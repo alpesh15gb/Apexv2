@@ -14,6 +14,7 @@ import '../../design_system/components/apex_badge.dart';
 import '../../design_system/components/apex_empty_state.dart';
 import '../../design_system/components/apex_loading_skeleton.dart';
 import '../../design_system/components/apex_stat_card.dart';
+import '../../models/attendance.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/employee_provider.dart';
 

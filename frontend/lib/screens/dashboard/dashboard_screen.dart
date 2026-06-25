@@ -14,6 +14,7 @@ import '../../design_system/components/apex_card.dart';
 import '../../design_system/components/apex_badge.dart';
 import '../../design_system/components/apex_empty_state.dart';
 import '../../design_system/components/apex_loading_skeleton.dart';
+import '../../models/dashboard.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
 

@@ -67,7 +67,7 @@ class ApexFilterBar extends StatelessWidget {
 class ApexFilter {
   final String label;
   final bool isSelected;
-  final VoidCallback onToggle;
+  final void Function(bool) onToggle;
 
   const ApexFilter({
     required this.label,

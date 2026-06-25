@@ -49,8 +49,8 @@ class _EsslDashboardScreenState extends ConsumerState<EsslDashboardScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Health Overview', icon: Icons.monitor_heart),
-            Tab(text: 'Server Details', icon: Icons.dns),
+            Tab(text: 'Health Overview', icon: Icon(Icons.monitor_heart)),
+            Tab(text: 'Server Details', icon: Icon(Icons.dns)),
           ],
         ),
       ),
@@ -553,44 +553,6 @@ class _ServerDetailsTab extends ConsumerWidget {
     );
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'connected': return Colors.green;
-      case 'testing': return Colors.orange;
-      case 'error': return Colors.red;
-      default: return Colors.grey;
-    }
-  }
-
-  IconData _statusIcon(String status) {
-    switch (status) {
-      case 'connected': return Icons.check_circle;
-      case 'testing': return Icons.sync;
-      case 'error': return Icons.error;
-      default: return Icons.cloud_off;
-    }
-  }
-
-  Color _syncStateColor(String? state) {
-    switch (state) {
-      case 'running': return Colors.blue;
-      case 'paused': return Colors.orange;
-      case 'cancelled': return Colors.grey;
-      case 'completed': return Colors.green;
-      case 'failed': return Colors.red;
-      default: return Colors.grey;
-    }
-  }
-
-  Color _recoveryColor(String? status) {
-    switch (status) {
-      case 'ok': return Colors.green;
-      case 'offline': return Colors.red;
-      case 'backlog': return Colors.orange;
-      default: return Colors.grey;
-    }
-  }
-
   String _formatDateTime(DateTime? dt) {
     if (dt == null) return 'Never';
     return DateFormat('MMM dd, HH:mm').format(dt);
@@ -631,4 +593,42 @@ Color _healthColor(int score) {
   if (score >= 80) return Colors.green;
   if (score >= 50) return Colors.orange;
   return Colors.red;
+}
+
+Color _statusColor(String status) {
+  switch (status) {
+    case 'connected': return Colors.green;
+    case 'testing': return Colors.orange;
+    case 'error': return Colors.red;
+    default: return Colors.grey;
+  }
+}
+
+IconData _statusIcon(String status) {
+  switch (status) {
+    case 'connected': return Icons.check_circle;
+    case 'testing': return Icons.sync;
+    case 'error': return Icons.error;
+    default: return Icons.cloud_off;
+  }
+}
+
+Color _syncStateColor(String? state) {
+  switch (state) {
+    case 'running': return Colors.blue;
+    case 'paused': return Colors.orange;
+    case 'cancelled': return Colors.grey;
+    case 'completed': return Colors.green;
+    case 'failed': return Colors.red;
+    default: return Colors.grey;
+  }
+}
+
+Color _recoveryColor(String? status) {
+  switch (status) {
+    case 'ok': return Colors.green;
+    case 'offline': return Colors.red;
+    case 'backlog': return Colors.orange;
+    default: return Colors.grey;
+  }
 }

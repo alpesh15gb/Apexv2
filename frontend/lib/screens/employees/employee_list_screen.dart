@@ -317,15 +317,6 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
       showCheckbox: true,
       selectedItems: _selectedEmployees,
       onSelectionChanged: (selected) => setState(() => _selectedEmployees = selected),
-      sortColumnIndex: _sortColumnIndex,
-      sortAscending: _sortAscending,
-      onSort: (index, ascending) {
-        setState(() {
-          _sortColumnIndex = index;
-          _sortAscending = ascending;
-          // TODO: Implement sorting
-        });
-      },
       onRowTap: (emp) => context.push('/employees/${emp.id}'),
       rowBuilder: (context, emp, index) {
         return Row(
