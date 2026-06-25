@@ -85,7 +85,7 @@ class VisitorListScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(v.visitorName ?? 'Visitor', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                          Text('${v.company ?? '—'} • ${v.purpose ?? '—'}', style: ApexTypography.captionMedium.copyWith(color: _muted)),
+                          Text('${v.visitorName ?? 'Visitor'} • ${v.purpose ?? '—'}', style: ApexTypography.captionMedium.copyWith(color: _muted)),
                         ],
                       ),
                     ),
