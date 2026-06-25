@@ -3,11 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/responsive.dart';
+import '../../design_system/typography.dart';
 import '../../providers/essl_provider.dart';
-import '../../services/essl_service.dart';
-import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
-import '../../widgets/empty_state.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _danger = Color(0xFFDC2626);
+const _warning = Color(0xFFF59E0B);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class EsslServerListScreen extends ConsumerWidget {
   const EsslServerListScreen({Key? key}) : super(key: key);
@@ -15,201 +23,109 @@ class EsslServerListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final serversAsync = ref.watch(esslServerListProvider);
-    final theme = Theme.of(context);
+    final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
+      backgroundColor: _bg,
       appBar: AppBar(
         title: const Text('eSSL Servers'),
+        backgroundColor: _surface,
+        foregroundColor: _text,
+        elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push('/settings/essl/create'),
-          ),
+          IconButton(icon: const Icon(Icons.add, size: 18), tooltip: 'Add Server', onPressed: () => context.push('/settings/essl/create')),
         ],
       ),
       body: serversAsync.when(
         data: (servers) {
           if (servers.isEmpty) {
-            return const EmptyState(
-              title: 'No eSSL Servers',
-              description: 'Add an eSSL eBioserverNew server to start syncing attendance data.',
-              icon: Icons.dns_outlined,
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.dns, size: 48, color: _muted),
+                  const SizedBox(height: 16),
+                  Text('No eSSL Servers', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  const SizedBox(height: 8),
+                  Text('Connect to your eBioserverNew to start syncing', style: ApexTypography.body.copyWith(color: _muted)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.push('/settings/essl/create'),
+                    style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+                    child: const Text('Add Server'),
+                  ),
+                ],
+              ),
             );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: servers.length,
-            itemBuilder: (context, index) {
-              final server = servers[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: _statusColor(server.status).withOpacity(0.1),
-                    child: Icon(
-                      _statusIcon(server.status),
-                      color: _statusColor(server.status),
+            itemBuilder: (context, i) {
+              final s = servers[i];
+              final statusColor = s.status == 'connected' ? _success : s.status == 'error' ? _danger : _muted;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _border),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.dns, color: statusColor, size: 20),
                     ),
-                  ),
-                  title: Text(server.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(server.serverUrl),
-                      const SizedBox(height: 4),
-                      Row(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: _statusColor(server.status).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              server.status.toUpperCase(),
-                              style: TextStyle(
-                                color: _statusColor(server.status),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (server.lastConnectedAt != null)
-                            Text(
-                              'Last: ${DateFormat('MMM dd, HH:mm').format(server.lastConnectedAt!)}',
-                              style: theme.textTheme.bodySmall,
-                            ),
+                          Text(s.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
+                          Text(s.serverUrl, style: ApexTypography.caption.copyWith(color: _muted), overflow: TextOverflow.ellipsis),
                         ],
                       ),
-                    ],
-                  ),
-                  trailing: PopupMenuButton(
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      const PopupMenuItem(value: 'initial_sync', child: Text('Initial Sync...')),
-                      const PopupMenuItem(value: 'sync_attendance', child: Text('Sync Attendance')),
-                      const PopupMenuItem(value: 'sync_employees', child: Text('Sync Employees')),
-                      const PopupMenuItem(value: 'sync_devices', child: Text('Sync Devices')),
-                      const PopupMenuItem(value: 'history', child: Text('Sync History')),
-                      const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
-                    ],
-                    onSelected: (value) async {
-                      switch (value) {
-                        case 'edit':
-                          context.push('/settings/essl/${server.id}');
-                          break;
-                        case 'initial_sync':
-                          context.push('/settings/essl/${server.id}/initial-sync');
-                          break;
-                        case 'sync_attendance':
-                          await _syncAction(context, ref, server.id, 'attendance');
-                          break;
-                        case 'sync_employees':
-                          await _syncAction(context, ref, server.id, 'employees');
-                          break;
-                        case 'sync_devices':
-                          await _syncAction(context, ref, server.id, 'devices');
-                          break;
-                        case 'history':
-                          context.push('/settings/essl/${server.id}/history');
-                          break;
-                        case 'delete':
-                          await _confirmDelete(context, ref, server.id, server.name);
-                          break;
-                      }
-                    },
-                  ),
-                  onTap: () => context.push('/settings/essl/${server.id}'),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(s.status.toUpperCase(), style: ApexTypography.badge.copyWith(color: statusColor)),
+                    ),
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, size: 18),
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        const PopupMenuItem(value: 'history', child: Text('Sync History')),
+                        const PopupMenuItem(value: 'dashboard', child: Text('Dashboard')),
+                      ],
+                      onSelected: (v) {
+                        if (v == 'edit') context.push('/settings/essl/${s.id}');
+                        if (v == 'history') context.push('/settings/essl/${s.id}/history');
+                        if (v == 'dashboard') context.push('/settings/essl/dashboard');
+                      },
+                    ),
+                  ],
                 ),
               );
             },
           );
         },
-        loading: () => const LoadingWidget(count: 3),
-        error: (err, stack) => CustomErrorWidget(
-          errorMessage: err.toString(),
-          onRetry: () => ref.read(esslServerListProvider.notifier).fetchServers(isRefresh: true),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
       ),
     );
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'connected':
-        return Colors.green;
-      case 'testing':
-        return Colors.orange;
-      case 'error':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _statusIcon(String status) {
-    switch (status) {
-      case 'connected':
-        return Icons.check_circle;
-      case 'testing':
-        return Icons.sync;
-      case 'error':
-        return Icons.error;
-      default:
-        return Icons.cloud_off;
-    }
-  }
-
-  Future<void> _syncAction(BuildContext context, WidgetRef ref, String serverId, String type) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-    try {
-      final service = ref.read(esslServiceProvider);
-      switch (type) {
-        case 'attendance':
-          await service.syncAttendance(serverId);
-          break;
-        case 'employees':
-          await service.syncEmployees(serverId);
-          break;
-        case 'devices':
-          await service.syncDevices(serverId);
-          break;
-      }
-      if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$type sync completed'), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sync failed: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, String id, String name) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Server'),
-        content: Text('Delete "$name"? This will remove all sync history and mappings.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await ref.read(esslServerListProvider.notifier).deleteServer(id);
-    }
   }
 }

@@ -3,8 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/responsive.dart';
+import '../../design_system/typography.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/employee_provider.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class MarkAttendanceScreen extends ConsumerStatefulWidget {
   const MarkAttendanceScreen({Key? key}) : super(key: key);
@@ -33,55 +44,45 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
     if (_formKey.currentState!.validate()) {
       if (_selectedEmployeeId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an employee'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Please select an employee'), backgroundColor: _danger),
         );
         return;
       }
 
-      final dateStr = _selectedDate.toIso8601String().substring(0, 10);
-      
-      // Build full DateTime strings for punch in/out
-      final punchInDateTime = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        _punchInTime.hour,
-        _punchInTime.minute,
-      ).toIso8601String();
-
-      String? punchOutDateTime;
+      final punchIn = DateTime(
+        _selectedDate.year, _selectedDate.month, _selectedDate.day,
+        _punchInTime.hour, _punchInTime.minute,
+      );
+      DateTime? punchOut;
       if (_punchOutTime != null) {
-        punchOutDateTime = DateTime(
-          _selectedDate.year,
-          _selectedDate.month,
-          _selectedDate.day,
-          _punchOutTime!.hour,
-          _punchOutTime!.minute,
-        ).toIso8601String();
+        punchOut = DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day,
+          _punchOutTime!.hour, _punchOutTime!.minute,
+        );
       }
 
       final data = {
         'employee_id': _selectedEmployeeId,
-        'date': dateStr,
-        'punch_in': punchInDateTime,
-        'punch_out': punchOutDateTime,
+        'date': _selectedDate.toIso8601String().substring(0, 10),
+        'punch_in': punchIn.toIso8601String(),
+        'punch_out': punchOut?.toIso8601String(),
         'status': _selectedStatus,
-        'remarks': _remarksController.text.trim().isEmpty ? null : _remarksController.text.trim(),
         'is_manual': true,
+        'remarks': _remarksController.text.trim().isEmpty ? null : _remarksController.text.trim(),
       };
 
       try {
         await ref.read(attendanceListProvider.notifier).manualMark(data);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Attendance logged successfully'), backgroundColor: Colors.green),
+            const SnackBar(content: Text('Attendance marked'), backgroundColor: _success),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: _danger),
           );
         }
       }
@@ -91,122 +92,226 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     final employeesAsync = ref.watch(employeeListProvider);
+    final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
+      backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Manual Attendance Mark'),
+        title: const Text('Mark Attendance'),
+        backgroundColor: _surface,
+        foregroundColor: _text,
+        elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isMobile ? 16 : 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Employee Dropdown
-              employeesAsync.employees.maybeWhen(
-                data: (list) => DropdownButtonFormField<String>(
-                  value: _selectedEmployeeId,
-                  decoration: const InputDecoration(labelText: 'Employee *'),
-                  items: list.map((e) => DropdownMenuItem(value: e.id, child: Text('${e.fullName} (${e.employeeCode})'))).toList(),
-                  onChanged: (v) => setState(() => _selectedEmployeeId = v),
-                  validator: (v) => v == null ? 'Required' : null,
-                ),
-                orElse: () => const SizedBox(),
-              ),
-              const SizedBox(height: 16),
-
-              // Date Picker
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => _selectedDate = picked);
-                  }
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Date *'),
-                  child: Text(DateFormat('MMMM dd, yyyy').format(_selectedDate)),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Punch In Time
-              InkWell(
-                onTap: () async {
-                  final picked = await showTimePicker(
-                    context: context,
-                    initialTime: _punchInTime,
-                  );
-                  if (picked != null) {
-                    setState(() => _punchInTime = picked);
-                  }
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Punch In Time *'),
-                  child: Text(_punchInTime.format(context)),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Punch Out Time (Optional)
-              InkWell(
-                onTap: () async {
-                  final picked = await showTimePicker(
-                    context: context,
-                    initialTime: _punchOutTime ?? const TimeOfDay(hour: 17, minute: 0),
-                  );
-                  setState(() => _punchOutTime = picked);
-                },
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Punch Out Time (Optional)',
-                    suffixIcon: _punchOutTime != null
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () => setState(() => _punchOutTime = null),
-                          )
-                        : null,
+              // Employee & Date
+              _SectionCard(
+                title: 'EMPLOYEE & DATE',
+                children: [
+                  employeesAsync.when(
+                    data: (state) => state.employees.when(
+                      data: (employees) => _dropdown(
+                        'Employee',
+                        _selectedEmployeeId,
+                        employees.map((e) => {'id': e.id, 'name': '${e.fullName} (${e.employeeCode})'}).toList(),
+                        (v) => setState(() => _selectedEmployeeId = v),
+                      ),
+                      loading: () => const SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
+                      error: (_, __) => const SizedBox(),
+                    ),
+                    loading: () => const SizedBox(height: 48),
+                    error: (_, __) => const SizedBox(),
                   ),
-                  child: Text(_punchOutTime == null ? 'Not Punched Out' : _punchOutTime!.format(context)),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Status Selector
-              DropdownButtonFormField<String>(
-                value: _selectedStatus,
-                decoration: const InputDecoration(labelText: 'Status *'),
-                items: const [
-                  DropdownMenuItem(value: 'present', child: Text('Present')),
-                  DropdownMenuItem(value: 'absent', child: Text('Absent')),
-                  DropdownMenuItem(value: 'half_day', child: Text('Half Day')),
-                  DropdownMenuItem(value: 'on_leave', child: Text('On Leave')),
+                  _dateField('Date', _selectedDate, (v) => setState(() => _selectedDate = v)),
                 ],
-                onChanged: (v) => setState(() => _selectedStatus = v!),
               ),
               const SizedBox(height: 16),
 
-              // Remarks
-              TextFormField(
-                controller: _remarksController,
-                decoration: const InputDecoration(labelText: 'Remarks / Reason'),
-                maxLines: 2,
+              // Attendance Details
+              _SectionCard(
+                title: 'ATTENDANCE DETAILS',
+                children: [
+                  _dropdown(
+                    'Status',
+                    _selectedStatus,
+                    [
+                      {'id': 'present', 'name': 'Present'},
+                      {'id': 'absent', 'name': 'Absent'},
+                      {'id': 'late', 'name': 'Late'},
+                      {'id': 'half_day', 'name': 'Half Day'},
+                    ],
+                    (v) => setState(() => _selectedStatus = v ?? 'present'),
+                  ),
+                  _timeField('Punch In', _punchInTime, (v) => setState(() => _punchInTime = v)),
+                  _timeField('Punch Out', _punchOutTime, (v) => setState(() => _punchOutTime = v)),
+                  _field('Remarks', _remarksController),
+                ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              ElevatedButton(
-                onPressed: _submit,
-                child: const Text('Mark Attendance'),
+              // Submit
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text('Mark Attendance', style: ApexTypography.button),
+                ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _field(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: ApexTypography.titleSmall.copyWith(color: _text)),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            maxLines: 2,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary, width: 1.5)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dropdown(String label, String? value, List<dynamic> items, ValueChanged<String?> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: ApexTypography.titleSmall.copyWith(color: _text)),
+          const SizedBox(height: 6),
+          DropdownButtonFormField<String>(
+            value: value,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+            items: items.map((item) {
+              if (item is String) return DropdownMenuItem(value: item, child: Text(item));
+              return DropdownMenuItem(value: item['id'], child: Text(item['name']));
+            }).toList(),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dateField(String label, DateTime date, ValueChanged<DateTime> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: ApexTypography.titleSmall.copyWith(color: _text)),
+          const SizedBox(height: 6),
+          InkWell(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context, initialDate: date, firstDate: DateTime(2020), lastDate: DateTime.now(),
+              );
+              if (picked != null) onChanged(picked);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(border: Border.all(color: _border), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 18, color: _muted),
+                  const SizedBox(width: 10),
+                  Text(DateFormat('MMM dd, yyyy').format(date), style: ApexTypography.body),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _timeField(String label, TimeOfDay? time, ValueChanged<TimeOfDay> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: ApexTypography.titleSmall.copyWith(color: _text)),
+          const SizedBox(height: 6),
+          InkWell(
+            onTap: () async {
+              final picked = await showTimePicker(context: context, initialTime: time ?? const TimeOfDay(hour: 9, minute: 0));
+              if (picked != null) onChanged(picked);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(border: Border.all(color: _border), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, size: 18, color: _muted),
+                  const SizedBox(width: 10),
+                  Text(time != null ? time.format(context) : 'Select time', style: ApexTypography.body),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _SectionCard({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: ApexTypography.sectionHeader),
+          const SizedBox(height: 12),
+          ...children,
+        ],
       ),
     );
   }
