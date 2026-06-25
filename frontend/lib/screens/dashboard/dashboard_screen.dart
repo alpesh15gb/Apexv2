@@ -7,15 +7,20 @@ import 'package:intl/intl.dart';
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
-import '../../design_system/spacing.dart';
 import '../../design_system/border_radius.dart';
-import '../../design_system/components/apex_stat_card.dart';
-import '../../design_system/components/apex_card.dart';
-import '../../design_system/components/apex_badge.dart';
-import '../../design_system/components/apex_empty_state.dart';
-import '../../design_system/components/apex_loading_skeleton.dart';
 import '../../models/dashboard.dart';
 import '../../providers/dashboard_provider.dart';
+
+// ── RULE 1: Exact colors ───────────────────────────────────
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _warning = Color(0xFFF59E0B);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -24,16 +29,12 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final chartAsync = ref.watch(dashboardChartProvider(7));
-    final deptDistAsync = ref.watch(departmentDistributionProvider);
+    final deptAsync = ref.watch(departmentDistributionProvider);
     final activityAsync = ref.watch(recentActivityProvider);
-    final syncHealthAsync = ref.watch(syncHealthProvider);
-    final birthdaysAsync = ref.watch(birthdaysProvider);
-    final anniversariesAsync = ref.watch(anniversariesProvider);
-
-    final padding = Responsive.isMobile(context) ? 12.0 : 20.0;
-    final isMobile = Responsive.isMobile(context);
+    final syncAsync = ref.watch(syncHealthProvider);
 
     return Scaffold(
+      backgroundColor: _bg,
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(dashboardStatsProvider);
@@ -43,110 +44,164 @@ class DashboardScreen extends ConsumerWidget {
           ref.invalidate(syncHealthProvider);
         },
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(padding),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // KPI Block
+              // ── RULE 4: Header ──────────────────────────
+              _Header(),
+              const SizedBox(height: 16),
+
+              // ── RULE 4: KPI Row ─────────────────────────
               statsAsync.when(
-                data: (stats) => _buildKpis(context, stats, isMobile),
-                loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
-                error: (e, _) => _err(e.toString()),
+                data: (s) => _KpiRow(stats: s),
+                loading: () => const SizedBox(height: 88, child: Center(child: CircularProgressIndicator())),
+                error: (e, _) => _ErrorCard(msg: e.toString()),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Trend Block
-              chartAsync.when(
-                data: (trends) => _buildTrend(context, trends),
-                loading: () => const ApexLoadingSkeleton(count: 1, type: ApexSkeletonType.card),
-                error: (e, _) => _err(e.toString()),
-              ),
-              const SizedBox(height: 12),
-
-              // Department Block
-              deptDistAsync.when(
-                data: (data) => _buildDept(context, data),
-                loading: () => const ApexLoadingSkeleton(count: 1, type: ApexSkeletonType.card),
-                error: (e, _) => _err(e.toString()),
-              ),
-              const SizedBox(height: 12),
-
-              // Pending Work Block
-              _buildPendingWork(context),
-              const SizedBox(height: 12),
-
-              // Quick Actions Block
-              _buildQuickActions(context),
-              const SizedBox(height: 12),
-
-              // Activity + Side widgets
-              if (isMobile) ...[
-                activityAsync.when(
-                  data: (a) => _buildActivity(context, a),
-                  loading: () => const ApexLoadingSkeleton(count: 5, type: ApexSkeletonType.list),
-                  error: (e, _) => _err(e.toString()),
-                ),
-                const SizedBox(height: 12),
-                syncHealthAsync.when(
-                  data: (d) => _buildSyncHealth(context, d),
-                  loading: () => const SizedBox(),
-                  error: (_, __) => const SizedBox(),
-                ),
-                const SizedBox(height: 12),
-                birthdaysAsync.when(
-                  data: (d) => _buildBirthdays(context, d),
-                  loading: () => const SizedBox(),
-                  error: (_, __) => const SizedBox(),
-                ),
-              ] else
+              // ── Charts Row ───────────────────────────────
+              if (Responsive.isDesktop(context))
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       flex: 2,
-                      child: activityAsync.when(
-                        data: (a) => _buildActivity(context, a),
-                        loading: () => const ApexLoadingSkeleton(count: 5, type: ApexSkeletonType.list),
-                        error: (e, _) => _err(e.toString()),
+                      child: chartAsync.when(
+                        data: (t) => _TrendChart(data: t),
+                        loading: () => const _LoadingCard(height: 200),
+                        error: (e, _) => _ErrorCard(msg: e.toString()),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        children: [
-                          syncHealthAsync.when(
-                            data: (d) => _buildSyncHealth(context, d),
-                            loading: () => const SizedBox(),
-                            error: (_, __) => const SizedBox(),
-                          ),
-                          const SizedBox(height: 12),
-                          birthdaysAsync.when(
-                            data: (d) => _buildBirthdays(context, d),
-                            loading: () => const SizedBox(),
-                            error: (_, __) => const SizedBox(),
-                          ),
-                          const SizedBox(height: 12),
-                          anniversariesAsync.when(
-                            data: (d) => _buildAnniversaries(context, d),
-                            loading: () => const SizedBox(),
-                            error: (_, __) => const SizedBox(),
-                          ),
-                        ],
+                      child: deptAsync.when(
+                        data: (d) => _DeptDistribution(data: d),
+                        loading: () => const _LoadingCard(height: 200),
+                        error: (e, _) => _ErrorCard(msg: e.toString()),
                       ),
                     ),
                   ],
+                )
+              else ...[
+                chartAsync.when(
+                  data: (t) => _TrendChart(data: t),
+                  loading: () => const _LoadingCard(height: 200),
+                  error: (e, _) => _ErrorCard(msg: e.toString()),
                 ),
+                const SizedBox(height: 12),
+                deptAsync.when(
+                  data: (d) => _DeptDistribution(data: d),
+                  loading: () => const _LoadingCard(height: 200),
+                  error: (e, _) => _ErrorCard(msg: e.toString()),
+                ),
+              ],
+              const SizedBox(height: 16),
+
+              // ── Pending Work + Activity ──────────────────
+              if (Responsive.isDesktop(context))
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _PendingWork()),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: activityAsync.when(
+                        data: (a) => _ActivityFeed(data: a),
+                        loading: () => const _LoadingCard(height: 300),
+                        error: (e, _) => _ErrorCard(msg: e.toString()),
+                      ),
+                    ),
+                  ],
+                )
+              else ...[
+                _PendingWork(),
+                const SizedBox(height: 12),
+                activityAsync.when(
+                  data: (a) => _ActivityFeed(data: a),
+                  loading: () => const _LoadingCard(height: 300),
+                  error: (e, _) => _ErrorCard(msg: e.toString()),
+                ),
+              ],
+              const SizedBox(height: 16),
+
+              // ── Quick Actions + Sync Health ──────────────
+              if (Responsive.isDesktop(context))
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _QuickActions()),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: syncAsync.when(
+                        data: (d) => _SyncHealth(data: d),
+                        loading: () => const _LoadingCard(height: 120),
+                        error: (_, __) => const SizedBox(),
+                      ),
+                    ),
+                  ],
+                )
+              else ...[
+                _QuickActions(),
+                const SizedBox(height: 12),
+                syncAsync.when(
+                  data: (d) => _SyncHealth(data: d),
+                  loading: () => const SizedBox(),
+                  error: (_, __) => const SizedBox(),
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  // ── KPI Block ────────────────────────────────────────────────
-  Widget _buildKpis(BuildContext context, DashboardStats stats, bool isMobile) {
+// ── RULE 4: Header ─────────────────────────────────────────
+class _Header extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Dashboard', style: ApexTypography.pageTitle.copyWith(color: _text)),
+            Text(
+              DateFormat('EEEE, MMMM dd, yyyy').format(DateTime.now()),
+              style: ApexTypography.bodySmall.copyWith(color: _muted),
+            ),
+          ],
+        ),
+        const Spacer(),
+        if (!Responsive.isMobile(context))
+          ElevatedButton.icon(
+            onPressed: () => context.push('/attendance/mark'),
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Mark Attendance'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── RULE 3: KPI Row — business purpose only ────────────────
+class _KpiRow extends StatelessWidget {
+  final DashboardStats stats;
+  const _KpiRow({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
     final pct = stats.attendancePercentage;
+
     return GridView.count(
       crossAxisCount: isMobile ? 2 : 7,
       shrinkWrap: true,
@@ -155,45 +210,99 @@ class DashboardScreen extends ConsumerWidget {
       mainAxisSpacing: 8,
       childAspectRatio: isMobile ? 1.6 : 2.0,
       children: [
-        ApexStatCard(title: 'Attendance', value: '${pct.toStringAsFixed(0)}%', icon: Icons.people_outline,
-          color: pct >= 90 ? ApexColors.success : pct >= 75 ? ApexColors.warning : ApexColors.error, onTap: () => context.push('/attendance')),
-        ApexStatCard(title: 'Present', value: '${stats.employeesPresent}', icon: Icons.check_circle_outline,
-          color: ApexColors.success, onTap: () => context.push('/attendance')),
-        ApexStatCard(title: 'Absent', value: '${stats.employeesAbsent}', icon: Icons.cancel_outlined,
-          color: ApexColors.error, onTap: () => context.push('/attendance')),
-        ApexStatCard(title: 'Late', value: '${stats.lateToday}', icon: Icons.access_time,
-          color: ApexColors.warning, onTap: () => context.push('/attendance')),
-        ApexStatCard(title: 'Leave', value: '${stats.pendingLeaves}', icon: Icons.event_busy_outlined,
-          color: ApexColors.accent, onTap: () => context.push('/leaves/requests')),
-        ApexStatCard(title: 'Devices', value: '${stats.onlineDevices}', icon: Icons.biotech_outlined,
-          color: stats.offlineDevices > 0 ? ApexColors.warning : ApexColors.success, onTap: () => context.push('/devices')),
-        ApexStatCard(title: 'Visitors', value: '${stats.visitorsInside}', icon: Icons.card_membership_outlined,
-          color: ApexColors.info, onTap: () => context.push('/visitors/active')),
+        _KpiCard(label: 'Attendance', value: '${pct.toStringAsFixed(0)}%', color: pct >= 90 ? _success : _warning, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Present', value: '${stats.employeesPresent}', color: _success, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Absent', value: '${stats.employeesAbsent}', color: _danger, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Late', value: '${stats.lateToday}', color: _warning, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Leave', value: '${stats.pendingLeaves}', color: _primary, onTap: () => context.push('/leaves/requests')),
+        _KpiCard(label: 'Devices', value: '${stats.onlineDevices}', color: stats.offlineDevices > 0 ? _warning : _success, onTap: () => context.push('/devices')),
+        _KpiCard(label: 'Visitors', value: '${stats.visitorsInside}', color: _primary, onTap: () => context.push('/visitors/active')),
       ],
     );
   }
+}
 
-  // ── Trend Block ──────────────────────────────────────────────
-  Widget _buildTrend(BuildContext context, List<AttendanceTrend> trends) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ApexCard(
-      header: Text('Attendance Trend', style: ApexTypography.titleMedium),
-      child: trends.isEmpty
-          ? const SizedBox(height: 160, child: Center(child: Text('No data')))
+class _KpiCard extends StatefulWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _KpiCard({required this.label, required this.value, required this.color, this.onTap});
+
+  @override
+  State<_KpiCard> createState() => _KpiCardState();
+}
+
+class _KpiCardState extends State<_KpiCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          height: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _hovered ? widget.color.withOpacity(0.4) : _border),
+          ),
+          child: Row(
+            children: [
+              Container(width: 4, decoration: BoxDecoration(color: widget.color, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(widget.value, style: ApexTypography.kpiValue.copyWith(color: _text)),
+                    Text(widget.label, style: ApexTypography.kpiLabel),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Trend Chart ─────────────────────────────────────────────
+class _TrendChart extends StatelessWidget {
+  final List<AttendanceTrend> data;
+  const _TrendChart({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Attendance Trend',
+      child: data.isEmpty
+          ? const _EmptyBlock(msg: 'No attendance data yet')
           : SizedBox(
-              height: 160,
+              height: 180,
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(show: true, drawVerticalLine: false,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
                     horizontalInterval: 1,
-                    getDrawingHorizontalLine: (v) => FlLine(color: isDark ? ApexColors.neutral800 : ApexColors.neutral100, strokeWidth: 0.5)),
+                    getDrawingHorizontalLine: (v) => FlLine(color: _border, strokeWidth: 0.5),
+                  ),
                   titlesData: FlTitlesData(
                     show: true,
                     bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, m) {
                       final i = v.toInt();
-                      if (i >= 0 && i < trends.length) return Padding(
+                      if (i >= 0 && i < data.length) return Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(DateFormat('E').format(trends[i].date), style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                        child: Text(DateFormat('E').format(data[i].date), style: ApexTypography.captionSmall.copyWith(color: _muted)),
                       );
                       return const SizedBox();
                     })),
@@ -204,14 +313,14 @@ class DashboardScreen extends ConsumerWidget {
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
-                      spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.present.toDouble())).toList(),
-                      isCurved: true, color: ApexColors.primary, barWidth: 2,
+                      spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.present.toDouble())).toList(),
+                      isCurved: true, color: _primary, barWidth: 2,
                       dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(show: true, color: ApexColors.primary.withOpacity(0.08)),
+                      belowBarData: BarAreaData(show: true, color: _primary.withOpacity(0.08)),
                     ),
                     LineChartBarData(
-                      spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.absent.toDouble())).toList(),
-                      isCurved: true, color: ApexColors.error, barWidth: 1.5,
+                      spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.absent.toDouble())).toList(),
+                      isCurved: true, color: _danger, barWidth: 1.5,
                       dotData: const FlDotData(show: false),
                     ),
                   ],
@@ -220,13 +329,19 @@ class DashboardScreen extends ConsumerWidget {
             ),
     );
   }
+}
 
-  // ── Department Block ─────────────────────────────────────────
-  Widget _buildDept(BuildContext context, List<DepartmentDistribution> data) {
-    return ApexCard(
-      header: Text('Department Distribution', style: ApexTypography.titleMedium),
+// ── Department Distribution ─────────────────────────────────
+class _DeptDistribution extends StatelessWidget {
+  final List<DepartmentDistribution> data;
+  const _DeptDistribution({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Departments',
       child: data.isEmpty
-          ? const SizedBox(height: 100, child: Center(child: Text('No data')))
+          ? const _EmptyBlock(msg: 'No departments configured')
           : Column(
               children: data.take(6).map((d) {
                 final total = data.fold<int>(0, (s, x) => s + x.count);
@@ -236,10 +351,12 @@ class DashboardScreen extends ConsumerWidget {
                   child: Row(
                     children: [
                       SizedBox(width: 80, child: Text(d.department, style: ApexTypography.bodySmall, overflow: TextOverflow.ellipsis)),
-                      Expanded(child: ClipRRect(
-                        borderRadius: ApexRadius.xsAll,
-                        child: LinearProgressIndicator(value: pct, backgroundColor: ApexColors.neutral100, color: ApexColors.primary, minHeight: 6),
-                      )),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(value: pct, backgroundColor: _border, color: _primary, minHeight: 6),
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       SizedBox(width: 30, child: Text('${d.count}', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
                     ],
@@ -249,74 +366,145 @@ class DashboardScreen extends ConsumerWidget {
             ),
     );
   }
+}
 
-  // ── Pending Work Block ───────────────────────────────────────
-  Widget _buildPendingWork(BuildContext context) {
-    return ApexCard(
-      header: Text('Pending Work', style: ApexTypography.titleMedium),
+// ── RULE 3: Pending Work — business purpose ─────────────────
+class _PendingWork extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Pending Work',
       child: Column(
         children: [
-          _pendingItem(context, Icons.warning_amber, 'Missing Punches', '3 employees', ApexColors.warning, () {}),
-          const Divider(height: 1),
-          _pendingItem(context, Icons.access_time, 'Late Arrivals', '5 employees', ApexColors.warning, () {}),
-          const Divider(height: 1),
-          _pendingItem(context, Icons.event_busy, 'Pending Approvals', '2 requests', ApexColors.accent, () => context.push('/leaves/requests')),
-          const Divider(height: 1),
-          _pendingItem(context, Icons.cloud_off, 'Offline Devices', '1 device', ApexColors.error, () => context.push('/devices')),
+          _PendingItem(icon: Icons.warning_amber, label: 'Missing Punches', count: '3 employees', color: _warning, onTap: () => context.push('/attendance')),
+          const Divider(height: 1, color: _border),
+          _PendingItem(icon: Icons.access_time, label: 'Late Arrivals', count: '5 employees', color: _warning, onTap: () => context.push('/attendance')),
+          const Divider(height: 1, color: _border),
+          _PendingItem(icon: Icons.event_busy, label: 'Pending Approvals', count: '2 requests', color: _primary, onTap: () => context.push('/leaves/requests')),
+          const Divider(height: 1, color: _border),
+          _PendingItem(icon: Icons.cloud_off, label: 'Offline Devices', count: '1 device', color: _danger, onTap: () => context.push('/devices')),
         ],
       ),
     );
   }
+}
 
-  Widget _pendingItem(BuildContext context, IconData icon, String title, String count, Color color, VoidCallback onTap) {
+class _PendingItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String count;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _PendingItem({required this.icon, required this.label, required this.count, required this.color, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, size: 18, color: color),
-      title: Text(title, style: ApexTypography.bodySmall),
+      title: Text(label, style: ApexTypography.bodySmall),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(count, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: color)),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, size: 16, color: ApexColors.neutral400),
+          const Icon(Icons.chevron_right, size: 16, color: _muted),
         ],
       ),
       onTap: onTap,
     );
   }
+}
 
-  // ── Quick Actions Block ──────────────────────────────────────
-  Widget _buildQuickActions(BuildContext context) {
-    return ApexCard(
-      header: Text('Quick Actions', style: ApexTypography.titleMedium),
+// ── Activity Feed ───────────────────────────────────────────
+class _ActivityFeed extends StatelessWidget {
+  final List<RecentActivity> data;
+  const _ActivityFeed({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Recent Activity',
+      child: data.isEmpty
+          ? const _EmptyBlock(msg: 'No activity yet')
+          : ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: data.length > 6 ? 6 : data.length,
+              separatorBuilder: (_, __) => const Divider(height: 1, color: _border),
+              itemBuilder: (context, i) {
+                final a = data[i];
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    radius: 14,
+                    backgroundColor: _border,
+                    child: Icon(_icon(a.activityType), size: 14, color: _muted),
+                  ),
+                  title: Text(a.description, style: ApexTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                    DateFormat('hh:mm a').format(DateTime.tryParse(a.timestamp) ?? DateTime.now()),
+                    style: ApexTypography.captionSmall,
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  IconData _icon(String type) {
+    if (type.contains('punch')) return Icons.fingerprint;
+    if (type.contains('device')) return Icons.biotech;
+    if (type.contains('visitor')) return Icons.card_membership;
+    if (type.contains('leave')) return Icons.event_busy;
+    return Icons.notifications_none;
+  }
+}
+
+// ── Quick Actions ───────────────────────────────────────────
+class _QuickActions extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Quick Actions',
       child: Row(
         children: [
-          Expanded(child: _actionBtn(context, Icons.person_add, 'Add Employee', () => context.push('/employees/create'))),
+          Expanded(child: _ActionBtn(icon: Icons.person_add, label: 'Add Employee', onTap: () => context.push('/employees/create'))),
           const SizedBox(width: 8),
-          Expanded(child: _actionBtn(context, Icons.calendar_today, 'Mark Attendance', () => context.push('/attendance/mark'))),
+          Expanded(child: _ActionBtn(icon: Icons.calendar_today, label: 'Mark Attendance', onTap: () => context.push('/attendance/mark'))),
           const SizedBox(width: 8),
-          Expanded(child: _actionBtn(context, Icons.event_busy, 'Apply Leave', () => context.push('/leaves/apply'))),
+          Expanded(child: _ActionBtn(icon: Icons.event_busy, label: 'Apply Leave', onTap: () => context.push('/leaves/apply'))),
           const SizedBox(width: 8),
-          Expanded(child: _actionBtn(context, Icons.assessment, 'Reports', () => context.push('/reports'))),
+          Expanded(child: _ActionBtn(icon: Icons.assessment, label: 'Reports', onTap: () => context.push('/reports'))),
         ],
       ),
     );
   }
+}
 
-  Widget _actionBtn(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+class _ActionBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+
+  const _ActionBtn({required this.icon, required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: ApexRadius.smAll,
+      borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: ApexColors.neutral200),
-          borderRadius: ApexRadius.smAll,
+          border: Border.all(color: _border),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 20, color: ApexColors.primary),
+            Icon(icon, size: 20, color: _primary),
             const SizedBox(height: 4),
             Text(label, style: ApexTypography.captionSmall, textAlign: TextAlign.center),
           ],
@@ -324,115 +512,122 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  // ── Activity Block ───────────────────────────────────────────
-  Widget _buildActivity(BuildContext context, List<RecentActivity> activities) {
-    return ApexCard(
-      header: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('Recent Activity', style: ApexTypography.titleMedium),
-          TextButton(onPressed: () => context.push('/notifications'), child: const Text('View All')),
-        ],
-      ),
-      child: activities.isEmpty
-          ? const Padding(padding: EdgeInsets.all(16), child: Text('No activity', style: TextStyle(color: ApexColors.neutral500)))
-          : ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: activities.length > 8 ? 8 : activities.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, i) {
-                final a = activities[i];
-                return ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: ApexColors.neutral100,
-                    child: Icon(_actIcon(a.activityType), size: 14, color: ApexColors.neutral600),
-                  ),
-                  title: Text(a.description, style: ApexTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text(DateFormat('hh:mm a').format(DateTime.tryParse(a.timestamp) ?? DateTime.now()), style: ApexTypography.captionSmall),
-                );
-              },
-            ),
-    );
-  }
+// ── Sync Health ─────────────────────────────────────────────
+class _SyncHealth extends StatelessWidget {
+  final SyncHealthStatus data;
+  const _SyncHealth({required this.data});
 
-  // ── Sync Health Block ────────────────────────────────────────
-  Widget _buildSyncHealth(BuildContext context, SyncHealthStatus data) {
-    return ApexCard(
-      header: Text('Sync Health', style: ApexTypography.titleMedium),
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Sync Health',
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _syncStat('Servers', '${data.totalServers}', ApexColors.neutral600),
-          _syncStat('Connected', '${data.connected}', ApexColors.success),
-          _syncStat('Error', '${data.error}', data.error > 0 ? ApexColors.error : ApexColors.success),
+          _SyncStat(label: 'Servers', value: '${data.totalServers}', color: _muted),
+          _SyncStat(label: 'Connected', value: '${data.connected}', color: _success),
+          _SyncStat(label: 'Error', value: '${data.error}', color: data.error > 0 ? _danger : _success),
         ],
       ),
     );
   }
+}
 
-  Widget _syncStat(String label, String value, Color color) {
+class _SyncStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _SyncStat({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(children: [
       Text(value, style: ApexTypography.headingMedium.copyWith(color: color)),
       Text(label, style: ApexTypography.kpiLabel),
     ]);
   }
+}
 
-  // ── Birthdays Block ──────────────────────────────────────────
-  Widget _buildBirthdays(BuildContext context, List<BirthdayItem> data) {
-    return ApexCard(
-      header: Row(children: [
-        const Icon(Icons.cake, size: 14, color: ApexColors.accent),
-        const SizedBox(width: 6),
-        Text('Birthdays', style: ApexTypography.titleMedium),
-      ]),
-      child: data.isEmpty
-          ? const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text('None this month', style: TextStyle(color: ApexColors.neutral500)))
-          : Column(children: data.take(3).map((b) => ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(radius: 12, backgroundColor: ApexColors.accent50, child: Text(b.name[0].toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: ApexColors.accent))),
-              title: Text(b.name, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
-              subtitle: Text(DateFormat('MMM dd').format(DateTime.parse(b.dateOfBirth)), style: ApexTypography.captionSmall),
-            )).toList()),
+// ── Shared Widgets ──────────────────────────────────────────
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _SectionCard({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title.toUpperCase(), style: ApexTypography.sectionHeader),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
     );
   }
+}
 
-  // ── Anniversaries Block ──────────────────────────────────────
-  Widget _buildAnniversaries(BuildContext context, List<AnniversaryItem> data) {
-    return ApexCard(
-      header: Row(children: [
-        const Icon(Icons.celebration, size: 14, color: ApexColors.secondary),
-        const SizedBox(width: 6),
-        Text('Anniversaries', style: ApexTypography.titleMedium),
-      ]),
-      child: data.isEmpty
-          ? const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text('None this month', style: TextStyle(color: ApexColors.neutral500)))
-          : Column(children: data.take(3).map((a) => ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(radius: 12, backgroundColor: ApexColors.secondary50, child: Text('${a.years}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.secondary))),
-              title: Text(a.name, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
-              subtitle: Text('${a.years}yr', style: ApexTypography.captionSmall),
-            )).toList()),
+class _EmptyBlock extends StatelessWidget {
+  final String msg;
+  const _EmptyBlock({required this.msg});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: _muted))),
     );
   }
+}
 
-  Widget _err(String msg) => ApexCard(child: Row(children: [
-    const Icon(Icons.error_outline, color: ApexColors.error, size: 18),
-    const SizedBox(width: 8),
-    Expanded(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: ApexColors.error))),
-  ]));
+class _ErrorCard extends StatelessWidget {
+  final String msg;
+  const _ErrorCard({required this.msg});
 
-  IconData _actIcon(String type) {
-    if (type.contains('punch')) return Icons.fingerprint;
-    if (type.contains('device')) return Icons.biotech;
-    if (type.contains('visitor')) return Icons.card_membership;
-    if (type.contains('leave')) return Icons.event_busy;
-    return Icons.notifications_none;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _border),
+      ),
+      child: Row(children: [
+        const Icon(Icons.error_outline, color: _danger, size: 18),
+        const SizedBox(width: 8),
+        Expanded(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: _danger))),
+      ]),
+    );
+  }
+}
+
+class _LoadingCard extends StatelessWidget {
+  final double height;
+  const _LoadingCard({this.height = 100});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _border),
+      ),
+      child: const Center(child: CircularProgressIndicator()),
+    );
   }
 }
