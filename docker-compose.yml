@@ -9,9 +9,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apex_secret}
       POSTGRES_DB: ${POSTGRES_DB:-apex_db}
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - apex_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U apex -d apex_db"]
       interval: 10s
@@ -24,10 +24,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: apex_redis
+    command: redis-server --appendonly yes
     ports:
       - "127.0.0.1:6380:6379"
     volumes:
-      - redis_data:/data
+      - apex_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -44,9 +45,9 @@ services:
     container_name: apex_backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8001:8000"
     volumes:
-      - uploads_data:/app/uploads
+      - apex_uploads_data:/app/uploads
     env_file:
       - .env
     depends_on:
@@ -93,9 +94,9 @@ services:
       - apex_network
 
 volumes:
-  postgres_data:
-  redis_data:
-  uploads_data:
+  apex_postgres_data:
+  apex_redis_data:
+  apex_uploads_data:
 
 networks:
   apex_network:

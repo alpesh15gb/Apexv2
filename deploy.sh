@@ -1,90 +1,112 @@
 #!/bin/bash
 # Apex HRMS — VPS Deployment Script
-# Run this on your VPS after cloning the repo
-# Usage: bash deploy.sh
-
+# Run on Ubuntu 24.04 VPS
 set -e
 
-echo "=== Apex HRMS Deployment ==="
+APP_DIR="/opt/Apexv2"
+FRONTEND_DIR="/var/www/apexhrms"
 
-# 1. Install Docker if not present
-if ! command -v docker &> /dev/null; then
-    echo "Installing Docker..."
-    curl -fsSL https://get.docker.com | sh
-    sudo usermod -aG docker $USER
-    echo "Docker installed. Please log out and back in, then re-run this script."
-    exit 1
+echo "=== Apex HRMS VPS Deployment ==="
+echo ""
+
+# 1. Clone repo if not exists
+if [ ! -d "$APP_DIR" ]; then
+    echo "[1/7] Cloning repository..."
+    cd /opt
+    sudo git clone https://github.com/alpesh15gb/Apexv2.git
+    sudo chown -R $USER:$USER $APP_DIR
+else
+    echo "[1/7] Pulling latest changes..."
+    cd $APP_DIR
+    git pull origin main
 fi
 
-# 2. Install Docker Compose plugin if not present
-if ! docker compose version &> /dev/null; then
-    echo "Installing Docker Compose plugin..."
-    sudo apt-get update
-    sudo apt-get install -y docker-compose-plugin
-fi
+cd $APP_DIR
 
-# 3. Create .env from example if not exists
+# 2. Create .env if not exists
 if [ ! -f .env ]; then
-    echo "Creating .env from .env.example..."
+    echo "[2/7] Creating .env file..."
     cp .env.example .env
     
     # Generate random secret key
     SECRET_KEY=$(openssl rand -hex 32)
-    sed -i "s/change-this-to-a-random-secret-key-in-production-min-32-chars/$SECRET_KEY/" .env
-    
-    # Generate Fernet encryption key
-    FERNET_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" 2>/dev/null || echo "CHANGE_ME_GENERATE_WITH_PYTHON")
+    sed -i "s|change-this-to-a-random-secret-key-in-production-min-32-chars|${SECRET_KEY}|g" .env
     
     echo ""
-    echo "=== IMPORTANT: Edit .env file ==="
-    echo "1. Set ENCRYPTION_KEY to: $FERNET_KEY"
-    echo "2. Update CORS_ORIGINS with your domain"
-    echo "3. Update POSTGRES_PASSWORD for production"
+    echo "========================================"
+    echo "  .env created with random SECRET_KEY"
+    echo "  Edit .env to set ENCRYPTION_KEY"
+    echo "========================================"
     echo ""
-    read -p "Press Enter after editing .env..."
+    echo "Run: nano $APP_DIR/.env"
+    echo ""
+    read -p "Press Enter after editing .env to continue..."
+else
+    echo "[2/7] .env already exists, skipping..."
 fi
 
-# 4. Build Flutter frontend
-echo "Building Flutter frontend..."
+# 3. Build Flutter frontend
+echo "[3/7] Building Flutter frontend..."
 if command -v flutter &> /dev/null; then
-    cd frontend
+    cd $APP_DIR/frontend
     flutter pub get
     flutter build web --release
-    cd ..
+    cd $APP_DIR
 else
-    echo "Flutter not installed. Please install Flutter or build locally and upload build/web folder."
-    echo "See: https://docs.flutter.dev/get-started/install"
-    exit 1
+    echo "  Flutter not found. Installing Flutter..."
+    sudo apt-get update
+    sudo apt-get install -y snapd
+    sudo snap install flutter --classic
+    cd $APP_DIR/frontend
+    flutter pub get
+    flutter build web --release
+    cd $APP_DIR
 fi
 
-# 5. Create upload directory
-mkdir -p uploads
+# 4. Copy frontend build to web root
+echo "[4/7] Deploying frontend..."
+sudo mkdir -p $FRONTEND_DIR
+sudo rm -rf $FRONTEND_DIR/frontend/build/web
+sudo mkdir -p $FRONTEND_DIR/frontend/build
+sudo cp -r $APP_DIR/frontend/build/web $FRONTEND_DIR/frontend/build/web
+sudo chown -R www-data:www-data $FRONTEND_DIR
 
-# 6. Start Docker services
-echo "Starting Docker services..."
+# 5. Start Docker services
+echo "[5/7] Starting Docker services..."
+cd $APP_DIR
 docker compose up -d --build
 
-# 7. Wait for services to be healthy
-echo "Waiting for services to start..."
-sleep 10
-
-# 8. Run database migrations
+# 6. Wait for services and run migrations
+echo "[6/7] Waiting for database..."
+sleep 15
 echo "Running database migrations..."
-docker compose exec backend alembic upgrade head
+docker compose exec -T backend alembic upgrade head
 
-# 9. Check service status
+# 7. Configure Nginx
+echo "[7/7] Configuring Nginx..."
+sudo cp $APP_DIR/nginx/apex.conf /etc/nginx/sites-available/apexhrms.conf
+
+# Check if symlink exists
+if [ ! -L /etc/nginx/sites-enabled/apexhrms.conf ]; then
+    sudo ln -s /etc/nginx/sites-available/apexhrms.conf /etc/nginx/sites-enabled/apexhrms.conf
+fi
+
+# Test and reload Nginx
+sudo nginx -t
+sudo systemctl reload nginx
+
 echo ""
-echo "=== Service Status ==="
+echo "============================================"
+echo "  DEPLOYMENT COMPLETE"
+echo "============================================"
+echo ""
+echo "  Frontend:  http://YOUR_VPS_IP:8084"
+echo "  API:       http://127.0.0.1:8001/api/v1"
+echo ""
+echo "  Docker services:"
 docker compose ps
-
 echo ""
-echo "=== Deployment Complete ==="
-echo "Backend API: http://localhost:8000"
-echo "Frontend: Build at frontend/build/web"
+echo "  View logs:  docker compose logs -f"
+echo "  Restart:    docker compose restart"
+echo "  Stop:       docker compose down"
 echo ""
-echo "Next steps:"
-echo "1. Copy nginx/apex.conf to /etc/nginx/sites-available/apex"
-echo "2. Edit the config with your domain"
-echo "3. sudo ln -s /etc/nginx/sites-available/apex /etc/nginx/sites-enabled/"
-echo "4. sudo nginx -t && sudo systemctl reload nginx"
-echo "5. (Optional) sudo certbot --nginx -d YOUR_DOMAIN"
