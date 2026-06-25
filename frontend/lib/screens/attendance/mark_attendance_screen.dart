@@ -114,18 +114,14 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
               _SectionCard(
                 title: 'EMPLOYEE & DATE',
                 children: [
-                  employeesAsync.when(
-                    data: (state) => state.employees.when(
-                      data: (employees) => _dropdown(
-                        'Employee',
-                        _selectedEmployeeId,
-                        employees.map((e) => {'id': e.id, 'name': '${e.fullName} (${e.employeeCode})'}).toList(),
-                        (v) => setState(() => _selectedEmployeeId = v),
-                      ),
-                      loading: () => const SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
-                      error: (_, __) => const SizedBox(),
+                  employeesAsync.employees.when(
+                    data: (employees) => _dropdown(
+                      'Employee',
+                      _selectedEmployeeId,
+                      employees.map((e) => {'id': e.id, 'name': '${e.fullName} (${e.employeeCode})'}).toList(),
+                      (v) => setState(() => _selectedEmployeeId = v),
                     ),
-                    loading: () => const SizedBox(height: 48),
+                    loading: () => const SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
                     error: (_, __) => const SizedBox(),
                   ),
                   _dateField('Date', _selectedDate, (v) => setState(() => _selectedDate = v)),
@@ -214,9 +210,9 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             ),
-            items: items.map((item) {
-              if (item is String) return DropdownMenuItem(value: item, child: Text(item));
-              return DropdownMenuItem(value: item['id'], child: Text(item['name']));
+            items: items.map<DropdownMenuItem<String>>((item) {
+              if (item is String) return DropdownMenuItem<String>(value: item, child: Text(item));
+              return DropdownMenuItem<String>(value: item['id'] as String, child: Text(item['name'] as String));
             }).toList(),
             onChanged: onChanged,
           ),

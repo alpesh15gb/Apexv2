@@ -218,9 +218,9 @@ class _EmployeeCreateScreenState extends ConsumerState<EmployeeCreateScreen> {
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             ),
-            items: items.map((item) {
-              if (item is String) return DropdownMenuItem(value: item, child: Text(item));
-              return DropdownMenuItem(value: item['id'], child: Text(item['name']));
+            items: items.map<DropdownMenuItem<String>>((item) {
+              if (item is String) return DropdownMenuItem<String>(value: item, child: Text(item));
+              return DropdownMenuItem<String>(value: item['id'] as String, child: Text(item['name'] as String));
             }).toList(),
             onChanged: onChanged,
           ),
