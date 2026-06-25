@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/colors.dart';
 import '../design_system/border_radius.dart';
+import '../design_system/typography.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
