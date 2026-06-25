@@ -379,7 +379,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(radius: 14, child: Text(name[0].toUpperCase(), style: ApexTypography.captionSmall))),
+      leading: CircleAvatar(radius: 14, child: Text(name[0].toUpperCase(), style: ApexTypography.captionSmall)),
       title: Text(name, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
       subtitle: Text('$code • $issue • $time', style: ApexTypography.captionSmall),
       trailing: IconButton(icon: const Icon(Icons.edit, size: 16), onPressed: () => context.push('/attendance/mark')),
