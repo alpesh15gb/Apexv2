@@ -10,9 +10,7 @@ import '../../design_system/typography.dart';
 import '../../design_system/spacing.dart';
 import '../../design_system/border_radius.dart';
 import '../../design_system/components/apex_card.dart';
-import '../../design_system/components/apex_button.dart';
 import '../../design_system/components/apex_empty_state.dart';
-import '../../design_system/components/apex_loading_skeleton.dart';
 import '../../services/report_service.dart';
 
 class ReportSelectionScreen extends ConsumerStatefulWidget {
@@ -29,20 +27,12 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
   bool _isDownloading = false;
   final List<_DownloadItem> _downloadHistory = [];
 
-  void _saveFile(Uint8List bytes, String filename) {
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.AnchorElement(href: url)
-      ..setAttribute('download', filename)
-      ..click();
-    html.Url.revokeObjectUrl(url);
-  }
-
-  String _getFilename() {
-    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    final ext = _selectedFormat == 'pdf' ? 'pdf' : _selectedFormat == 'excel' ? 'xlsx' : 'csv';
-    return '${_selectedReportType}_report_$dateStr.$ext';
-  }
+  final _reports = [
+    _ReportDef('daily', 'Daily Attendance', 'Present/absent/late for a specific date', Icons.calendar_today, ApexColors.primary),
+    _ReportDef('absent', 'Absent Report', 'Employees absent on a specific date', Icons.person_off, ApexColors.error),
+    _ReportDef('late', 'Late Arrivals', 'Employees who arrived late', Icons.access_time, ApexColors.warning),
+    _ReportDef('devices', 'Device Status', 'Status of all biometric devices', Icons.biotech, ApexColors.info),
+  ];
 
   void _download() async {
     setState(() => _isDownloading = true);
@@ -73,29 +63,18 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
           filename: filename,
           timestamp: DateTime.now(),
           size: bytes.length,
-          status: 'completed',
         ));
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Downloaded: $filename'),
-            backgroundColor: ApexColors.success,
-            action: SnackBarAction(
-              label: 'Open',
-              textColor: Colors.white,
-              onPressed: () {
-                // File already downloaded
-              },
-            ),
-          ),
+          SnackBar(content: Text('Downloaded: $filename'), backgroundColor: ApexColors.success),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed: ${e.toString()}'), backgroundColor: ApexColors.error),
+          SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: ApexColors.error),
         );
       }
     } finally {
@@ -103,178 +82,135 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
     }
   }
 
+  void _saveFile(Uint8List bytes, String filename) {
+    final blob = html.Blob([bytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    html.AnchorElement(href: url)
+      ..setAttribute('download', filename)
+      ..click();
+    html.Url.revokeObjectUrl(url);
+  }
+
+  String _getFilename() {
+    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final ext = _selectedFormat == 'pdf' ? 'pdf' : _selectedFormat == 'excel' ? 'xlsx' : 'csv';
+    return '${_selectedReportType}_report_$dateStr.$ext';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final padding = Responsive.contentPadding(context);
     final isMobile = Responsive.isMobile(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Report Center')),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Report Templates
-            Text('Report Templates', style: ApexTypography.headingSmall),
-            const SizedBox(height: 16),
-            _buildReportTemplates(isMobile),
-            const SizedBox(height: 24),
+      body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
+    );
+  }
 
-            // Configuration
-            if (isMobile) ...[
-              _buildConfigurationCard(),
-              const SizedBox(height: 16),
-              _buildDownloadButton(),
-            ] else
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 2, child: _buildConfigurationCard()),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildDownloadButton()),
-                ],
-              ),
-            const SizedBox(height: 24),
-
-            // Download History
-            Text('Download History', style: ApexTypography.headingSmall),
-            const SizedBox(height: 16),
-            _buildDownloadHistory(),
-          ],
+  Widget _buildDesktopLayout(bool isDark) {
+    return Row(
+      children: [
+        // Left: Categories
+        SizedBox(
+          width: 240,
+          child: _buildCategories(isDark),
         ),
-      ),
+        const VerticalDivider(width: 1),
+        // Center: Configuration
+        Expanded(
+          child: _buildConfiguration(isDark),
+        ),
+        const VerticalDivider(width: 1),
+        // Right: Recent exports
+        SizedBox(
+          width: 280,
+          child: _buildRecentExports(isDark),
+        ),
+      ],
     );
   }
 
-  Widget _buildReportTemplates(bool isMobile) {
-    final templates = [
-      _ReportTemplate(
-        id: 'daily',
-        title: 'Daily Attendance',
-        description: 'Daily attendance summary for all employees',
-        icon: Icons.calendar_today,
-        color: ApexColors.primary,
-        category: 'Attendance',
-      ),
-      _ReportTemplate(
-        id: 'absent',
-        title: 'Absent Report',
-        description: 'Employees who were absent on a specific date',
-        icon: Icons.person_off,
-        color: ApexColors.error,
-        category: 'Attendance',
-      ),
-      _ReportTemplate(
-        id: 'late',
-        title: 'Late Arrivals',
-        description: 'Employees who arrived late',
-        icon: Icons.access_time,
-        color: ApexColors.warning,
-        category: 'Attendance',
-      ),
-      _ReportTemplate(
-        id: 'devices',
-        title: 'Device Status',
-        description: 'Status report of all biometric devices',
-        icon: Icons.biotech,
-        color: ApexColors.info,
-        category: 'Devices',
-      ),
-    ];
-
-    // Group by category
-    final categories = <String, List<_ReportTemplate>>{};
-    for (final template in templates) {
-      categories.putIfAbsent(template.category, () => []).add(template);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: categories.entries.map((entry) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(entry.key, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral500)),
-            const SizedBox(height: 8),
-            GridView.count(
-              crossAxisCount: isMobile ? 1 : (entry.value.length > 4 ? 4 : entry.value.length),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: isMobile ? 3 : 1.5,
-              children: entry.value.map((template) {
-                final isSelected = _selectedReportType == template.id;
-                return InkWell(
-                  onTap: () => setState(() => _selectedReportType = template.id),
-                  borderRadius: ApexRadius.lgAll,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: isSelected ? template.color : ApexColors.neutral200,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      borderRadius: ApexRadius.lgAll,
-                      color: isSelected ? template.color.withOpacity(0.05) : null,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: template.color.withOpacity(0.1),
-                            borderRadius: ApexRadius.mdAll,
-                          ),
-                          child: Icon(template.icon, color: template.color, size: 24),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                template.title,
-                                style: ApexTypography.titleMedium.copyWith(
-                                  color: isSelected ? template.color : null,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                template.description,
-                                style: ApexTypography.captionMedium.copyWith(
-                                  color: ApexColors.neutral500,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(Icons.check_circle, color: template.color, size: 24),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildConfigurationCard() {
-    return ApexCard(
-      header: Text('Configuration', style: ApexTypography.titleMedium),
+  Widget _buildMobileLayout(bool isDark) {
+    return SingleChildScrollView(
       child: Column(
         children: [
+          _buildCategories(isDark),
+          const Divider(height: 1),
+          _buildConfiguration(isDark),
+          const Divider(height: 1),
+          _buildRecentExports(isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategories(bool isDark) {
+    return Container(
+      color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text('REPORT TYPES', style: ApexTypography.sectionHeader),
+          ),
+          ..._reports.map((r) {
+            final isSelected = _selectedReportType == r.id;
+            return ListTile(
+              selected: isSelected,
+              leading: Icon(r.icon, size: 20, color: isSelected ? r.color : ApexColors.neutral500),
+              title: Text(r.name, style: ApexTypography.bodyMedium.copyWith(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? r.color : null,
+              )),
+              subtitle: Text(r.description, style: ApexTypography.captionSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+              onTap: () => setState(() => _selectedReportType = r.id),
+              dense: true,
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfiguration(bool isDark) {
+    final report = _reports.firstWhere((r) => r.id == _selectedReportType, orElse: () => _reports.first);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Report info
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: report.color.withOpacity(0.1),
+                  borderRadius: ApexRadius.mdAll,
+                ),
+                child: Icon(report.icon, color: report.color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(report.name, style: ApexTypography.headingMedium),
+                    Text(report.description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
           // Date picker
+          Text('DATE', style: ApexTypography.sectionHeader),
+          const SizedBox(height: 8),
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(
@@ -285,161 +221,120 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
               );
               if (picked != null) setState(() => _selectedDate = picked);
             },
-            borderRadius: ApexRadius.mdAll,
+            borderRadius: ApexRadius.smAll,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                border: Border.all(color: ApexColors.neutral200),
-                borderRadius: ApexRadius.mdAll,
+                border: Border.all(color: ApexColors.neutral300),
+                borderRadius: ApexRadius.smAll,
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 20, color: ApexColors.neutral500),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Target Date', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
-                      Text(
-                        DateFormat('MMMM dd, yyyy').format(_selectedDate),
-                        style: ApexTypography.bodyMedium,
-                      ),
-                    ],
-                  ),
+                  const Icon(Icons.calendar_today, size: 18, color: ApexColors.neutral500),
+                  const SizedBox(width: 10),
+                  Text(DateFormat('MMMM dd, yyyy').format(_selectedDate), style: ApexTypography.bodyMedium),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Format selection
+          // Format
+          Text('FORMAT', style: ApexTypography.sectionHeader),
+          const SizedBox(height: 8),
           Row(
-            children: [
-              Text('Format:', style: ApexTypography.titleSmall),
-              const SizedBox(width: 16),
-              ...['pdf', 'excel', 'csv'].map((format) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(format.toUpperCase()),
-                    selected: _selectedFormat == format,
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedFormat = format);
-                    },
-                    selectedColor: ApexColors.primary100,
-                    checkmarkColor: ApexColors.primary,
-                  ),
-                );
-              }),
-            ],
+            children: ['pdf', 'excel', 'csv'].map((f) {
+              final isSelected = _selectedFormat == f;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(f.toUpperCase()),
+                  selected: isSelected,
+                  onSelected: (v) => setState(() => _selectedFormat = f),
+                  selectedColor: ApexColors.primary100,
+                  checkmarkColor: ApexColors.primary,
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 32),
+
+          // Download button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isDownloading ? null : _download,
+              icon: _isDownloading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.download, size: 18),
+              label: Text(_isDownloading ? 'Downloading...' : 'Download Report'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDownloadButton() {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: ApexButton.primary(
-            label: _isDownloading ? 'Downloading...' : 'Download Report',
-            icon: _isDownloading ? null : Icons.download,
-            loading: _isDownloading,
-            onPressed: _isDownloading ? null : _download,
-            fullWidth: true,
-            size: ApexButtonSize.lg,
+  Widget _buildRecentExports(bool isDark) {
+    return Container(
+      color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text('RECENT EXPORTS', style: ApexTypography.sectionHeader),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Report will be downloaded as ${_selectedFormat.toUpperCase()}',
-          style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDownloadHistory() {
-    if (_downloadHistory.isEmpty) {
-      return const ApexEmptyState(
-        icon: Icons.download_done_outlined,
-        title: 'No Downloads Yet',
-        description: 'Your downloaded reports will appear here.',
-      );
-    }
-
-    return ApexCard(
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _downloadHistory.length,
-        separatorBuilder: (context, idx) => const Divider(height: 1),
-        itemBuilder: (context, idx) {
-          final item = _downloadHistory[idx];
-          return ListTile(
-            leading: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: ApexColors.success.withOpacity(0.1),
-                borderRadius: ApexRadius.mdAll,
-              ),
-              child: const Icon(Icons.check_circle, color: ApexColors.success, size: 20),
-            ),
-            title: Text(item.filename, style: ApexTypography.bodyMedium),
-            subtitle: Text(
-              '${DateFormat('MMM dd, HH:mm').format(item.timestamp)} • ${_formatSize(item.size)}',
-              style: ApexTypography.captionMedium,
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.download, size: 18),
-              onPressed: () {
-                // Re-download
-              },
-            ),
-          );
-        },
+          if (_downloadHistory.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('No downloads yet', style: TextStyle(color: ApexColors.neutral500)),
+            )
+          else
+            ..._downloadHistory.take(10).map((item) {
+              return ListTile(
+                dense: true,
+                leading: const Icon(Icons.description, size: 20, color: ApexColors.neutral500),
+                title: Text(item.filename, style: ApexTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text(
+                  '${DateFormat('MMM dd, HH:mm').format(item.timestamp)} • ${_formatSize(item.size)}',
+                  style: ApexTypography.captionSmall,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.download, size: 16),
+                  onPressed: () {},
+                ),
+              );
+            }),
+        ],
       ),
     );
   }
 
   String _formatSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }
 
-class _ReportTemplate {
+class _ReportDef {
   final String id;
-  final String title;
+  final String name;
   final String description;
   final IconData icon;
   final Color color;
-  final String category;
 
-  const _ReportTemplate({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.color,
-    required this.category,
-  });
+  const _ReportDef(this.id, this.name, this.description, this.icon, this.color);
 }
 
 class _DownloadItem {
   final String filename;
   final DateTime timestamp;
   final int size;
-  final String status;
 
-  const _DownloadItem({
-    required this.filename,
-    required this.timestamp,
-    required this.size,
-    required this.status,
-  });
+  const _DownloadItem({required this.filename, required this.timestamp, required this.size});
 }

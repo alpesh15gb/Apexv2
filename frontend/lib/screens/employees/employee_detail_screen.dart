@@ -144,7 +144,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 
   Widget _buildProfileHeader(BuildContext context, Employee emp, bool isMobile) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24, vertical: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
             ? ApexColors.darkSurface
@@ -155,7 +155,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
           ? Column(
               children: [
                 _buildAvatar(emp),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildProfileInfo(context, emp),
               ],
             )
@@ -171,38 +171,15 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
   }
 
   Widget _buildAvatar(Employee emp) {
-    return Stack(
-      children: [
-        CircleAvatar(
-          radius: 48,
-          backgroundImage: emp.photoUrl != null ? NetworkImage(emp.photoUrl!) : null,
-          child: emp.photoUrl == null
-              ? Text(
-                  emp.firstName[0].toUpperCase(),
-                  style: ApexTypography.displaySmall.copyWith(color: ApexColors.primary),
-                )
-              : null,
-        ),
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: ApexColors.success,
-              borderRadius: ApexRadius.fullAll,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: Text(
-              emp.status.toUpperCase(),
-              style: ApexTypography.captionSmall.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ],
+    return CircleAvatar(
+      radius: 28,
+      backgroundImage: emp.photoUrl != null ? NetworkImage(emp.photoUrl!) : null,
+      child: emp.photoUrl == null
+          ? Text(
+              emp.firstName[0].toUpperCase(),
+              style: ApexTypography.titleLarge.copyWith(color: ApexColors.primary),
+            )
+          : null,
     );
   }
 
@@ -210,23 +187,29 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          emp.fullName,
-          style: ApexTypography.headingLarge.copyWith(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? ApexColors.darkOnSurface
-                : ApexColors.neutral900,
-          ),
+        Row(
+          children: [
+            Text(
+              emp.fullName,
+              style: ApexTypography.headingMedium.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? ApexColors.darkOnSurface
+                    : ApexColors.neutral900,
+              ),
+            ),
+            const SizedBox(width: 8),
+            ApexBadge(status: emp.status, category: 'employee'),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           '${emp.employeeCode} • ${emp.designationName ?? 'No Designation'}',
-          style: ApexTypography.bodyMedium.copyWith(color: ApexColors.neutral500),
+          style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 6,
+          runSpacing: 4,
           children: [
             if (emp.departmentName != null)
               _buildInfoChip(Icons.business, emp.departmentName!),

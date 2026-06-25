@@ -31,18 +31,16 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
     final listState = ref.watch(employeeListProvider);
     final departmentsAsync = ref.watch(departmentsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final padding = Responsive.contentPadding(context);
+    final padding = Responsive.isMobile(context) ? 16.0 : 24.0;
 
     return Scaffold(
       body: Column(
         children: [
-          // Header with search and actions
+          // Compact header
           _buildHeader(context, isDark, padding),
-          const Divider(height: 1),
-          // Filters
+          // Filter chips
           _buildFilters(context, departmentsAsync, isDark, padding),
-          const Divider(height: 1),
-          // Bulk actions bar
+          // Bulk bar
           if (_selectedEmployees.isNotEmpty) _buildBulkBar(),
           // Table
           Expanded(
@@ -51,7 +49,7 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                 if (employees.isEmpty) {
                   return const ApexEmptyState(
                     icon: Icons.people_outline,
-                    title: 'No Employees Found',
+                    title: 'No Employees',
                     description: 'Add your first employee or import from eSSL.',
                     actionLabel: 'Add Employee',
                   );
@@ -63,10 +61,10 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: ApexColors.error),
-                    const SizedBox(height: 16),
-                    Text('Error: ${err.toString()}'),
-                    const SizedBox(height: 16),
+                    const Icon(Icons.error_outline, size: 40, color: ApexColors.error),
+                    const SizedBox(height: 12),
+                    Text('Error: ${err.toString()}', style: ApexTypography.bodySmall),
+                    const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: () => ref.read(employeeListProvider.notifier).fetchEmployees(isRefresh: true),
                       child: const Text('Retry'),
@@ -78,46 +76,37 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/employees/create'),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add Employee'),
+        child: const Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context, bool isDark, double padding) {
     return Container(
-      padding: EdgeInsets.fromLTRB(padding, 16, padding, 12),
-      color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
+      padding: EdgeInsets.fromLTRB(padding, 12, padding, 8),
+      decoration: BoxDecoration(
+        color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
+        border: const Border(bottom: BorderSide(color: ApexColors.neutral200)),
+      ),
       child: Row(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Employees', style: ApexTypography.headingMedium.copyWith(
-                  color: isDark ? ApexColors.darkOnSurface : ApexColors.neutral900,
-                )),
-                const SizedBox(height: 4),
-                Text(
-                  'Manage your workforce',
-                  style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500),
-                ),
-              ],
-            ),
-          ),
+          Text('Employees', style: ApexTypography.pageTitle.copyWith(
+            color: isDark ? ApexColors.darkOnSurface : ApexColors.neutral900,
+          )),
+          const Spacer(),
           // Search
           SizedBox(
-            width: 300,
+            width: 260,
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search by name, code, email...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search, size: 18),
+                contentPadding: const EdgeInsets.symmetric(vertical: 6),
                 border: OutlineInputBorder(
-                  borderRadius: ApexRadius.mdAll,
-                  borderSide: BorderSide(color: ApexColors.neutral300),
+                  borderRadius: ApexRadius.smAll,
+                  borderSide: const BorderSide(color: ApexColors.neutral300),
                 ),
                 isDense: true,
               ),
@@ -127,23 +116,10 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
               },
             ),
           ),
-          const SizedBox(width: 12),
-          // Actions
-          IconButton(
-            icon: const Icon(Icons.domain, size: 20),
-            tooltip: 'Departments',
-            onPressed: () => context.push('/departments'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.store, size: 20),
-            tooltip: 'Branches',
-            onPressed: () => context.push('/branches'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.download, size: 20),
-            tooltip: 'Export',
-            onPressed: () {},
-          ),
+          const SizedBox(width: 8),
+          IconButton(icon: const Icon(Icons.download, size: 18), tooltip: 'Export', onPressed: () {}),
+          IconButton(icon: const Icon(Icons.domain, size: 18), tooltip: 'Departments', onPressed: () => context.push('/departments')),
+          IconButton(icon: const Icon(Icons.store, size: 18), tooltip: 'Branches', onPressed: () => context.push('/branches')),
         ],
       ),
     );
@@ -151,38 +127,28 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
 
   Widget _buildFilters(BuildContext context, AsyncValue departmentsAsync, bool isDark, double padding) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: padding, vertical: 8),
-      color: isDark ? ApexColors.darkSurface : ApexColors.neutral50,
+      padding: EdgeInsets.symmetric(horizontal: padding, vertical: 6),
+      color: isDark ? ApexColors.neutral900 : ApexColors.neutral50,
       child: Row(
         children: [
           departmentsAsync.maybeWhen(
-            data: (deps) => _buildFilterChip(
-              'Department',
-              _departmentFilter != null
-                  ? deps.firstWhere((d) => d.id == _departmentFilter, orElse: () => deps.first).name
-                  : null,
-              () => _showDepartmentPicker(deps),
-            ),
+            data: (deps) => _buildChip('Department', _departmentFilter != null
+                ? deps.firstWhere((d) => d.id == _departmentFilter, orElse: () => deps.first).name
+                : null, () => _showDeptPicker(deps)),
             orElse: () => const SizedBox(),
           ),
           const SizedBox(width: 8),
-          _buildFilterChip(
-            'Status',
-            _statusFilter,
-            () => _showStatusPicker(),
-          ),
+          _buildChip('Status', _statusFilter, () => _showStatusPicker()),
           if (_departmentFilter != null || _statusFilter != null) ...[
             const SizedBox(width: 8),
             TextButton.icon(
               onPressed: () {
-                setState(() {
-                  _departmentFilter = null;
-                  _statusFilter = null;
-                });
+                setState(() { _departmentFilter = null; _statusFilter = null; });
                 ref.read(employeeListProvider.notifier).clearFilters();
               },
-              icon: const Icon(Icons.clear, size: 16),
-              label: const Text('Clear filters'),
+              icon: const Icon(Icons.clear, size: 14),
+              label: const Text('Clear'),
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
             ),
           ],
         ],
@@ -190,34 +156,26 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, String? value, VoidCallback onTap) {
+  Widget _buildChip(String label, String? value, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: ApexRadius.mdAll,
+      borderRadius: ApexRadius.smAll,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: value != null ? ApexColors.primary50 : null,
-          border: Border.all(
-            color: value != null ? ApexColors.primary : ApexColors.neutral300,
-          ),
-          borderRadius: ApexRadius.mdAll,
+          border: Border.all(color: value != null ? ApexColors.primary : ApexColors.neutral300),
+          borderRadius: ApexRadius.smAll,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              value ?? label,
-              style: ApexTypography.bodySmall.copyWith(
-                color: value != null ? ApexColors.primary : ApexColors.neutral600,
-              ),
-            ),
+            Text(value ?? label, style: ApexTypography.captionLarge.copyWith(
+              color: value != null ? ApexColors.primary : ApexColors.neutral600,
+            )),
             const SizedBox(width: 4),
-            Icon(
-              value != null ? Icons.close : Icons.arrow_drop_down,
-              size: 16,
-              color: value != null ? ApexColors.primary : ApexColors.neutral500,
-            ),
+            Icon(value != null ? Icons.close : Icons.arrow_drop_down, size: 14,
+              color: value != null ? ApexColors.primary : ApexColors.neutral500),
           ],
         ),
       ),
@@ -226,26 +184,15 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
 
   Widget _buildBulkBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       color: ApexColors.primary50,
       child: Row(
         children: [
           Text('${_selectedEmployees.length} selected', style: ApexTypography.titleSmall.copyWith(color: ApexColors.primary)),
           const Spacer(),
-          TextButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.download, size: 18),
-            label: const Text('Export'),
-          ),
-          TextButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.person_off, size: 18),
-            label: const Text('Deactivate'),
-          ),
-          TextButton(
-            onPressed: () => setState(() => _selectedEmployees = {}),
-            child: const Text('Clear'),
-          ),
+          TextButton.icon(onPressed: () {}, icon: const Icon(Icons.download, size: 16), label: const Text('Export')),
+          TextButton.icon(onPressed: () {}, icon: const Icon(Icons.person_off, size: 16), label: const Text('Deactivate')),
+          TextButton(onPressed: () => setState(() => _selectedEmployees = {}), child: const Text('Clear')),
         ],
       ),
     );
@@ -255,23 +202,23 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 1200),
+        constraints: const BoxConstraints(minWidth: 1100),
         child: Column(
           children: [
             // Header
             Container(
-              height: 44,
+              height: 36,
               color: isDark ? ApexColors.neutral800 : ApexColors.neutral50,
               child: Row(
                 children: [
-                  _buildHeaderCell(48, '', isDark),
-                  _buildHeaderCell(200, 'Employee', isDark),
-                  _buildHeaderCell(100, 'Code', isDark),
-                  _buildHeaderCell(150, 'Department', isDark),
-                  _buildHeaderCell(150, 'Designation', isDark),
-                  _buildHeaderCell(120, 'Branch', isDark),
-                  _buildHeaderCell(100, 'Status', isDark),
-                  _buildHeaderCell(80, 'Actions', isDark),
+                  _buildHdr(40, ''),
+                  _buildHdr(200, 'EMPLOYEE'),
+                  _buildHdr(90, 'CODE'),
+                  _buildHdr(130, 'DEPARTMENT'),
+                  _buildHdr(130, 'DESIGNATION'),
+                  _buildHdr(110, 'BRANCH'),
+                  _buildHdr(90, 'STATUS'),
+                  _buildHdr(70, 'ACTIONS'),
                 ],
               ),
             ),
@@ -279,11 +226,7 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
             Expanded(
               child: ListView.builder(
                 itemCount: employees.length,
-                itemBuilder: (context, index) {
-                  final emp = employees[index];
-                  final isSelected = _selectedEmployees.contains(emp.id);
-                  return _buildRow(context, emp, isSelected, isDark, index);
-                },
+                itemBuilder: (context, i) => _buildRow(context, employees[i], i, isDark),
               ),
             ),
           ],
@@ -292,47 +235,40 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
     );
   }
 
-  Widget _buildHeaderCell(double width, String label, bool isDark) {
+  Widget _buildHdr(double w, String label) {
     return SizedBox(
-      width: width,
+      width: w,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Text(
-          label,
-          style: ApexTypography.captionLarge.copyWith(
-            color: ApexColors.neutral500,
-            fontWeight: FontWeight.w600,
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(label, style: ApexTypography.tableHeader),
         ),
       ),
     );
   }
 
-  Widget _buildRow(BuildContext context, dynamic emp, bool isSelected, bool isDark, int index) {
+  Widget _buildRow(BuildContext context, dynamic emp, int index, bool isDark) {
+    final isSelected = _selectedEmployees.contains(emp.id);
     return InkWell(
       onTap: () => context.push('/employees/${emp.id}'),
       child: Container(
-        height: 52,
+        height: 44,
         color: isSelected
             ? ApexColors.primary50
             : index.isEven
                 ? (isDark ? ApexColors.darkSurface : ApexColors.neutral0)
-                : (isDark ? ApexColors.neutral900 : ApexColors.neutral50),
+                : (isDark ? ApexColors.neutral900 : const Color(0xFFFAFBFC)),
         child: Row(
           children: [
             SizedBox(
-              width: 48,
+              width: 40,
               child: Checkbox(
                 value: isSelected,
-                onChanged: (v) {
-                  setState(() {
-                    if (v == true) {
-                      _selectedEmployees.add(emp.id);
-                    } else {
-                      _selectedEmployees.remove(emp.id);
-                    }
-                  });
-                },
+                onChanged: (v) => setState(() {
+                  v == true ? _selectedEmployees.add(emp.id) : _selectedEmployees.remove(emp.id);
+                }),
+                visualDensity: VisualDensity.compact,
               ),
             ),
             SizedBox(
@@ -340,19 +276,17 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 16,
+                    radius: 14,
                     backgroundImage: emp.photoUrl != null ? NetworkImage(emp.photoUrl!) : null,
-                    child: emp.photoUrl == null
-                        ? Text(emp.firstName[0].toUpperCase(), style: ApexTypography.captionLarge)
-                        : null,
+                    child: emp.photoUrl == null ? Text(emp.firstName[0].toUpperCase(), style: ApexTypography.captionSmall) : null,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(emp.fullName, style: ApexTypography.titleSmall, overflow: TextOverflow.ellipsis),
+                        Text(emp.fullName, style: ApexTypography.tableCell.copyWith(fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
                         if (emp.email != null)
                           Text(emp.email!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
                       ],
@@ -361,25 +295,22 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                 ],
               ),
             ),
-            SizedBox(width: 100, child: Text(emp.employeeCode, style: ApexTypography.bodySmall)),
-            SizedBox(width: 150, child: Text(emp.departmentName ?? '—', style: ApexTypography.bodySmall, overflow: TextOverflow.ellipsis)),
-            SizedBox(width: 150, child: Text(emp.designationName ?? '—', style: ApexTypography.bodySmall, overflow: TextOverflow.ellipsis)),
-            SizedBox(width: 120, child: Text(emp.branchName ?? '—', style: ApexTypography.bodySmall, overflow: TextOverflow.ellipsis)),
-            SizedBox(width: 100, child: ApexBadge(status: emp.status, category: 'employee')),
+            SizedBox(width: 90, child: Text(emp.employeeCode, style: ApexTypography.tableCell)),
+            SizedBox(width: 130, child: Text(emp.departmentName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis)),
+            SizedBox(width: 130, child: Text(emp.designationName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis)),
+            SizedBox(width: 110, child: Text(emp.branchName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis)),
+            SizedBox(width: 90, child: ApexBadge(status: emp.status, category: 'employee')),
             SizedBox(
-              width: 80,
+              width: 70,
               child: PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 18),
+                icon: const Icon(Icons.more_vert, size: 16),
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'view', child: Text('View')),
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
                   const PopupMenuItem(value: 'attendance', child: Text('Attendance')),
                 ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 'view': context.push('/employees/${emp.id}'); break;
-                    case 'attendance': context.push('/attendance/detail?employeeId=${emp.id}'); break;
-                  }
+                onSelected: (v) {
+                  if (v == 'view') context.push('/employees/${emp.id}');
+                  if (v == 'attendance') context.push('/attendance/detail?employeeId=${emp.id}');
                 },
               ),
             ),
@@ -389,36 +320,28 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
     );
   }
 
-  void _showDepartmentPicker(List<dynamic> departments) {
+  void _showDeptPicker(List<dynamic> deps) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Department'),
+        title: const Text('Department'),
         content: SizedBox(
           width: 300,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: departments.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return ListTile(
-                  title: const Text('All Departments'),
-                  onTap: () {
-                    setState(() => _departmentFilter = null);
-                    ref.read(employeeListProvider.notifier).setFilter(departmentId: null);
-                    Navigator.pop(context);
-                  },
-                );
-              }
-              final dept = departments[index - 1];
-              return ListTile(
-                title: Text(dept.name),
-                onTap: () {
-                  setState(() => _departmentFilter = dept.id);
-                  ref.read(employeeListProvider.notifier).setFilter(departmentId: dept.id);
-                  Navigator.pop(context);
-                },
-              );
+            itemCount: deps.length + 1,
+            itemBuilder: (context, i) {
+              if (i == 0) return ListTile(title: const Text('All'), onTap: () {
+                setState(() => _departmentFilter = null);
+                ref.read(employeeListProvider.notifier).setFilter(departmentId: null);
+                Navigator.pop(context);
+              });
+              final d = deps[i - 1];
+              return ListTile(title: Text(d.name), onTap: () {
+                setState(() => _departmentFilter = d.id);
+                ref.read(employeeListProvider.notifier).setFilter(departmentId: d.id);
+                Navigator.pop(context);
+              });
             },
           ),
         ),
@@ -430,34 +353,25 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Status'),
+        title: const Text('Status'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: const Text('All Statuses'),
-              onTap: () {
-                setState(() => _statusFilter = null);
-                ref.read(employeeListProvider.notifier).setFilter(status: null);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Active'),
-              onTap: () {
-                setState(() => _statusFilter = 'active');
-                ref.read(employeeListProvider.notifier).setFilter(status: 'active');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Inactive'),
-              onTap: () {
-                setState(() => _statusFilter = 'inactive');
-                ref.read(employeeListProvider.notifier).setFilter(status: 'inactive');
-                Navigator.pop(context);
-              },
-            ),
+            ListTile(title: const Text('All'), onTap: () {
+              setState(() => _statusFilter = null);
+              ref.read(employeeListProvider.notifier).setFilter(status: null);
+              Navigator.pop(context);
+            }),
+            ListTile(title: const Text('Active'), onTap: () {
+              setState(() => _statusFilter = 'active');
+              ref.read(employeeListProvider.notifier).setFilter(status: 'active');
+              Navigator.pop(context);
+            }),
+            ListTile(title: const Text('Inactive'), onTap: () {
+              setState(() => _statusFilter = 'inactive');
+              ref.read(employeeListProvider.notifier).setFilter(status: 'inactive');
+              Navigator.pop(context);
+            }),
           ],
         ),
       ),

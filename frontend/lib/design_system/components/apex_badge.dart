@@ -4,11 +4,7 @@ import '../border_radius.dart';
 import '../typography.dart';
 import '../status_colors.dart';
 
-/// Apex Design System — Status Badge
-///
-/// Usage:
-///   ApexBadge(status: 'present', category: 'attendance')
-///   ApexBadge(status: 'online', category: 'device')
+/// Enterprise Badge — Compact status indicator
 class ApexBadge extends StatelessWidget {
   final String status;
   final String category;
@@ -34,32 +30,26 @@ class ApexBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 6),
-          Text(label, style: ApexTypography.captionLarge.copyWith(color: color)),
+          const SizedBox(width: 5),
+          Text(label, style: ApexTypography.captionSmall.copyWith(color: color)),
         ],
       );
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: outlined ? Colors.transparent : lightColor,
-        borderRadius: ApexRadius.fullAll,
+        borderRadius: ApexRadius.smAll,
         border: outlined ? Border.all(color: color, width: 1) : null,
       ),
       child: Text(
         label,
-        style: ApexTypography.captionLarge.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: ApexTypography.captionSmall.copyWith(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -68,14 +58,8 @@ class ApexBadge extends StatelessWidget {
     switch (category) {
       case 'attendance':
         return ApexStatusColors.attendanceLabels[status] ?? status;
-      case 'device':
-        return status[0].toUpperCase() + status.substring(1);
-      case 'leave':
-        return status[0].toUpperCase() + status.substring(1);
-      case 'employee':
-        return status[0].toUpperCase() + status.substring(1);
       default:
-        return status;
+        return status[0].toUpperCase() + status.substring(1);
     }
   }
 }
