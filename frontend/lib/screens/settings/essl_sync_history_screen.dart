@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/responsive.dart';
+import '../../design_system/typography.dart';
 import '../../providers/essl_provider.dart';
-import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
-import '../../widgets/empty_state.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _danger = Color(0xFFDC2626);
+const _warning = Color(0xFFF59E0B);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class EsslSyncHistoryScreen extends ConsumerWidget {
   final String serverId;
-
   const EsslSyncHistoryScreen({Key? key, required this.serverId}) : super(key: key);
 
   @override
@@ -17,63 +25,87 @@ class EsslSyncHistoryScreen extends ConsumerWidget {
     final historyAsync = ref.watch(esslSyncHistoryProvider(serverId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sync History')),
+      backgroundColor: _bg,
+      appBar: AppBar(
+        title: const Text('Sync History'),
+        backgroundColor: _surface,
+        foregroundColor: _text,
+        elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+      ),
       body: historyAsync.when(
         data: (history) {
           if (history.isEmpty) {
-            return const EmptyState(
-              title: 'No Sync History',
-              description: 'Sync history will appear here after your first sync.',
-              icon: Icons.history,
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.sync, size: 48, color: _muted),
+                  const SizedBox(height: 16),
+                  Text('No Sync History', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  const SizedBox(height: 8),
+                  Text('Sync history will appear here after the first sync', style: ApexTypography.body.copyWith(color: _muted)),
+                ],
+              ),
             );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: history.length,
-            itemBuilder: (context, index) {
-              final h = history[index];
-              return Card(
+            itemBuilder: (context, i) {
+              final h = history[i];
+              final statusColor = h.status == 'completed' ? _success : h.status == 'failed' ? _danger : _warning;
+
+              return Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                child: ExpansionTile(
-                  leading: CircleAvatar(
-                    backgroundColor: _statusColor(h.status).withOpacity(0.1),
-                    child: Icon(_statusIcon(h.status), color: _statusColor(h.status), size: 20),
-                  ),
-                  title: Text('${h.syncType.toUpperCase()} Sync'),
-                  subtitle: Text(
-                    '${DateFormat('MMM dd, HH:mm').format(h.startedAt)} • ${h.triggeredBy}',
-                  ),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _statusColor(h.status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      h.status.toUpperCase(),
-                      style: TextStyle(color: _statusColor(h.status), fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _border),
+                ),
+                child: Row(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        h.status == 'completed' ? Icons.check_circle : h.status == 'failed' ? Icons.error : Icons.sync,
+                        color: statusColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildStatRow('Fetched', '${h.recordsFetched}'),
-                          _buildStatRow('Created', '${h.recordsCreated}'),
-                          _buildStatRow('Updated', '${h.recordsUpdated}'),
-                          _buildStatRow('Skipped', '${h.recordsSkipped}'),
-                          _buildStatRow('Failed', '${h.recordsFailed}'),
-                          if (h.durationSeconds != null)
-                            _buildStatRow('Duration', '${h.durationSeconds!.toStringAsFixed(1)}s'),
-                          if (h.errorMessage != null) ...[
-                            const SizedBox(height: 8),
-                            Text('Error:', style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold)),
-                            Text(h.errorMessage!, style: TextStyle(color: Colors.red.shade600)),
-                          ],
+                          Text('${h.syncType.toUpperCase()} Sync', style: ApexTypography.titleSmall.copyWith(color: _text)),
+                          Text(
+                            '${DateFormat('MMM dd, HH:mm').format(h.startedAt)} • ${h.recordsFetched} records',
+                            style: ApexTypography.caption.copyWith(color: _muted),
+                          ),
                         ],
                       ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(h.status.toUpperCase(), style: ApexTypography.badge.copyWith(color: statusColor)),
+                        ),
+                        if (h.durationSeconds != null)
+                          Text('${h.durationSeconds!.toStringAsFixed(1)}s', style: ApexTypography.caption.copyWith(color: _muted)),
+                      ],
                     ),
                   ],
                 ),
@@ -81,54 +113,8 @@ class EsslSyncHistoryScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const LoadingWidget(count: 5),
-        error: (err, stack) => CustomErrorWidget(
-          errorMessage: err.toString(),
-          onRetry: () => ref.read(esslSyncHistoryProvider(serverId).notifier).fetchHistory(isRefresh: true),
-        ),
-      ),
-    );
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'partial':
-        return Colors.orange;
-      case 'failed':
-        return Colors.red;
-      case 'running':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _statusIcon(String status) {
-    switch (status) {
-      case 'completed':
-        return Icons.check;
-      case 'partial':
-        return Icons.warning;
-      case 'failed':
-        return Icons.close;
-      case 'running':
-        return Icons.sync;
-      default:
-        return Icons.help;
-    }
-  }
-
-  Widget _buildStatRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
       ),
     );
   }
