@@ -1,13 +1,23 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'dart:html' as html;
 import 'constants.dart';
 import 'secure_storage.dart';
+
+String _getBaseUrl() {
+  if (kIsWeb) {
+    final origin = html.window.location.origin;
+    return '$origin${ApiConstants.baseUrl}';
+  }
+  return ApiConstants.baseUrl;
+}
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: ApiConstants.baseUrl,
+      baseUrl: _getBaseUrl(),
       connectTimeout: AppConstants.connectionTimeout,
       receiveTimeout: AppConstants.receiveTimeout,
       headers: {
