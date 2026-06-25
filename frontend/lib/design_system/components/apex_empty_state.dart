@@ -30,7 +30,7 @@ class ApexEmptyState extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: ApexSpacing.paddingXl,
+        padding: ApexSpacing.pagePadding,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

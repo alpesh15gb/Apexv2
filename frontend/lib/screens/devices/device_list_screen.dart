@@ -160,7 +160,7 @@ class DeviceListScreen extends ConsumerWidget {
                 ApexBadge(status: device.status, category: 'device', dot: true),
               ],
             ),
-            const Spacer,
+            const Spacer(),
             Text(device.deviceName, style: ApexTypography.titleSmall, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 2),
             Text(
