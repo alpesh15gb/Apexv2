@@ -3,120 +3,115 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/responsive.dart';
+import '../../design_system/typography.dart';
 import '../../providers/visitor_provider.dart';
-import '../../widgets/paginated_list.dart';
-import '../../widgets/status_badge.dart';
-import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
-import '../../widgets/empty_state.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _warning = Color(0xFFF59E0B);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class VisitorListScreen extends ConsumerWidget {
   const VisitorListScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final listState = ref.watch(visitorPassesProvider);
+    final visitorsAsync = ref.watch(visitorListProvider);
+    final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
+      backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Visitor Logs'),
+        title: const Text('Visitors'),
+        backgroundColor: _surface,
+        foregroundColor: _text,
+        elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.people_outline),
-            tooltip: 'Active Visitors',
-            onPressed: () => context.push('/visitors/active'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.person_add_alt_outlined),
-            tooltip: 'Register Visitor',
-            onPressed: () => context.push('/visitors/register'),
-          ),
+          IconButton(icon: const Icon(Icons.person_add, size: 18), tooltip: 'Register Visitor', onPressed: () => context.push('/visitors/register')),
+          IconButton(icon: const Icon(Icons.card_membership, size: 18), tooltip: 'Active Visitors', onPressed: () => context.push('/visitors/active')),
         ],
       ),
-      body: Column(
-        children: [
-          // Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _buildStatusChip(ref, 'All', null, listState.status),
-                const SizedBox(width: 8),
-                _buildStatusChip(ref, 'Scheduled', 'scheduled', listState.status),
-                const SizedBox(width: 8),
-                _buildStatusChip(ref, 'Checked In', 'checked_in', listState.status),
-                const SizedBox(width: 8),
-                _buildStatusChip(ref, 'Checked Out', 'checked_out', listState.status),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          Expanded(
-            child: listState.passes.when(
-              data: (passes) => PaginatedList(
-                items: passes,
-                hasMore: listState.hasMore,
-                isLoading: listState.passes.isLoading,
-                onLoadMore: () => ref.read(visitorPassesProvider.notifier).fetchPasses(),
-                onRefresh: () => ref.read(visitorPassesProvider.notifier).fetchPasses(isRefresh: true),
-                emptyState: const EmptyState(
-                  title: 'No Visitors Found',
-                  description: 'Register a visitor or clear your search filters.',
+      body: visitorsAsync.when(
+        data: (visitors) {
+          if (visitors.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.card_membership, size: 48, color: _muted),
+                  const SizedBox(height: 16),
+                  Text('No Visitors', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  const SizedBox(height: 8),
+                  Text('Register a visitor to get started', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.push('/visitors/register'),
+                    style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+                    child: const Text('Register Visitor'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: visitors.length,
+            itemBuilder: (context, i) {
+              final v = visitors[i];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _border),
                 ),
-                itemBuilder: (context, pass) {
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-                    child: ListTile(
-                      title: Text(pass.visitorName ?? 'Visitor Pass', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Column(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: _primary.withOpacity(0.1),
+                      child: Text(v.name[0].toUpperCase(), style: ApexTypography.titleSmall.copyWith(color: _primary)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Host: ${pass.hostName ?? 'N/A'}'),
-                          Text('Purpose: ${pass.purpose}'),
-                          Text('Expected Date: ${DateFormat('MMM dd, yyyy').format(pass.expectedDate)}'),
-                          if (pass.checkInTime != null)
-                            Text('In: ${DateFormat('hh:mm a').format(pass.checkInTime!)} ${pass.checkOutTime != null ? '• Out: ${DateFormat('hh:mm a').format(pass.checkOutTime!)}' : ''}'),
+                          Text(v.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
+                          Text('${v.company ?? '—'} • ${v.purpose ?? '—'}', style: ApexTypography.captionMedium.copyWith(color: _muted)),
                         ],
                       ),
-                      isThreeLine: true,
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          StatusBadge(status: pass.status),
-                        ],
-                      ),
-                      onTap: () => context.push('/visitors/pass?passId=${pass.id}'),
                     ),
-                  );
-                },
-              ),
-              loading: () => const LoadingWidget(count: 4),
-              error: (err, stack) => CustomErrorWidget(
-                errorMessage: err.toString(),
-                onRetry: () => ref.read(visitorPassesProvider.notifier).fetchPasses(isRefresh: true),
-              ),
-            ),
-          ),
-        ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text('REGISTERED', style: ApexTypography.captionSmall.copyWith(color: _success, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/visitors/register'),
-        tooltip: 'Register Visitor',
-        child: const Icon(Icons.add),
+        backgroundColor: _primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
-    );
-  }
-
-  Widget _buildStatusChip(WidgetRef ref, String label, String? statusVal, String? currentStatus) {
-    final isSelected = statusVal == currentStatus;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        ref.read(visitorPassesProvider.notifier).setFilters(status: statusVal);
-      },
     );
   }
 }
