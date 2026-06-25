@@ -4,19 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
-import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
-import '../../design_system/spacing.dart';
-import '../../design_system/border_radius.dart';
-import '../../design_system/components/apex_card.dart';
-import '../../design_system/components/apex_badge.dart';
-import '../../design_system/components/apex_empty_state.dart';
-import '../../design_system/components/apex_loading_skeleton.dart';
-import '../../design_system/components/apex_button.dart';
 import '../../models/employee.dart';
 import '../../providers/employee_provider.dart';
-import '../../providers/shift_provider.dart';
-import '../../providers/attendance_provider.dart';
 import '../../providers/leave_provider.dart';
 import '../../services/employee_service.dart';
 
@@ -25,9 +15,18 @@ final employeeDetailProvider = FutureProvider.family<Employee, String>((ref, id)
   return await service.getEmployee(id);
 });
 
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _warning = Color(0xFFF59E0B);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
+
 class EmployeeDetailScreen extends ConsumerStatefulWidget {
   final String employeeId;
-
   const EmployeeDetailScreen({Key? key, required this.employeeId}) : super(key: key);
 
   @override
@@ -41,7 +40,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -57,29 +56,16 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 
     return detailAsync.when(
       data: (emp) => Scaffold(
-        appBar: AppBar(
-          title: Text(emp.fullName),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () => _showEditDialog(context, ref, emp),
-            ),
-            IconButton(
-              icon: const Icon(Icons.calendar_today),
-              tooltip: 'View Attendance',
-              onPressed: () => context.push('/attendance/detail?employeeId=${emp.id}'),
-            ),
-          ],
-        ),
+        backgroundColor: _bg,
         body: Column(
           children: [
-            // Profile Header
-            _buildProfileHeader(context, emp, isMobile),
-
+            // Header
+            _ProfileHeader(employee: emp, isMobile: isMobile),
             // Tabs
             Container(
               decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
+                color: _surface,
+                border: Border(bottom: BorderSide(color: _border)),
               ),
               child: TabBar(
                 controller: _tabController,
@@ -88,18 +74,16 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                   Tab(text: 'Overview'),
                   Tab(text: 'Attendance'),
                   Tab(text: 'Leaves'),
-                  Tab(text: 'Emergency'),
                   Tab(text: 'Devices'),
+                  Tab(text: 'Emergency'),
                   Tab(text: 'Activity'),
-                  Tab(text: 'Audit'),
                 ],
-                labelColor: ApexColors.primary,
-                unselectedLabelColor: ApexColors.neutral500,
-                indicatorColor: ApexColors.primary,
+                labelColor: _primary,
+                unselectedLabelColor: _muted,
+                indicatorColor: _primary,
               ),
             ),
-
-            // Tab Content
+            // Tab content
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -107,10 +91,9 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                   _OverviewTab(employee: emp),
                   _AttendanceTab(employeeId: emp.id),
                   _LeavesTab(employeeId: emp.id),
-                  _EmergencyTab(employee: emp),
                   _DevicesTab(employeeId: emp.id),
+                  _EmergencyTab(employee: emp),
                   _ActivityTab(employeeId: emp.id),
-                  _AuditTab(employeeId: emp.id),
                 ],
               ),
             ),
@@ -119,18 +102,18 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
       ),
       loading: () => Scaffold(
         appBar: AppBar(title: const Text('Loading...')),
-        body: const ApexLoadingSkeleton(count: 5, type: ApexSkeletonType.list),
+        body: const Center(child: CircularProgressIndicator()),
       ),
-      error: (err, stack) => Scaffold(
+      error: (e, _) => Scaffold(
         appBar: AppBar(title: const Text('Error')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: ApexColors.error),
-              const SizedBox(height: 16),
-              Text('Error: ${err.toString()}', style: ApexTypography.bodyMedium),
-              const SizedBox(height: 16),
+              const Icon(Icons.error_outline, size: 40, color: _danger),
+              const SizedBox(height: 12),
+              Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
+              const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () => ref.invalidate(employeeDetailProvider(widget.employeeId)),
                 child: const Text('Retry'),
@@ -141,137 +124,119 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
       ),
     );
   }
+}
 
-  Widget _buildProfileHeader(BuildContext context, Employee emp, bool isMobile) {
+// ── Profile Header ──────────────────────────────────────────
+class _ProfileHeader extends StatelessWidget {
+  final Employee employee;
+  final bool isMobile;
+
+  const _ProfileHeader({required this.employee, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? ApexColors.darkSurface
-            : ApexColors.neutral0,
-        border: const Border(bottom: BorderSide(color: ApexColors.neutral200)),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: 12),
+      decoration: const BoxDecoration(
+        color: _surface,
+        border: Border(bottom: BorderSide(color: _border)),
       ),
       child: isMobile
           ? Column(
               children: [
-                _buildAvatar(emp),
+                _avatar(),
                 const SizedBox(height: 12),
-                _buildProfileInfo(context, emp),
+                _info(context),
               ],
             )
           : Row(
               children: [
-                _buildAvatar(emp),
-                const SizedBox(width: 24),
-                Expanded(child: _buildProfileInfo(context, emp)),
-                _buildQuickActions(context, emp),
+                _avatar(),
+                const SizedBox(width: 16),
+                Expanded(child: _info(context)),
+                _actions(context),
               ],
             ),
     );
   }
 
-  Widget _buildAvatar(Employee emp) {
+  Widget _avatar() {
     return CircleAvatar(
       radius: 28,
-      backgroundImage: emp.photoUrl != null ? NetworkImage(emp.photoUrl!) : null,
-      child: emp.photoUrl == null
-          ? Text(
-              emp.firstName[0].toUpperCase(),
-              style: ApexTypography.titleLarge.copyWith(color: ApexColors.primary),
-            )
+      backgroundImage: employee.photoUrl != null ? NetworkImage(employee.photoUrl!) : null,
+      child: employee.photoUrl == null
+          ? Text(employee.firstName[0].toUpperCase(), style: ApexTypography.titleLarge.copyWith(color: _primary))
           : null,
     );
   }
 
-  Widget _buildProfileInfo(BuildContext context, Employee emp) {
+  Widget _info(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text(
-              emp.fullName,
-              style: ApexTypography.headingMedium.copyWith(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? ApexColors.darkOnSurface
-                    : ApexColors.neutral900,
-              ),
-            ),
+            Text(employee.fullName, style: ApexTypography.headingMedium.copyWith(color: _text)),
             const SizedBox(width: 8),
-            ApexBadge(status: emp.status, category: 'employee'),
+            _StatusBadge(status: employee.status),
           ],
         ),
         const SizedBox(height: 2),
-        Text(
-          '${emp.employeeCode} • ${emp.designationName ?? 'No Designation'}',
-          style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500),
-        ),
+        Text('${employee.employeeCode} • ${employee.designationName ?? 'No Designation'}',
+          style: ApexTypography.bodySmall.copyWith(color: _muted)),
         const SizedBox(height: 6),
         Wrap(
           spacing: 6,
           runSpacing: 4,
           children: [
-            if (emp.departmentName != null)
-              _buildInfoChip(Icons.business, emp.departmentName!),
-            if (emp.branchName != null)
-              _buildInfoChip(Icons.location_on, emp.branchName!),
-            if (emp.shiftName != null)
-              _buildInfoChip(Icons.schedule, emp.shiftName!),
+            if (employee.departmentName != null) _infoChip(Icons.business, employee.departmentName!),
+            if (employee.branchName != null) _infoChip(Icons.location_on, employee.branchName!),
+            if (employee.shiftName != null) _infoChip(Icons.schedule, employee.shiftName!),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label) {
+  Widget _infoChip(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: ApexColors.neutral100,
-        borderRadius: ApexRadius.mdAll,
+        color: _bg,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: _border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: ApexColors.neutral500),
-          const SizedBox(width: 6),
-          Text(label, style: ApexTypography.captionLarge),
+          Icon(icon, size: 12, color: _muted),
+          const SizedBox(width: 4),
+          Text(label, style: ApexTypography.captionSmall),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, Employee emp) {
+  Widget _actions(BuildContext context) {
     return Row(
       children: [
-        OutlinedButton.icon(
-          onPressed: () => context.push('/attendance/detail?employeeId=${emp.id}'),
-          icon: const Icon(Icons.calendar_today, size: 18),
-          label: const Text('Attendance'),
-        ),
-        const SizedBox(width: 8),
-        OutlinedButton.icon(
-          onPressed: () => context.push('/leaves/requests'),
-          icon: const Icon(Icons.event_busy, size: 18),
-          label: const Text('Leaves'),
+        IconButton(icon: const Icon(Icons.edit, size: 18), tooltip: 'Edit', onPressed: () {}),
+        IconButton(icon: const Icon(Icons.calendar_today, size: 18), tooltip: 'Attendance', onPressed: () => context.push('/attendance/detail?employeeId=${employee.id}')),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, size: 18),
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'deactivate', child: Text('Deactivate')),
+          ],
+          onSelected: (v) {},
         ),
       ],
     );
   }
-
-  void _showEditDialog(BuildContext context, WidgetRef ref, Employee emp) {
-    // TODO: Implement edit dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit feature coming soon')),
-    );
-  }
 }
 
-// ── Overview Tab ─────────────────────────────────────────────────
-
+// ── Overview Tab ─────────────────────────────────────────────
 class _OverviewTab extends StatelessWidget {
   final Employee employee;
-
   const _OverviewTab({required this.employee});
 
   @override
@@ -279,110 +244,131 @@ class _OverviewTab extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSection('Personal Information', [
-            _buildDetail('Email', employee.email ?? 'N/A'),
-            _buildDetail('Phone', employee.phone ?? 'N/A'),
-            _buildDetail('Gender', employee.gender ?? 'N/A'),
-            _buildDetail('Blood Group', employee.bloodGroup ?? 'N/A'),
-            _buildDetail('Date of Birth', employee.dateOfBirth != null
-                ? DateFormat('MMM dd, yyyy').format(employee.dateOfBirth!)
-                : 'N/A'),
-          ]),
-          const SizedBox(height: 24),
-          _buildSection('Employment Details', [
-            _buildDetail('Employee Code', employee.employeeCode),
-            _buildDetail('Joining Date', DateFormat('MMM dd, yyyy').format(employee.joiningDate)),
-            _buildDetail('Department', employee.departmentName ?? 'N/A'),
-            _buildDetail('Designation', employee.designationName ?? 'N/A'),
-            _buildDetail('Branch', employee.branchName ?? 'N/A'),
-            _buildDetail('Shift', employee.shiftName ?? 'N/A'),
-          ]),
-          const SizedBox(height: 24),
-          _buildSection('Address', [
-            _buildDetail('Street', employee.address ?? 'N/A'),
-            _buildDetail('City', employee.city ?? 'N/A'),
-            _buildDetail('State', employee.state ?? 'N/A'),
-            _buildDetail('Pincode', employee.pincode ?? 'N/A'),
-          ]),
-          const SizedBox(height: 24),
-          _buildSection('Emergency Contact', [
-            _buildDetail('Name', employee.emergencyContactName ?? 'N/A'),
-            _buildDetail('Phone', employee.emergencyContactPhone ?? 'N/A'),
-          ]),
+          // Current Status
+          _Section(
+            title: 'CURRENT STATUS',
+            child: Column(
+              children: [
+                _statusRow('Today', 'Present (09:05 AM)', _success),
+                _statusRow('Shift', 'General (09:00 - 18:00)', _primary),
+                _statusRow('Leave Balance', '12 days available', _muted),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Personal + Employment
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _Section(
+                  title: 'PERSONAL',
+                  child: Column(
+                    children: [
+                      _detailRow('Email', employee.email ?? '—'),
+                      _detailRow('Phone', employee.phone ?? '—'),
+                      _detailRow('Gender', employee.gender ?? '—'),
+                      _detailRow('Blood Group', employee.bloodGroup ?? '—'),
+                      _detailRow('DOB', employee.dateOfBirth != null ? DateFormat('MMM dd, yyyy').format(employee.dateOfBirth!) : '—'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _Section(
+                  title: 'EMPLOYMENT',
+                  child: Column(
+                    children: [
+                      _detailRow('Code', employee.employeeCode),
+                      _detailRow('Department', employee.departmentName ?? '—'),
+                      _detailRow('Designation', employee.designationName ?? '—'),
+                      _detailRow('Branch', employee.branchName ?? '—'),
+                      _detailRow('Joined', DateFormat('MMM dd, yyyy').format(employee.joiningDate)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Address
+          _Section(
+            title: 'ADDRESS',
+            child: Column(
+              children: [
+                _detailRow('Street', employee.address ?? '—'),
+                _detailRow('City', employee.city ?? '—'),
+                _detailRow('State', employee.state ?? '—'),
+                _detailRow('Pincode', employee.pincode ?? '—'),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
-    return ApexCard(
-      header: Text(title, style: ApexTypography.titleMedium),
-      child: Column(children: children),
+  Widget _statusRow(String label, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 10),
+          Text(label, style: ApexTypography.bodySmall.copyWith(color: _muted)),
+          const Spacer(),
+          Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: _text)),
+        ],
+      ),
     );
   }
 
-  Widget _buildDetail(String label, String value) {
+  Widget _detailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 140,
-            child: Text(label, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
-          ),
-          Expanded(child: Text(value, style: ApexTypography.bodyMedium)),
+          SizedBox(width: 100, child: Text(label, style: ApexTypography.bodySmall.copyWith(color: _muted))),
+          Expanded(child: Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
 }
 
-// ── Attendance Tab ───────────────────────────────────────────────
-
-class _AttendanceTab extends ConsumerWidget {
+// ── Attendance Tab ───────────────────────────────────────────
+class _AttendanceTab extends StatelessWidget {
   final String employeeId;
-
   const _AttendanceTab({required this.employeeId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Use the attendance provider to get employee attendance
+  Widget build(BuildContext context) {
     return Center(
-      child: ApexCard(
-        margin: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.calendar_month, size: 48, color: ApexColors.primary),
-            const SizedBox(height: 16),
-            Text('Attendance History', style: ApexTypography.headingMedium),
-            const SizedBox(height: 8),
-            Text(
-              'View detailed attendance records for this employee.',
-              style: ApexTypography.bodyMedium.copyWith(color: ApexColors.neutral500),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => context.push('/attendance/detail?employeeId=$employeeId'),
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('View Attendance'),
-            ),
-          ],
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.calendar_today, size: 48, color: _muted),
+          const SizedBox(height: 16),
+          Text('Attendance History', style: ApexTypography.headingMedium.copyWith(color: _text)),
+          const SizedBox(height: 8),
+          Text('View detailed attendance records', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => context.push('/attendance/detail?employeeId=$employeeId'),
+            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            child: const Text('View Attendance'),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── Leaves Tab ───────────────────────────────────────────────────
-
+// ── Leaves Tab ───────────────────────────────────────────────
 class _LeavesTab extends ConsumerWidget {
   final String employeeId;
-
   const _LeavesTab({required this.employeeId});
 
   @override
@@ -391,106 +377,76 @@ class _LeavesTab extends ConsumerWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
+      child: balanceAsync.when(
+        data: (balances) {
+          if (balances.isEmpty) {
+            return const _EmptyBlock(msg: 'No leave balances configured');
+          }
+          return Column(
+            children: balances.map((b) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(child: Text(b.leaveTypeName ?? 'Leave', style: ApexTypography.titleSmall.copyWith(color: _text))),
+                  _leaveStat('Total', '${b.totalDays}'),
+                  _leaveStat('Used', '${b.usedDays}'),
+                  _leaveStat('Pending', '${b.pendingDays}'),
+                  _leaveStat('Available', '${b.availableDays}'),
+                ],
+              ),
+            )).toList(),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Text('Error: $e'),
+      ),
+    );
+  }
+
+  Widget _leaveStat(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Leave Balance', style: ApexTypography.headingSmall),
-          const SizedBox(height: 16),
-          balanceAsync.when(
-            data: (balances) {
-              if (balances.isEmpty) {
-                return const ApexEmptyState(
-                  icon: Icons.event_busy_outlined,
-                  title: 'No Leave Balances',
-                  description: 'Leave balances will appear here once configured.',
-                );
-              }
-              return Column(
-                children: balances.map((b) {
-                  return ApexCard(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(b.leaveTypeName ?? 'Leave', style: ApexTypography.titleMedium),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  _buildLeaveStat('Total', '${b.totalDays}', ApexColors.neutral600),
-                                  const SizedBox(width: 16),
-                                  _buildLeaveStat('Used', '${b.usedDays}', ApexColors.error),
-                                  const SizedBox(width: 16),
-                                  _buildLeaveStat('Pending', '${b.pendingDays}', ApexColors.warning),
-                                  const SizedBox(width: 16),
-                                  _buildLeaveStat('Available', '${b.availableDays}', ApexColors.success),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-            loading: () => const ApexLoadingSkeleton(count: 3, type: ApexSkeletonType.card),
-            error: (err, stack) => Center(child: Text('Error: $err')),
-          ),
+          Text(value, style: ApexTypography.titleMedium.copyWith(color: _text)),
+          Text(label, style: ApexTypography.kpiLabel),
         ],
       ),
     );
   }
-
-  Widget _buildLeaveStat(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(value, style: ApexTypography.titleLarge.copyWith(color: color)),
-        Text(label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
-      ],
-    );
-  }
 }
 
-// ── Activity Tab ─────────────────────────────────────────────────
-
-class _ActivityTab extends StatelessWidget {
+// ── Devices Tab ──────────────────────────────────────────────
+class _DevicesTab extends StatelessWidget {
   final String employeeId;
-
-  const _ActivityTab({required this.employeeId});
+  const _DevicesTab({required this.employeeId});
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: ApexCard(
-        margin: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.timeline, size: 48, color: ApexColors.primary),
-            const SizedBox(height: 16),
-            Text('Activity Timeline', style: ApexTypography.headingMedium),
-            const SizedBox(height: 8),
-            Text(
-              'Employee activity and audit logs will appear here.',
-              style: ApexTypography.bodyMedium.copyWith(color: ApexColors.neutral500),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.biotech, size: 48, color: _muted),
+          const SizedBox(height: 16),
+          Text('Assigned Devices', style: ApexTypography.headingMedium.copyWith(color: _text)),
+          const SizedBox(height: 8),
+          Text('Biometric devices assigned to this employee', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+        ],
       ),
     );
   }
 }
 
-// ── Emergency Tab ────────────────────────────────────────────────
-
+// ── Emergency Tab ────────────────────────────────────────────
 class _EmergencyTab extends StatelessWidget {
   final Employee employee;
-
   const _EmergencyTab({required this.employee});
 
   @override
@@ -498,45 +454,24 @@ class _EmergencyTab extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ApexCard(
-            header: Row(
-              children: [
-                const Icon(Icons.emergency, color: ApexColors.error, size: 20),
-                const SizedBox(width: 8),
-                Text('Emergency Contact', style: ApexTypography.titleMedium),
-              ],
-            ),
+          _Section(
+            title: 'EMERGENCY CONTACT',
             child: Column(
               children: [
-                _buildContactRow('Name', employee.emergencyContactName ?? 'Not provided'),
-                const Divider(height: 1),
-                _buildContactRow('Phone', employee.emergencyContactPhone ?? 'Not provided'),
-                const Divider(height: 1),
-                _buildContactRow('Relationship', 'Not specified'),
+                _detailRow('Name', employee.emergencyContactName ?? 'Not provided'),
+                _detailRow('Phone', employee.emergencyContactPhone ?? 'Not provided'),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          ApexCard(
-            header: Text('Blood Group', style: ApexTypography.titleMedium),
+          const SizedBox(height: 12),
+          _Section(
+            title: 'BLOOD GROUP',
             child: Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: ApexColors.error.withOpacity(0.1),
-                    borderRadius: ApexRadius.mdAll,
-                  ),
-                  child: const Icon(Icons.bloodtype, color: ApexColors.error),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  employee.bloodGroup ?? 'Not specified',
-                  style: ApexTypography.headingMedium,
-                ),
+                const Icon(Icons.bloodtype, color: _danger),
+                const SizedBox(width: 12),
+                Text(employee.bloodGroup ?? 'Not specified', style: ApexTypography.headingMedium.copyWith(color: _text)),
               ],
             ),
           ),
@@ -545,84 +480,102 @@ class _EmergencyTab extends StatelessWidget {
     );
   }
 
-  Widget _buildContactRow(String label, String value) {
+  Widget _detailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
-          Text(value, style: ApexTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+          SizedBox(width: 100, child: Text(label, style: ApexTypography.bodySmall.copyWith(color: _muted))),
+          Expanded(child: Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
 }
 
-// ── Devices Tab ──────────────────────────────────────────────────
-
-class _DevicesTab extends StatelessWidget {
+// ── Activity Tab ─────────────────────────────────────────────
+class _ActivityTab extends StatelessWidget {
   final String employeeId;
-
-  const _DevicesTab({required this.employeeId});
+  const _ActivityTab({required this.employeeId});
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: ApexCard(
-        margin: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.devices, size: 48, color: ApexColors.primary),
-            const SizedBox(height: 16),
-            Text('Assigned Devices', style: ApexTypography.headingMedium),
-            const SizedBox(height: 8),
-            Text(
-              'Biometric devices and access cards assigned to this employee will appear here.',
-              style: ApexTypography.bodyMedium.copyWith(color: ApexColors.neutral500),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: () => context.push('/devices'),
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('View All Devices'),
-            ),
-          ],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.timeline, size: 48, color: _muted),
+          const SizedBox(height: 16),
+          Text('Activity Timeline', style: ApexTypography.headingMedium.copyWith(color: _text)),
+          const SizedBox(height: 8),
+          Text('Employee activity and audit logs', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shared Widgets ───────────────────────────────────────────
+class _Section extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _Section({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: ApexTypography.sectionHeader),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = status == 'active';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: ApexTypography.captionSmall.copyWith(
+          color: isActive ? _success : _muted,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 }
 
-// ── Audit Tab ────────────────────────────────────────────────────
-
-class _AuditTab extends StatelessWidget {
-  final String employeeId;
-
-  const _AuditTab({required this.employeeId});
+class _EmptyBlock extends StatelessWidget {
+  final String msg;
+  const _EmptyBlock({required this.msg});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ApexCard(
-        margin: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.history, size: 48, color: ApexColors.primary),
-            const SizedBox(height: 16),
-            Text('Audit History', style: ApexTypography.headingMedium),
-            const SizedBox(height: 8),
-            Text(
-              'Changes to employee records, attendance modifications, and system actions will appear here.',
-              style: ApexTypography.bodyMedium.copyWith(color: ApexColors.neutral500),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Center(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: _muted))),
     );
   }
 }
