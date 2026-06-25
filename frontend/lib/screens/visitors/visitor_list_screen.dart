@@ -12,7 +12,6 @@ const _surface = Color(0xFFFFFFFF);
 const _border = Color(0xFFE5E7EB);
 const _primary = Color(0xFF2563EB);
 const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
 const _danger = Color(0xFFDC2626);
 const _text = Color(0xFF111827);
 const _muted = Color(0xFF6B7280);
@@ -22,7 +21,7 @@ class VisitorListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final visitorsAsync = ref.watch(visitorListProvider);
+    final passesState = ref.watch(visitorPassesProvider);
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
@@ -38,7 +37,7 @@ class VisitorListScreen extends ConsumerWidget {
           IconButton(icon: const Icon(Icons.card_membership, size: 18), tooltip: 'Active Visitors', onPressed: () => context.push('/visitors/active')),
         ],
       ),
-      body: visitorsAsync.when(
+      body: passesState.passes.when(
         data: (visitors) {
           if (visitors.isEmpty) {
             return Center(
@@ -78,14 +77,14 @@ class VisitorListScreen extends ConsumerWidget {
                     CircleAvatar(
                       radius: 18,
                       backgroundColor: _primary.withOpacity(0.1),
-                      child: Text(v.name[0].toUpperCase(), style: ApexTypography.titleSmall.copyWith(color: _primary)),
+                      child: Text((v.visitorName ?? 'V')[0].toUpperCase(), style: ApexTypography.titleSmall.copyWith(color: _primary)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(v.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
+                          Text(v.visitorName ?? 'Visitor', style: ApexTypography.titleSmall.copyWith(color: _text)),
                           Text('${v.company ?? '—'} • ${v.purpose ?? '—'}', style: ApexTypography.captionMedium.copyWith(color: _muted)),
                         ],
                       ),
@@ -96,7 +95,7 @@ class VisitorListScreen extends ConsumerWidget {
                         color: _success.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Text('REGISTERED', style: ApexTypography.captionSmall.copyWith(color: _success, fontWeight: FontWeight.w600)),
+                      child: Text(v.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: _success, fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),

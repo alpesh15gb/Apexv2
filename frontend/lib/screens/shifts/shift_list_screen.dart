@@ -183,11 +183,11 @@ class _ShiftCard extends StatelessWidget {
           const Spacer(),
           Row(
             children: [
-              _Rule('Grace', '${shift.gracePeriodMinutes}m'),
+              _Rule(label: 'Grace', value: '${shift.gracePeriodMinutes}m'),
               const SizedBox(width: 12),
-              _Rule('Late', '${shift.lateRuleMinutes}m'),
+              _Rule(label: 'Late', value: '${shift.lateRuleMinutes}m'),
               const SizedBox(width: 12),
-              _Rule('OT', '${shift.overtimeThresholdMinutes}m'),
+              _Rule(label: 'OT', value: '${shift.overtimeThresholdMinutes}m'),
             ],
           ),
         ],

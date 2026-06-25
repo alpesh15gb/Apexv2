@@ -10,6 +10,7 @@ const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
 const _border = Color(0xFFE5E7EB);
 const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
 const _danger = Color(0xFFDC2626);
 const _text = Color(0xFF111827);
 const _muted = Color(0xFF6B7280);
