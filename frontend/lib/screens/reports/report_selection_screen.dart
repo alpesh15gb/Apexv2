@@ -5,13 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
-import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
-import '../../design_system/spacing.dart';
-import '../../design_system/border_radius.dart';
-import '../../design_system/components/apex_card.dart';
-import '../../design_system/components/apex_empty_state.dart';
 import '../../services/report_service.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class ReportSelectionScreen extends ConsumerStatefulWidget {
   const ReportSelectionScreen({Key? key}) : super(key: key);
@@ -21,17 +25,17 @@ class ReportSelectionScreen extends ConsumerStatefulWidget {
 }
 
 class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
-  String _selectedReportType = 'daily';
+  String _selectedType = 'daily';
   String _selectedFormat = 'pdf';
   DateTime _selectedDate = DateTime.now();
   bool _isDownloading = false;
-  final List<_DownloadItem> _downloadHistory = [];
+  final List<_DownloadItem> _history = [];
 
   final _reports = [
-    _ReportDef('daily', 'Daily Attendance', 'Present/absent/late for a specific date', Icons.calendar_today, ApexColors.primary),
-    _ReportDef('absent', 'Absent Report', 'Employees absent on a specific date', Icons.person_off, ApexColors.error),
-    _ReportDef('late', 'Late Arrivals', 'Employees who arrived late', Icons.access_time, ApexColors.warning),
-    _ReportDef('devices', 'Device Status', 'Status of all biometric devices', Icons.biotech, ApexColors.info),
+    _ReportDef('daily', 'Daily Attendance', 'Present/absent/late for a specific date', Icons.calendar_today, _primary),
+    _ReportDef('absent', 'Absent Report', 'Employees absent on a specific date', Icons.person_off, _danger),
+    _ReportDef('late', 'Late Arrivals', 'Employees who arrived late', Icons.access_time, const Color(0xFFF59E0B)),
+    _ReportDef('devices', 'Device Status', 'Status of all biometric devices', Icons.biotech, _primary),
   ];
 
   void _download() async {
@@ -41,11 +45,11 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
       final dateStr = _selectedDate.toIso8601String().substring(0, 10);
       late final Uint8List bytes;
 
-      if (_selectedReportType == 'daily') {
+      if (_selectedType == 'daily') {
         bytes = await service.downloadDailyReport(date: dateStr, format: _selectedFormat);
-      } else if (_selectedReportType == 'absent') {
+      } else if (_selectedType == 'absent') {
         bytes = await service.downloadAbsentReport(date: dateStr, format: _selectedFormat);
-      } else if (_selectedReportType == 'devices') {
+      } else if (_selectedType == 'devices') {
         bytes = await service.downloadDeviceReport(format: _selectedFormat);
       } else {
         bytes = await service.downloadLateReport(
@@ -59,22 +63,18 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
       _saveFile(bytes, filename);
 
       setState(() {
-        _downloadHistory.insert(0, _DownloadItem(
-          filename: filename,
-          timestamp: DateTime.now(),
-          size: bytes.length,
-        ));
+        _history.insert(0, _DownloadItem(filename: filename, timestamp: DateTime.now(), size: bytes.length));
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Downloaded: $filename'), backgroundColor: ApexColors.success),
+          SnackBar(content: Text('Downloaded: $filename'), backgroundColor: _success),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: ApexColors.error),
+          SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: _danger),
         );
       }
     } finally {
@@ -85,69 +85,65 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
   void _saveFile(Uint8List bytes, String filename) {
     final blob = html.Blob([bytes]);
     final url = html.Url.createObjectUrlFromBlob(blob);
-    html.AnchorElement(href: url)
-      ..setAttribute('download', filename)
-      ..click();
+    html.AnchorElement(href: url)..setAttribute('download', filename)..click();
     html.Url.revokeObjectUrl(url);
   }
 
   String _getFilename() {
-    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final d = DateFormat('yyyy-MM-dd').format(_selectedDate);
     final ext = _selectedFormat == 'pdf' ? 'pdf' : _selectedFormat == 'excel' ? 'xlsx' : 'csv';
-    return '${_selectedReportType}_report_$dateStr.$ext';
+    return '${_selectedType}_report_$d.$ext';
   }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Report Center')),
-      body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
+      backgroundColor: _bg,
+      appBar: AppBar(
+        title: const Text('Report Center'),
+        backgroundColor: _surface,
+        foregroundColor: _text,
+        elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+      ),
+      body: isMobile ? _buildMobile() : _buildDesktop(),
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark) {
+  Widget _buildDesktop() {
     return Row(
       children: [
         // Left: Categories
-        SizedBox(
-          width: 240,
-          child: _buildCategories(isDark),
-        ),
-        const VerticalDivider(width: 1),
-        // Center: Configuration
-        Expanded(
-          child: _buildConfiguration(isDark),
-        ),
-        const VerticalDivider(width: 1),
-        // Right: Recent exports
-        SizedBox(
-          width: 280,
-          child: _buildRecentExports(isDark),
-        ),
+        SizedBox(width: 220, child: _buildCategories()),
+        const VerticalDivider(width: 1, color: _border),
+        // Center: Config
+        Expanded(child: _buildConfig()),
+        const VerticalDivider(width: 1, color: _border),
+        // Right: History
+        SizedBox(width: 260, child: _buildHistory()),
       ],
     );
   }
 
-  Widget _buildMobileLayout(bool isDark) {
+  Widget _buildMobile() {
     return SingleChildScrollView(
       child: Column(
         children: [
-          _buildCategories(isDark),
-          const Divider(height: 1),
-          _buildConfiguration(isDark),
-          const Divider(height: 1),
-          _buildRecentExports(isDark),
+          _buildCategories(),
+          const Divider(height: 1, color: _border),
+          _buildConfig(),
+          const Divider(height: 1, color: _border),
+          _buildHistory(),
         ],
       ),
     );
   }
 
-  Widget _buildCategories(bool isDark) {
+  Widget _buildCategories() {
     return Container(
-      color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
+      color: _surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -156,16 +152,16 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
             child: Text('REPORT TYPES', style: ApexTypography.sectionHeader),
           ),
           ..._reports.map((r) {
-            final isSelected = _selectedReportType == r.id;
+            final isSelected = _selectedType == r.id;
             return ListTile(
               selected: isSelected,
-              leading: Icon(r.icon, size: 20, color: isSelected ? r.color : ApexColors.neutral500),
+              leading: Icon(r.icon, size: 20, color: isSelected ? r.color : _muted),
               title: Text(r.name, style: ApexTypography.bodyMedium.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected ? r.color : null,
               )),
               subtitle: Text(r.description, style: ApexTypography.captionSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-              onTap: () => setState(() => _selectedReportType = r.id),
+              onTap: () => setState(() => _selectedType = r.id),
               dense: true,
             );
           }),
@@ -174,15 +170,14 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
     );
   }
 
-  Widget _buildConfiguration(bool isDark) {
-    final report = _reports.firstWhere((r) => r.id == _selectedReportType, orElse: () => _reports.first);
+  Widget _buildConfig() {
+    final report = _reports.firstWhere((r) => r.id == _selectedType, orElse: () => _reports.first);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Report info
           Row(
             children: [
               Container(
@@ -190,7 +185,7 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
                 height: 48,
                 decoration: BoxDecoration(
                   color: report.color.withOpacity(0.1),
-                  borderRadius: ApexRadius.mdAll,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(report.icon, color: report.color, size: 24),
               ),
@@ -199,16 +194,14 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(report.name, style: ApexTypography.headingMedium),
-                    Text(report.description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
+                    Text(report.name, style: ApexTypography.headingMedium.copyWith(color: _text)),
+                    Text(report.description, style: ApexTypography.bodySmall.copyWith(color: _muted)),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-
-          // Date picker
           Text('DATE', style: ApexTypography.sectionHeader),
           const SizedBox(height: 8),
           InkWell(
@@ -221,16 +214,16 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
               );
               if (picked != null) setState(() => _selectedDate = picked);
             },
-            borderRadius: ApexRadius.smAll,
+            borderRadius: BorderRadius.circular(6),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                border: Border.all(color: ApexColors.neutral300),
-                borderRadius: ApexRadius.smAll,
+                border: Border.all(color: _border),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 18, color: ApexColors.neutral500),
+                  const Icon(Icons.calendar_today, size: 18, color: _muted),
                   const SizedBox(width: 10),
                   Text(DateFormat('MMMM dd, yyyy').format(_selectedDate), style: ApexTypography.bodyMedium),
                 ],
@@ -238,28 +231,23 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Format
           Text('FORMAT', style: ApexTypography.sectionHeader),
           const SizedBox(height: 8),
           Row(
             children: ['pdf', 'excel', 'csv'].map((f) {
-              final isSelected = _selectedFormat == f;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
                   label: Text(f.toUpperCase()),
-                  selected: isSelected,
+                  selected: _selectedFormat == f,
                   onSelected: (v) => setState(() => _selectedFormat = f),
-                  selectedColor: ApexColors.primary100,
-                  checkmarkColor: ApexColors.primary,
+                  selectedColor: _primary.withOpacity(0.1),
+                  checkmarkColor: _primary,
                 ),
               );
             }).toList(),
           ),
           const SizedBox(height: 32),
-
-          // Download button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -269,7 +257,10 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
                   : const Icon(Icons.download, size: 18),
               label: Text(_isDownloading ? 'Downloading...' : 'Download Report'),
               style: ElevatedButton.styleFrom(
+                backgroundColor: _primary,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
               ),
             ),
           ),
@@ -278,9 +269,9 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
     );
   }
 
-  Widget _buildRecentExports(bool isDark) {
+  Widget _buildHistory() {
     return Container(
-      color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
+      color: _surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -288,25 +279,22 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text('RECENT EXPORTS', style: ApexTypography.sectionHeader),
           ),
-          if (_downloadHistory.isEmpty)
+          if (_history.isEmpty)
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('No downloads yet', style: TextStyle(color: ApexColors.neutral500)),
+              child: Text('No downloads yet', style: TextStyle(color: _muted)),
             )
           else
-            ..._downloadHistory.take(10).map((item) {
+            ..._history.take(10).map((item) {
               return ListTile(
                 dense: true,
-                leading: const Icon(Icons.description, size: 20, color: ApexColors.neutral500),
+                leading: const Icon(Icons.description, size: 18, color: _muted),
                 title: Text(item.filename, style: ApexTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
                 subtitle: Text(
                   '${DateFormat('MMM dd, HH:mm').format(item.timestamp)} • ${_formatSize(item.size)}',
                   style: ApexTypography.captionSmall,
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.download, size: 16),
-                  onPressed: () {},
-                ),
+                trailing: IconButton(icon: const Icon(Icons.download, size: 16), onPressed: () {}),
               );
             }),
         ],
