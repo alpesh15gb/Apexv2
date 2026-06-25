@@ -13,11 +13,15 @@ class WebSocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   bool _isConnecting = false;
   Timer? _reconnectTimer;
+  int _failCount = 0;
+  static const int _maxFailures = 3;
 
   Stream<Map<String, dynamic>> get stream => _messageController.stream;
 
   Future<void> connect() async {
     if (_channel != null || _isConnecting) return;
+    if (_failCount >= _maxFailures) return; // Stop retrying after max failures
+
     _isConnecting = true;
 
     final token = await secureStorage.read(StorageKeys.accessToken);
@@ -26,12 +30,14 @@ class WebSocketService {
       return;
     }
 
-    final wsUri = Uri.parse('${ApiConstants.wsUrl}?token=$token');
+    final wsUrl = ApiConstants.wsUrl;
+    final wsUri = Uri.parse('$wsUrl?token=$token');
 
     try {
       _channel = WebSocketChannel.connect(wsUri);
       _isConnecting = false;
-      
+      _failCount = 0;
+
       _channel!.stream.listen(
         (message) {
           try {
@@ -52,6 +58,7 @@ class WebSocketService {
       );
     } catch (e) {
       _isConnecting = false;
+      _failCount++;
       _cleanup();
       _scheduleReconnect();
     }
@@ -59,7 +66,8 @@ class WebSocketService {
 
   void _scheduleReconnect() {
     _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(const Duration(seconds: 5), () {
+    if (_failCount >= _maxFailures) return; // Stop retrying
+    _reconnectTimer = Timer(const Duration(seconds: 30), () {
       connect();
     });
   }
@@ -70,6 +78,7 @@ class WebSocketService {
 
   void disconnect() {
     _reconnectTimer?.cancel();
+    _failCount = _maxFailures; // Prevent reconnection after explicit disconnect
     if (_channel != null) {
       _channel!.sink.close(status.goingAway);
       _cleanup();

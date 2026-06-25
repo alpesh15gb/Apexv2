@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/dashboard.dart';
@@ -7,6 +8,7 @@ import '../services/websocket_service.dart';
 class DashboardStatsNotifier extends StateNotifier<AsyncValue<DashboardStats>> {
   final DashboardService _service;
   final WebSocketService _wsService;
+  StreamSubscription? _wsSubscription;
 
   DashboardStatsNotifier(this._service, this._wsService)
       : super(const AsyncValue.loading()) {
@@ -14,25 +16,35 @@ class DashboardStatsNotifier extends StateNotifier<AsyncValue<DashboardStats>> {
     _listenToWs();
   }
 
+  @override
+  void dispose() {
+    _wsSubscription?.cancel();
+    super.dispose();
+  }
+
   Future<void> loadStats() async {
     state = const AsyncValue.loading();
     try {
       final stats = await _service.getStats();
-      state = AsyncValue.data(stats);
+      if (mounted) state = AsyncValue.data(stats);
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      if (mounted) state = AsyncValue.error(e, stack);
     }
   }
 
   void _listenToWs() {
-    _wsService.stream.listen((event) {
-      if (event['type'] == 'dashboard_update') {
-        final data = event['data'];
-        if (data != null) {
-          state = AsyncValue.data(DashboardStats.fromJson(data as Map<String, dynamic>));
+    _wsSubscription = _wsService.stream.listen(
+      (event) {
+        if (!mounted) return;
+        if (event['type'] == 'dashboard_update') {
+          final data = event['data'];
+          if (data != null && mounted) {
+            state = AsyncValue.data(DashboardStats.fromJson(data as Map<String, dynamic>));
+          }
         }
-      }
-    });
+      },
+      onError: (_) {}, // Silently handle WS errors
+    );
   }
 }
 
@@ -54,6 +66,7 @@ final dashboardChartProvider =
 class RecentActivityNotifier extends StateNotifier<AsyncValue<List<RecentActivity>>> {
   final DashboardService _service;
   final WebSocketService _wsService;
+  StreamSubscription? _wsSubscription;
 
   RecentActivityNotifier(this._service, this._wsService)
       : super(const AsyncValue.loading()) {
@@ -61,34 +74,43 @@ class RecentActivityNotifier extends StateNotifier<AsyncValue<List<RecentActivit
     _listenToWs();
   }
 
+  @override
+  void dispose() {
+    _wsSubscription?.cancel();
+    super.dispose();
+  }
+
   Future<void> loadActivities() async {
     state = const AsyncValue.loading();
     try {
       final list = await _service.getRecentActivity();
-      state = AsyncValue.data(list);
+      if (mounted) state = AsyncValue.data(list);
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      if (mounted) state = AsyncValue.error(e, stack);
     }
   }
 
   void _listenToWs() {
-    _wsService.stream.listen((event) {
-      final type = event['type'] as String?;
-      if (type == 'punch_event' || type == 'device_status' || type?.startsWith('visitor_') == true) {
-        // Prepend a recent activity item representing the real-time event
-        if (state.value != null) {
-          final description = event['description'] ?? _formatEventDescription(event);
-          final newActivity = RecentActivity(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            activityType: type ?? 'general',
-            description: description,
-            timestamp: DateTime.now().toIso8601String(),
-            userName: event['user_name'] ?? 'System',
-          );
-          state = AsyncValue.data([newActivity, ...state.value!.take(19)]);
+    _wsSubscription = _wsService.stream.listen(
+      (event) {
+        if (!mounted) return;
+        final type = event['type'] as String?;
+        if (type == 'punch_event' || type == 'device_status' || type?.startsWith('visitor_') == true) {
+          if (state.value != null && mounted) {
+            final description = event['description'] ?? _formatEventDescription(event);
+            final newActivity = RecentActivity(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              activityType: type ?? 'general',
+              description: description,
+              timestamp: DateTime.now().toIso8601String(),
+              userName: event['user_name'] ?? 'System',
+            );
+            state = AsyncValue.data([newActivity, ...state.value!.take(19)]);
+          }
         }
-      }
-    });
+      },
+      onError: (_) {},
+    );
   }
 
   String _formatEventDescription(Map<String, dynamic> event) {
