@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../design_system/typography.dart';
 import '../providers/auth_provider.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -13,18 +22,18 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _companyNameController = TextEditingController();
+  final _companyController = TextEditingController();
   final _slugController = TextEditingController();
-  final _adminNameController = TextEditingController();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _companyNameController.dispose();
+    _companyController.dispose();
     _slugController.dispose();
-    _adminNameController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -35,195 +44,187 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       FocusScope.of(context).unfocus();
       try {
         await ref.read(authProvider.notifier).register(
-          tenantName: _companyNameController.text.trim(),
-          tenantSlug: _slugController.text.trim().toLowerCase(),
+          tenantName: _companyController.text.trim(),
+          tenantSlug: _slugController.text.trim(),
           adminEmail: _emailController.text.trim(),
           adminPassword: _passwordController.text,
-          adminFullName: _adminNameController.text.trim(),
+          adminFullName: _nameController.text.trim(),
         );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registration successful! Please login.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          context.go('/login');
-        }
+        if (mounted) context.go('/login');
       } catch (e) {
-        // Handled in listener
+        // Error handled by listener
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     ref.listen<AsyncValue<dynamic>>(authProvider, (previous, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(next.error.toString()), backgroundColor: _danger),
         );
       }
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register Company'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/login'),
-        ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Create Workspace',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
+      backgroundColor: _bg,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [_primary, Color(0xFF3B82F6)]),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Setup your tenant portal and administrator profile',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? Colors.white60 : Colors.black54,
-                    ),
-                    textAlign: TextAlign.center,
+                  child: const Center(
+                    child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 28)),
                   ),
-                  const SizedBox(height: 32),
-                  TextFormField(
-                    controller: _companyNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Company Name',
-                      prefixIcon: Icon(Icons.business_outlined),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your company name';
-                      }
-                      return null;
-                    },
-                    onChanged: (val) {
-                      // Auto-fill slug from company name
-                      final slug = val
-                          .trim()
-                          .toLowerCase()
-                          .replaceAll(RegExp(r'[^a-z0-9\s-]'), '')
-                          .replaceAll(RegExp(r'\s+'), '-');
-                      _slugController.text = slug;
-                    },
+                ),
+                const SizedBox(height: 20),
+                Text('Create Account', style: ApexTypography.headingLarge.copyWith(color: _text)),
+                const SizedBox(height: 4),
+                Text('Set up your company and admin account', style: ApexTypography.bodyMedium.copyWith(color: _muted)),
+                const SizedBox(height: 32),
+
+                // Form
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _border),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _slugController,
-                    decoration: const InputDecoration(
-                      labelText: 'Portal Slug (URL path)',
-                      prefixIcon: Icon(Icons.link_outlined),
-                      helperText: 'Only lowercase letters, numbers, and dashes.',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a slug';
-                      }
-                      if (!RegExp(r'^[a-z0-9-]+$').hasMatch(value)) {
-                        return 'Slug can only contain lowercase letters, numbers, and hyphens';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _adminNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Admin Full Name',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter administrator name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Admin Email Address',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter admin email';
-                      }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Please enter a valid email address';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Admin Password',
-                      prefixIcon: const Icon(Icons.lock_outlined),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Company
+                        Text('Company Name', style: ApexTypography.titleSmall.copyWith(color: _text)),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _companyController,
+                          decoration: _inputDecoration('Enter company name'),
+                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
+                        const SizedBox(height: 14),
+
+                        // Slug
+                        Text('Company Slug', style: ApexTypography.titleSmall.copyWith(color: _text)),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _slugController,
+                          decoration: _inputDecoration('e.g., my-company'),
+                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Admin Name
+                        Text('Admin Name', style: ApexTypography.titleSmall.copyWith(color: _text)),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: _inputDecoration('Enter your full name'),
+                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Email
+                        Text('Email', style: ApexTypography.titleSmall.copyWith(color: _text)),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: _inputDecoration('Enter your email'),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Required';
+                            if (!v.contains('@')) return 'Enter a valid email';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Password
+                        Text('Password', style: ApexTypography.titleSmall.copyWith(color: _text)),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: _inputDecoration('Create a password').copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 18),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Required';
+                            if (v.length < 6) return 'At least 6 characters';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Register button
+                        ElevatedButton(
+                          onPressed: _register,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: Text('Create Account', style: ApexTypography.buttonLarge),
+                        ),
+                      ],
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 8) {
-                        return 'Password must be at least 8 characters';
-                      }
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: authState.isLoading ? null : _register,
-                    child: authState.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text('Register & Setup'),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+
+                // Login link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Already have an account? ', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+                    GestureDetector(
+                      onTap: () => context.go('/login'),
+                      child: Text('Sign In', style: ApexTypography.bodySmall.copyWith(color: _primary, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _primary, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
 }
