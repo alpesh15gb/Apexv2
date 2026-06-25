@@ -1,0 +1,73 @@
+eBioserverNew Web Service Details
+Server URL
+External Access: http://keystoneinfra.ddns.net:8080/webservice.asmx
+
+Demo Server
+URL: http://keystoneinfra.ddns.net:8080
+
+Username: essl
+
+Password: Keystone@999
+
+Device Management
+Delete Device http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeleteDevice
+
+Update Device http://keystoneinfra.ddns.net:8080/webservice.asmx?op=UpdateDevice
+
+Get Device List http://keystoneinfra.ddns.net:8080/webservice.asmx?op=GetDeviceList
+
+Get Device Last Ping http://keystoneinfra.ddns.net:8080/webservice.asmx?op=GetDeviceLastPing
+
+Get Device Logs http://keystoneinfra.ddns.net:8080/webservice.asmx?op=GetDeviceLogs
+
+Get Device Illegal Logs http://keystoneinfra.ddns.net:8080/webservice.asmx?op=GetDeviceIllegalLogs
+
+Employee Management
+Update Employee http://keystoneinfra.ddns.net:8080/webservice.asmx?op=UpdateEmployee
+
+Update Employee Ex http://keystoneinfra.ddns.net:8080/webservice.asmx?op=UpdateEmployeeEx
+
+Update Employee Photo http://keystoneinfra.ddns.net:8080/webservice.asmx?op=UpdateEmployeePhoto
+
+Update Employee with Expiry Dates http://keystoneinfra.ddns.net:8080/webservice.asmx?op=UpdateEmployeewithExpiryDates
+
+Delete Employee http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeleteEmployee
+
+Get Employee Codes http://keystoneinfra.ddns.net:8080/webservice.asmx?op=GetEmployeeCodes
+
+Get Employee Details http://keystoneinfra.ddns.net:8080/webservice.asmx?op=GetEmployeeDetails
+
+Get Employee Punch Logs http://keystoneinfra.ddns.net:8080/webservice.asmx?op=GetEmployeePunchLogs
+
+Location Management
+Update Location http://keystoneinfra.ddns.net:8080/webservice.asmx?op=UpdateLocation
+
+Delete Location http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeleteLocation
+
+Device Commands
+Block / Unblock User http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_BlockUnBlockUser
+
+Enroll Fingerprint http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_EnrollFP
+
+Enroll Face http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_EnrollFace
+
+Get Device Logs http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_GetDeviceLogs
+
+Clear Logs http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_ClearLogs
+
+Reboot Device http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_Reboot
+
+Unlock Door http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_UnlockDoor
+
+Reset OP Stamp http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_ResetOPStamp
+
+Reset Transaction Stamp http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_ResetTransactionStamp
+
+Change Web Server Address http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_ChangeWebServerAddress
+
+Change Web Server Port http://keystoneinfra.ddns.net:8080/webservice.asmx?op=DeviceCommand_ChangeWebServerPort
+
+Utilities
+Server Status Check http://keystoneinfra.ddns.net:8080/webservice.asmx?op=IseSSLebioServer
+
+Visitor Desk Validation http://keystoneinfra.ddns.net:8080/webservice.asmx?op=ValidateVisitorDesk

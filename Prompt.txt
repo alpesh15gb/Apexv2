@@ -1,0 +1,530 @@
+You are a Principal Software Architect, Principal FastAPI Engineer, Principal Flutter Engineer, Principal PostgreSQL DBA, DevOps Engineer, QA Lead, Product Manager, and Security Auditor.
+
+Build a COMPLETE PRODUCTION-READY SaaS Attendance, Biometric Device Management, Access Control, and Visitor Management Platform integrated with eSSL eBioserverNew.
+
+IMPORTANT RULES:
+
+* NO dummy data
+* NO mock APIs
+* NO placeholders
+* NO TODO comments
+* NO hardcoded records
+* NO sample repositories
+* NO fake dashboards
+* NO fake statistics
+* NO simulated responses
+
+Every screen, API, database table, report, and workflow must be fully connected and functional.
+
+If any functionality cannot be completed, stop and explain why instead of creating dummy implementations.
+
+====================================================
+PROJECT OBJECTIVE
+=================
+
+Create a production-grade cloud platform similar to:
+
+* Keka
+* GreytHR
+* ZKTeco BioTime
+* Matrix COSEC
+* eTimeTrackLite
+
+The platform must support:
+
+1. Multi Tenant SaaS
+2. Attendance Management
+3. Employee Management
+4. Shift Management
+5. Leave Management
+6. Holiday Management
+7. Visitor Management
+8. Access Control
+9. Biometric Device Management
+10. Device Monitoring
+11. Remote Device Commands
+12. Payroll Export
+13. Mobile Application
+14. Web Dashboard
+15. Real-time Device Status
+
+====================================================
+TECH STACK
+==========
+
+Backend
+
+* Python 3.12
+* FastAPI
+* SQLAlchemy 2.x
+* PostgreSQL
+* Alembic
+* Redis
+* Celery
+* JWT Authentication
+* RBAC
+
+Frontend
+
+* Flutter
+* Riverpod
+* Dio
+* Go Router
+* Material 3
+
+Infrastructure
+
+* Docker
+* Docker Compose
+* Nginx
+* GitHub Actions
+
+====================================================
+EXTERNAL INTEGRATION
+====================
+
+Integrate fully with eSSL eBioserverNew SOAP API.
+
+Supported operations:
+
+GetDeviceList
+GetDeviceLastPing
+GetDeviceLogs
+GetEmployeePunchLogs
+GetEmployeeDetails
+GetEmployeeCodes
+
+UpdateEmployee
+UpdateEmployeeEx
+UpdateEmployeePhoto
+DeleteEmployee
+
+UpdateDevice
+DeleteDevice
+
+UpdateLocation
+DeleteLocation
+
+DeviceCommand_Reboot
+DeviceCommand_ClearLogs
+DeviceCommand_EnrollFP
+DeviceCommand_EnrollFace
+DeviceCommand_UnlockDoor
+DeviceCommand_BlockUnBlockUser
+DeviceCommand_ResetTransactionStamp
+DeviceCommand_ResetOPStamp
+
+ValidateVisitorDesk
+
+Build a dedicated SOAP service layer.
+
+Requirements:
+
+* XML serialization
+* XML deserialization
+* Retry logic
+* Timeout management
+* Circuit breaker
+* Error handling
+* Logging
+* Queue processing
+
+====================================================
+MULTI TENANT
+============
+
+Create complete SaaS architecture.
+
+Tables:
+
+tenants
+users
+roles
+permissions
+audit_logs
+
+Every business record must contain tenant_id.
+
+Tenant isolation must be enforced at:
+
+* Database layer
+* Repository layer
+* Service layer
+* API layer
+
+Cross-tenant access must be impossible.
+
+====================================================
+EMPLOYEE MANAGEMENT
+===================
+
+Build complete employee module.
+
+Employee fields:
+
+Employee Code
+Name
+Photo
+Department
+Designation
+Phone
+Email
+Branch
+Shift
+Joining Date
+Status
+
+Support:
+
+Create
+Update
+Delete
+Deactivate
+Bulk Import
+Biometric Mapping
+
+Employee data must synchronize with devices.
+
+====================================================
+DEVICE MANAGEMENT
+=================
+
+Store:
+
+Serial Number
+Device Name
+Model
+Firmware
+IP Address
+Location
+Branch
+Last Ping
+Status
+
+Features:
+
+Online Devices
+Offline Devices
+Device Health
+Device Monitoring
+Last Communication
+Device Logs
+
+Dashboard widgets:
+
+Total Devices
+Online
+Offline
+Inactive
+
+====================================================
+ATTENDANCE ENGINE
+=================
+
+Create enterprise-grade attendance processor.
+
+Input:
+
+Raw Punch Logs
+
+Process:
+
+Punch Collection
+Punch Pairing
+Shift Assignment
+Attendance Calculation
+Late Calculation
+Early Exit Calculation
+Overtime Calculation
+Attendance Status
+
+Support:
+
+Single Punch
+Multiple Punches
+Night Shift
+Cross-Day Attendance
+Missing Punch
+Holiday Attendance
+Week-Off Attendance
+
+Statuses:
+
+Present
+Absent
+Half Day
+Late
+Early Out
+Holiday
+Week Off
+
+====================================================
+SHIFT MANAGEMENT
+================
+
+Support:
+
+General Shift
+Night Shift
+Rotational Shift
+
+Fields:
+
+Start Time
+End Time
+Grace Time
+Late Rule
+Early Rule
+Overtime Rule
+
+====================================================
+LEAVE MANAGEMENT
+================
+
+Leave Types:
+
+Casual Leave
+Sick Leave
+Earned Leave
+Comp Off
+
+Features:
+
+Apply Leave
+Approve Leave
+Reject Leave
+Cancel Leave
+
+Workflow:
+
+Employee
+→ Manager
+→ HR
+
+====================================================
+VISITOR MANAGEMENT
+==================
+
+Build complete visitor desk.
+
+Features:
+
+Visitor Registration
+Photo Capture
+Host Selection
+Purpose
+Visitor Pass
+Check In
+Check Out
+
+Use ValidateVisitorDesk API.
+
+Reports:
+
+Daily Visitors
+Active Visitors
+Visit History
+
+====================================================
+ACCESS CONTROL
+==============
+
+Features:
+
+Door Access
+Access Groups
+User Access Levels
+Restricted Zones
+
+Commands:
+
+Unlock Door
+Block User
+Unblock User
+
+Maintain audit trail.
+
+====================================================
+REMOTE DEVICE COMMAND CENTER
+============================
+
+Command Queue Table
+
+Fields:
+
+Command ID
+Device
+Command
+Status
+Requested By
+Requested Time
+Response Time
+
+Track:
+
+Pending
+Sent
+Success
+Failed
+
+====================================================
+REPORTS
+=======
+
+Generate:
+
+Daily Attendance
+Monthly Attendance
+Employee Attendance
+Late Coming Report
+Overtime Report
+Absent Report
+Visitor Report
+Device Status Report
+
+Formats:
+
+PDF
+Excel
+CSV
+
+====================================================
+NOTIFICATIONS
+=============
+
+Support:
+
+Email
+SMS
+Push Notification
+
+Events:
+
+Late Arrival
+Device Offline
+Leave Approval
+Visitor Arrival
+
+====================================================
+REAL TIME DASHBOARD
+===================
+
+Build real-time dashboard using WebSockets.
+
+Widgets:
+
+Employees Present
+Employees Absent
+Late Today
+Visitors Inside
+Online Devices
+Offline Devices
+
+====================================================
+SECURITY
+========
+
+Implement:
+
+JWT
+Refresh Tokens
+Password Hashing
+RBAC
+Tenant Isolation
+Audit Logging
+Rate Limiting
+API Security
+
+====================================================
+DATABASE
+========
+
+Generate:
+
+Complete PostgreSQL Schema
+Indexes
+Foreign Keys
+Constraints
+Optimized Queries
+
+No nullable fields where not required.
+
+====================================================
+DEVOPS
+======
+
+Generate:
+
+Dockerfiles
+Docker Compose
+Nginx Config
+Environment Templates
+Backup Strategy
+CI/CD Pipeline
+
+====================================================
+FRONTEND
+========
+
+Every Flutter screen must:
+
+* Use real API integration
+* Show loading states
+* Show error states
+* Show empty states
+* Support pagination
+* Support filtering
+* Support search
+
+No hardcoded values.
+
+====================================================
+TESTING
+=======
+
+Generate:
+
+Unit Tests
+Integration Tests
+API Tests
+Attendance Engine Tests
+
+Minimum:
+
+90% backend coverage
+
+====================================================
+DELIVERY ORDER
+==============
+
+Build in this exact order:
+
+1. Database Schema
+2. Alembic Migrations
+3. Authentication
+4. Multi-Tenancy
+5. RBAC
+6. SOAP Integration Layer
+7. Employee Module
+8. Device Module
+9. Attendance Engine
+10. Shift Module
+11. Leave Module
+12. Visitor Module
+13. Access Control Module
+14. Reports Module
+15. Notifications
+16. Dashboard
+17. Flutter Application
+18. Docker Deployment
+19. Automated Testing
+20. Production Audit
+
+After each module:
+
+* Run validation
+* Fix defects
+* Run integration tests
+* Proceed only when passing
+
+Deliver production-ready code only.

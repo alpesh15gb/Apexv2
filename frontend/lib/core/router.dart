@@ -1,0 +1,310 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../screens/splash_screen.dart';
+import '../screens/login_screen.dart';
+import '../screens/register_screen.dart';
+import '../screens/main_shell.dart';
+import '../screens/dashboard/dashboard_screen.dart';
+import '../screens/employees/employee_list_screen.dart';
+import '../screens/employees/employee_detail_screen.dart';
+import '../screens/employees/employee_create_screen.dart';
+import '../screens/employees/department_screen.dart';
+import '../screens/employees/branch_screen.dart';
+import '../screens/devices/device_list_screen.dart';
+import '../screens/devices/device_detail_screen.dart';
+import '../screens/devices/device_health_screen.dart';
+import '../screens/attendance/attendance_list_screen.dart';
+import '../screens/attendance/attendance_detail_screen.dart';
+import '../screens/attendance/daily_summary_screen.dart';
+import '../screens/attendance/mark_attendance_screen.dart';
+import '../screens/shifts/shift_list_screen.dart';
+import '../screens/shifts/shift_create_screen.dart';
+import '../screens/shifts/shift_assign_screen.dart';
+import '../screens/leaves/leave_balance_screen.dart';
+import '../screens/leaves/leave_apply_screen.dart';
+import '../screens/leaves/leave_requests_screen.dart';
+import '../screens/visitors/visitor_list_screen.dart';
+import '../screens/visitors/visitor_register_screen.dart';
+import '../screens/visitors/visitor_pass_screen.dart';
+import '../screens/visitors/active_visitors_screen.dart';
+import '../screens/access_control/zone_list_screen.dart';
+import '../screens/access_control/door_list_screen.dart';
+import '../screens/access_control/access_logs_screen.dart';
+import '../screens/commands/command_center_screen.dart';
+import '../screens/notifications/notification_list_screen.dart';
+import '../screens/reports/report_selection_screen.dart';
+import '../screens/settings/settings_screen.dart';
+import '../screens/settings/essl_server_list_screen.dart';
+import '../screens/settings/essl_server_form_screen.dart';
+import '../screens/settings/essl_sync_history_screen.dart';
+import '../screens/settings/essl_initial_sync_screen.dart';
+import '../screens/settings/essl_dashboard_screen.dart';
+import '../screens/settings/essl_reprocess_screen.dart';
+import 'secure_storage.dart';
+import 'constants.dart';
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  final shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+
+  return GoRouter(
+    navigatorKey: rootNavigatorKey,
+    initialLocation: '/splash',
+    redirect: (context, state) async {
+      final token = await secureStorage.read(StorageKeys.accessToken);
+      final loggedIn = token != null && token.isNotEmpty;
+      
+      final goingToSplash = state.matchedLocation == '/splash';
+      final goingToLogin = state.matchedLocation == '/login';
+      final goingToRegister = state.matchedLocation == '/register';
+
+      if (!loggedIn && !goingToLogin && !goingToRegister && !goingToSplash) {
+        return '/login';
+      }
+
+      if (loggedIn && (goingToLogin || goingToRegister || goingToSplash)) {
+        return '/dashboard';
+      }
+
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      ShellRoute(
+        navigatorKey: shellNavigatorKey,
+        builder: (context, state, child) => MainShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/dashboard',
+            builder: (context, state) => const DashboardScreen(),
+          ),
+          GoRoute(
+            path: '/employees',
+            builder: (context, state) => const EmployeeListScreen(),
+          ),
+          GoRoute(
+            path: '/attendance',
+            builder: (context, state) => const AttendanceListScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+        ],
+      ),
+      // Employees sub-routes
+      GoRoute(
+        path: '/employees/create',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const EmployeeCreateScreen(),
+      ),
+      GoRoute(
+        path: '/employees/:id',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EmployeeDetailScreen(employeeId: id);
+        },
+      ),
+      GoRoute(
+        path: '/departments',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DepartmentScreen(),
+      ),
+      GoRoute(
+        path: '/branches',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const BranchScreen(),
+      ),
+      // Devices routes
+      GoRoute(
+        path: '/devices',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DeviceListScreen(),
+      ),
+      GoRoute(
+        path: '/devices/health',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DeviceHealthScreen(),
+      ),
+      GoRoute(
+        path: '/devices/:id',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return DeviceDetailScreen(deviceId: id);
+        },
+      ),
+      // Attendance sub-routes
+      GoRoute(
+        path: '/attendance/detail',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final employeeId = state.uri.queryParameters['employeeId']!;
+          return AttendanceDetailScreen(employeeId: employeeId);
+        },
+      ),
+      GoRoute(
+        path: '/attendance/summary',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DailySummaryScreen(),
+      ),
+      GoRoute(
+        path: '/attendance/mark',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const MarkAttendanceScreen(),
+      ),
+      // Shifts routes
+      GoRoute(
+        path: '/shifts',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ShiftListScreen(),
+      ),
+      GoRoute(
+        path: '/shifts/create',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ShiftCreateScreen(),
+      ),
+      GoRoute(
+        path: '/shifts/assign',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ShiftAssignScreen(),
+      ),
+      // Leaves routes
+      GoRoute(
+        path: '/leaves/balance',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const LeaveBalanceScreen(),
+      ),
+      GoRoute(
+        path: '/leaves/apply',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const LeaveApplyScreen(),
+      ),
+      GoRoute(
+        path: '/leaves/requests',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const LeaveRequestsScreen(),
+      ),
+      // Visitors routes
+      GoRoute(
+        path: '/visitors',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const VisitorListScreen(),
+      ),
+      GoRoute(
+        path: '/visitors/register',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const VisitorRegisterScreen(),
+      ),
+      GoRoute(
+        path: '/visitors/pass',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final passId = state.uri.queryParameters['passId']!;
+          return VisitorPassScreen(passId: passId);
+        },
+      ),
+      GoRoute(
+        path: '/visitors/active',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ActiveVisitorsScreen(),
+      ),
+      // Access Control routes
+      GoRoute(
+        path: '/access/zones',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ZoneListScreen(),
+      ),
+      GoRoute(
+        path: '/access/doors',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DoorListScreen(),
+      ),
+      GoRoute(
+        path: '/access/logs',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AccessLogsScreen(),
+      ),
+      // Command Center routes
+      GoRoute(
+        path: '/commands',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const CommandCenterScreen(),
+      ),
+      // Notifications routes
+      GoRoute(
+        path: '/notifications',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const NotificationListScreen(),
+      ),
+      // Reports routes
+      GoRoute(
+        path: '/reports',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ReportSelectionScreen(),
+      ),
+      // eSSL Connector routes
+      GoRoute(
+        path: '/settings/essl',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const EsslServerListScreen(),
+      ),
+      GoRoute(
+        path: '/settings/essl/create',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const EsslServerFormScreen(),
+      ),
+      GoRoute(
+        path: '/settings/essl/:id',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EsslServerFormScreen(serverId: id);
+        },
+      ),
+      GoRoute(
+        path: '/settings/essl/:id/history',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EsslSyncHistoryScreen(serverId: id);
+        },
+      ),
+      GoRoute(
+        path: '/settings/essl/:id/initial-sync',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EsslInitialSyncScreen(serverId: id);
+        },
+      ),
+      GoRoute(
+        path: '/settings/essl/:id/reprocess',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EsslReprocessScreen(serverId: id);
+        },
+      ),
+      GoRoute(
+        path: '/settings/essl/dashboard',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const EsslDashboardScreen(),
+      ),
+    ],
+  );
+});

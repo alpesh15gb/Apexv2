@@ -1,0 +1,50 @@
+name: apex_attendance
+description: A complete SaaS Attendance Platform Mobile Application.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.3
+
+  # Networking
+  dio: ^5.4.3
+  pretty_dio_logger: ^1.4.0
+  web_socket_channel: ^2.4.5
+
+  # Routing
+  go_router: ^14.1.4
+
+  # Local Storage
+  flutter_secure_storage: ^9.0.0
+
+  # Utilities
+  intl: ^0.19.0
+  json_annotation: ^4.9.0
+
+  # UI & Animation
+  table_calendar: ^3.1.1
+  fl_chart: ^0.68.0
+  image_picker: ^1.1.2
+  file_picker: ^6.1.1
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.0
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.9
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.3.9
+
+flutter:
+  uses-material-design: true
