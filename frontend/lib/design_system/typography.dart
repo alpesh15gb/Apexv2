@@ -55,8 +55,4 @@ class ApexTypography {
 
   // Legacy aliases for compatibility
   static TextStyle get headingSmall_ => headingSmall;
-
-  // Table
-  static TextStyle get tableHeader => _base.copyWith(fontSize: 11, fontWeight: FontWeight.w600, height: 1.4, letterSpacing: 0.5, color: const Color(0xFF64748B));
-  static TextStyle get tableCell => _base.copyWith(fontSize: 13, fontWeight: FontWeight.w400, height: 1.4);
 }
