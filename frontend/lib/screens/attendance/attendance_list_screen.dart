@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../../core/responsive.dart';
-import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
-import '../../design_system/spacing.dart';
-import '../../design_system/border_radius.dart';
-import '../../design_system/components/apex_card.dart';
-import '../../design_system/components/apex_badge.dart';
-import '../../design_system/components/apex_empty_state.dart';
-import '../../design_system/components/apex_loading_skeleton.dart';
-import '../../design_system/components/apex_stat_card.dart';
-import '../../models/attendance.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/employee_provider.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _warning = Color(0xFFF59E0B);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class AttendanceListScreen extends ConsumerStatefulWidget {
   const AttendanceListScreen({Key? key}) : super(key: key);
@@ -25,433 +25,625 @@ class AttendanceListScreen extends ConsumerStatefulWidget {
   ConsumerState<AttendanceListScreen> createState() => _AttendanceListScreenState();
 }
 
-class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen> {
+  String _search = '';
   DateTime _selectedDate = DateTime.now();
-  DateTime _focusedMonth = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 5, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  String? _deptFilter;
+  String? _shiftFilter;
+  String? _statusFilter;
+  final Set<String> _selected = {};
 
   @override
   Widget build(BuildContext context) {
+    final listState = ref.watch(attendanceListProvider);
+    final deptsAsync = ref.watch(departmentsProvider);
     final dateStr = _selectedDate.toIso8601String().substring(0, 10);
     final summaryAsync = ref.watch(dailySummaryProvider(dateStr));
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Attendance'),
-        actions: [
-          IconButton(icon: const Icon(Icons.add_task, size: 20), tooltip: 'Manual Mark', onPressed: () => context.push('/attendance/mark')),
-          IconButton(icon: const Icon(Icons.summarize_outlined, size: 20), tooltip: 'Summary', onPressed: () => context.push('/attendance/summary')),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: const [
-            Tab(text: 'Today'),
-            Tab(text: 'Calendar'),
-            Tab(text: 'Timeline'),
-            Tab(text: 'Exceptions'),
-            Tab(text: 'Analytics'),
-          ],
-        ),
-      ),
+      backgroundColor: _bg,
       body: Column(
         children: [
-          // Summary bar
+          // Header
+          _Header(isMobile: isMobile),
+          // Toolbar: Search | Date | Department | Shift | Status | Export
+          _Toolbar(
+            search: _search,
+            onSearch: (v) => setState(() => _search = v),
+            selectedDate: _selectedDate,
+            onDateChanged: (v) => setState(() => _selectedDate = v),
+            deptFilter: _deptFilter,
+            shiftFilter: _shiftFilter,
+            statusFilter: _statusFilter,
+            onDeptChanged: (v) => setState(() => _deptFilter = v),
+            onShiftChanged: (v) => setState(() => _shiftFilter = v),
+            onStatusChanged: (v) => setState(() => _statusFilter = v),
+            onClear: () => setState(() {
+              _deptFilter = null;
+              _shiftFilter = null;
+              _statusFilter = null;
+            }),
+            deptsAsync: deptsAsync,
+          ),
+          // Summary cards
           summaryAsync.when(
-            data: (s) => _buildSummaryBar(s, isMobile),
-            loading: () => const SizedBox(height: 60),
+            data: (s) => _SummaryCards(summary: s),
+            loading: () => const SizedBox(height: 72),
             error: (_, __) => const SizedBox(),
           ),
-          // Tab content
+          // Bulk bar
+          if (_selected.isNotEmpty)
+            _BulkBar(count: _selected.length, onClear: () => setState(() => _selected.clear())),
+          // Attendance table
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildTodayTab(),
-                _buildCalendarTab(),
-                _buildTimelineTab(),
-                _buildExceptionsTab(),
-                _buildAnalyticsTab(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Summary Bar ──────────────────────────────────────────────
-  Widget _buildSummaryBar(DailyAttendanceSummary s, bool isMobile) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? ApexColors.darkSurface : ApexColors.neutral0,
-        border: const Border(bottom: BorderSide(color: ApexColors.neutral200)),
-      ),
-      child: Row(
-        children: [
-          _summaryChip('Present', '${s.present}', ApexColors.success),
-          _summaryChip('Absent', '${s.absent}', ApexColors.error),
-          _summaryChip('Late', '${s.late}', ApexColors.warning),
-          _summaryChip('Half Day', '${s.halfDay}', ApexColors.accent),
-          _summaryChip('Leave', '${s.onLeave}', ApexColors.info),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryChip(String label, String value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 6),
-          Text('$value $label', style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-
-  // ── Today Tab ────────────────────────────────────────────────
-  Widget _buildTodayTab() {
-    final listState = ref.watch(attendanceListProvider);
-    return listState.records.when(
-      data: (records) {
-        if (records.isEmpty) return const ApexEmptyState(icon: Icons.calendar_today_outlined, title: 'No Records', description: 'No attendance for today.');
-        return ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: records.length,
-          itemBuilder: (context, i) {
-            final r = records[i];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 4),
-              child: ListTile(
-                dense: true,
-                leading: CircleAvatar(
-                  radius: 16,
-                  child: Text((r.employeeName ?? 'U')[0].toUpperCase(), style: ApexTypography.captionSmall),
-                ),
-                title: Text(r.employeeName ?? 'Unknown', style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
-                subtitle: Text(
-                  '${r.punchIn != null ? DateFormat('hh:mm a').format(r.punchIn!) : 'No in'} - ${r.punchOut != null ? DateFormat('hh:mm a').format(r.punchOut!) : 'No out'}',
-                  style: ApexTypography.captionSmall,
-                ),
-                trailing: ApexBadge(status: r.status, category: 'attendance'),
-                onTap: () => context.push('/attendance/detail?employeeId=${r.employeeId}'),
-              ),
-            );
-          },
-        );
-      },
-      loading: () => const ApexLoadingSkeleton(count: 10, type: ApexSkeletonType.list),
-      error: (e, _) => Center(child: Text('Error: $e')),
-    );
-  }
-
-  // ── Calendar Tab ─────────────────────────────────────────────
-  Widget _buildCalendarTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          _buildCalendarGrid(),
-          const SizedBox(height: 16),
-          _buildSelectedDayDetails(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCalendarGrid() {
-    final firstDay = DateTime(_focusedMonth.year, _focusedMonth.month, 1);
-    final lastDay = DateTime(_focusedMonth.year, _focusedMonth.month + 1, 0);
-    final startWeekday = firstDay.weekday;
-    final daysInMonth = lastDay.day;
-
-    return ApexCard(
-      child: Column(
-        children: [
-          // Month navigation
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => setState(() => _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1))),
-              Text(DateFormat('MMMM yyyy').format(_focusedMonth), style: ApexTypography.titleMedium),
-              IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => setState(() => _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1))),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Weekday headers
-          Row(
-            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) =>
-              Expanded(child: Center(child: Text(d, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500))))
-            ).toList(),
-          ),
-          const SizedBox(height: 4),
-          // Calendar grid
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, childAspectRatio: 1),
-            itemCount: (startWeekday - 1) + daysInMonth,
-            itemBuilder: (context, index) {
-              if (index < startWeekday - 1) return const SizedBox();
-              final day = index - (startWeekday - 1) + 1;
-              final date = DateTime(_focusedMonth.year, _focusedMonth.month, day);
-              final isSelected = _selectedDate.year == date.year && _selectedDate.month == date.month && _selectedDate.day == date.day;
-              final isToday = DateTime.now().year == date.year && DateTime.now().month == date.month && DateTime.now().day == date.day;
-              final isWeekend = date.weekday >= 6;
-
-              // Simulate status color
-              Color? dotColor;
-              if (!isWeekend && date.isBefore(DateTime.now())) {
-                final hash = date.day.hashCode % 10;
-                if (hash < 7) dotColor = ApexColors.success;
-                else if (hash < 9) dotColor = ApexColors.warning;
-                else dotColor = ApexColors.error;
-              }
-
-              return InkWell(
-                onTap: () => setState(() => _selectedDate = date),
-                borderRadius: ApexRadius.xsAll,
-                child: Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: isSelected ? ApexColors.primary : isToday ? ApexColors.primary50 : null,
-                    borderRadius: ApexRadius.xsAll,
-                    border: isToday && !isSelected ? Border.all(color: ApexColors.primary) : null,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('$day', style: ApexTypography.bodySmall.copyWith(
-                        color: isSelected ? Colors.white : isWeekend ? ApexColors.neutral400 : null,
-                        fontWeight: isToday ? FontWeight.w700 : null,
-                      )),
-                      if (dotColor != null)
-                        Container(width: 5, height: 5, margin: const EdgeInsets.only(top: 2),
-                          decoration: BoxDecoration(color: isSelected ? Colors.white : dotColor, shape: BoxShape.circle)),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSelectedDayDetails() {
-    final dateStr = _selectedDate.toIso8601String().substring(0, 10);
-    final summaryAsync = ref.watch(dailySummaryProvider(dateStr));
-
-    return ApexCard(
-      header: Text(DateFormat('EEEE, MMMM dd').format(_selectedDate), style: ApexTypography.titleMedium),
-      child: summaryAsync.when(
-        data: (s) => Column(
-          children: [
-            _detailRow('Present', '${s.present}', ApexColors.success),
-            _detailRow('Absent', '${s.absent}', ApexColors.error),
-            _detailRow('Late', '${s.late}', ApexColors.warning),
-            _detailRow('Half Day', '${s.halfDay}', ApexColors.accent),
-            _detailRow('Leave', '${s.onLeave}', ApexColors.info),
-          ],
-        ),
-        loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
-        error: (e, _) => Text('Error: $e'),
-      ),
-    );
-  }
-
-  Widget _detailRow(String label, String value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 10),
-          Expanded(child: Text(label, style: ApexTypography.bodySmall)),
-          Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: color)),
-        ],
-      ),
-    );
-  }
-
-  // ── Timeline Tab ─────────────────────────────────────────────
-  Widget _buildTimelineTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Punch Timeline — ${DateFormat('MMM dd, yyyy').format(_selectedDate)}', style: ApexTypography.titleMedium),
-          const SizedBox(height: 12),
-          ApexCard(
-            child: Column(
-              children: [
-                _timelineEntry('John Doe', '09:05 AM', 'IN', ApexColors.success),
-                _timelineEntry('John Doe', '06:10 PM', 'OUT', ApexColors.info),
-                _timelineEntry('Jane Smith', '09:25 AM', 'IN', ApexColors.warning),
-                _timelineEntry('Jane Smith', '05:45 PM', 'OUT', ApexColors.info),
-                _timelineEntry('Bob Johnson', '10:15 AM', 'IN', ApexColors.error),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _timelineEntry(String name, String time, String type, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 12),
-          Expanded(child: Text(name, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600))),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: ApexRadius.xsAll),
-            child: Text(type, style: ApexTypography.captionSmall.copyWith(color: color, fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(width: 8),
-          Text(time, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
-        ],
-      ),
-    );
-  }
-
-  // ── Exceptions Tab ───────────────────────────────────────────
-  Widget _buildExceptionsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          ApexCard(
-            header: Row(children: [
-              const Icon(Icons.warning_amber, size: 16, color: ApexColors.warning),
-              const SizedBox(width: 6),
-              Text('Missing Punches', style: ApexTypography.titleMedium),
-            ]),
-            child: Column(children: [
-              _exceptionItem('John Doe', 'EMP001', 'Missing Punch Out', '09:15 AM'),
-              const Divider(height: 1),
-              _exceptionItem('Jane Smith', 'EMP002', 'Missing Punch In', '--'),
-            ]),
-          ),
-          const SizedBox(height: 12),
-          ApexCard(
-            header: Row(children: [
-              const Icon(Icons.access_time, size: 16, color: ApexColors.warning),
-              const SizedBox(width: 6),
-              Text('Late Arrivals', style: ApexTypography.titleMedium),
-            ]),
-            child: Column(children: [
-              _exceptionItem('Bob Johnson', 'EMP003', '15 minutes late', '09:15 AM'),
-              const Divider(height: 1),
-              _exceptionItem('Alice Brown', 'EMP004', '25 minutes late', '09:25 AM'),
-            ]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _exceptionItem(String name, String code, String issue, String time) {
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(radius: 14, child: Text(name[0].toUpperCase(), style: ApexTypography.captionSmall)),
-      title: Text(name, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
-      subtitle: Text('$code • $issue • $time', style: ApexTypography.captionSmall),
-      trailing: IconButton(icon: const Icon(Icons.edit, size: 16), onPressed: () => context.push('/attendance/mark')),
-    );
-  }
-
-  // ── Analytics Tab ────────────────────────────────────────────
-  Widget _buildAnalyticsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          ApexCard(
-            header: Text('Late Arrival Analysis', style: ApexTypography.titleMedium),
-            child: SizedBox(
-              height: 180,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: 10,
-                  barTouchData: BarTouchData(enabled: true),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, m) {
-                      final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-                      final i = v.toInt();
-                      if (i >= 0 && i < days.length) return Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(days[i], style: ApexTypography.captionSmall),
-                      );
-                      return const SizedBox();
-                    })),
-                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  barGroups: [
-                    BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 3, color: ApexColors.warning, width: 20, borderRadius: BorderRadius.circular(4))]),
-                    BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 5, color: ApexColors.warning, width: 20, borderRadius: BorderRadius.circular(4))]),
-                    BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 2, color: ApexColors.warning, width: 20, borderRadius: BorderRadius.circular(4))]),
-                    BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 4, color: ApexColors.warning, width: 20, borderRadius: BorderRadius.circular(4))]),
-                    BarChartGroupData(x: 4, barRods: [BarChartRodData(toY: 1, color: ApexColors.warning, width: 20, borderRadius: BorderRadius.circular(4))]),
+            child: listState.records.when(
+              data: (records) {
+                if (records.isEmpty) {
+                  return _EmptyState(
+                    icon: Icons.calendar_today_outlined,
+                    title: 'No Attendance Records',
+                    description: 'No attendance data for the selected filters.',
+                    actionLabel: 'Mark Attendance',
+                    onAction: () => context.push('/attendance/mark'),
+                  );
+                }
+                return _AttendanceTable(
+                  records: records,
+                  selected: _selected,
+                  onSelect: (id, v) => setState(() {
+                    v ? _selected.add(id) : _selected.remove(id);
+                  }),
+                  onSelectAll: (v) => setState(() {
+                    if (v) _selected.addAll(records.map((e) => e.id));
+                    else _selected.clear();
+                  }),
+                  onTap: (r) => context.push('/attendance/detail?employeeId=${r.employeeId}'),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 40, color: _danger),
+                    const SizedBox(height: 12),
+                    Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => ref.read(attendanceListProvider.notifier).fetchRecords(isRefresh: true),
+                      child: const Text('Retry'),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          ApexCard(
-            header: Text('Overtime Analysis', style: ApexTypography.titleMedium),
-            child: Column(children: [
-              _overtimeStat('This Week', '12.5 hrs', ApexColors.info),
-              _overtimeStat('This Month', '48.0 hrs', ApexColors.primary),
-              _overtimeStat('Top Performer', 'EMP003', ApexColors.success),
-            ]),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Header ──────────────────────────────────────────────────
+class _Header extends StatelessWidget {
+  final bool isMobile;
+  const _Header({required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(isMobile ? 16 : 20, 12, isMobile ? 16 : 20, 8),
+      decoration: const BoxDecoration(
+        color: _surface,
+        border: Border(bottom: BorderSide(color: _border)),
+      ),
+      child: Row(
+        children: [
+          Text('Attendance', style: ApexTypography.pageTitle.copyWith(color: _text)),
+          const Spacer(),
+          if (!isMobile) ...[
+            IconButton(icon: const Icon(Icons.add_task, size: 18), tooltip: 'Manual Mark', onPressed: () => context.push('/attendance/mark')),
+            IconButton(icon: const Icon(Icons.summarize_outlined, size: 18), tooltip: 'Summary', onPressed: () => context.push('/attendance/summary')),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Toolbar ─────────────────────────────────────────────────
+class _Toolbar extends StatelessWidget {
+  final String search;
+  final ValueChanged<String> onSearch;
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateChanged;
+  final String? deptFilter;
+  final String? shiftFilter;
+  final String? statusFilter;
+  final ValueChanged<String?> onDeptChanged;
+  final ValueChanged<String?> onShiftChanged;
+  final ValueChanged<String?> onStatusChanged;
+  final VoidCallback onClear;
+  final AsyncValue deptsAsync;
+
+  const _Toolbar({
+    required this.search,
+    required this.onSearch,
+    required this.selectedDate,
+    required this.onDateChanged,
+    required this.deptFilter,
+    required this.shiftFilter,
+    required this.statusFilter,
+    required this.onDeptChanged,
+    required this.onShiftChanged,
+    required this.onStatusChanged,
+    required this.onClear,
+    required this.deptsAsync,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: const BoxDecoration(
+        color: _surface,
+        border: Border(bottom: BorderSide(color: _border)),
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          // Search
+          SizedBox(
+            width: 200,
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search employee...',
+                prefixIcon: const Icon(Icons.search, size: 18),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: _border)),
+                isDense: true,
+              ),
+              onChanged: onSearch,
+            ),
           ),
+          // Date picker
+          _DatePicker(date: selectedDate, onChanged: onDateChanged),
+          // Department
+          deptsAsync.maybeWhen(
+            data: (deps) => _Chip(
+              label: 'Department',
+              value: deptFilter != null ? deps.firstWhere((d) => d.id == deptFilter, orElse: () => deps.first).name : null,
+              onTap: () => _showDeptPicker(context, deps),
+            ),
+            orElse: () => const SizedBox(),
+          ),
+          // Status
+          _Chip(
+            label: 'Status',
+            value: statusFilter,
+            onTap: () => _showStatusPicker(context),
+          ),
+          // Clear
+          if (deptFilter != null || shiftFilter != null || statusFilter != null)
+            TextButton.icon(
+              onPressed: onClear,
+              icon: const Icon(Icons.clear, size: 14),
+              label: const Text('Clear'),
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
+            ),
         ],
       ),
     );
   }
 
-  Widget _overtimeStat(String label, String value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+  void _showDeptPicker(BuildContext context, List<dynamic> deps) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Department'),
+        content: SizedBox(
+          width: 300,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: deps.length + 1,
+            itemBuilder: (context, i) {
+              if (i == 0) return ListTile(title: const Text('All'), onTap: () { onDeptChanged(null); Navigator.pop(context); });
+              final d = deps[i - 1];
+              return ListTile(title: Text(d.name), onTap: () { onDeptChanged(d.id); Navigator.pop(context); });
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showStatusPicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Status'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: const Text('All'), onTap: () { onStatusChanged(null); Navigator.pop(context); }),
+            ListTile(title: const Text('Present'), onTap: () { onStatusChanged('present'); Navigator.pop(context); }),
+            ListTile(title: const Text('Absent'), onTap: () { onStatusChanged('absent'); Navigator.pop(context); }),
+            ListTile(title: const Text('Late'), onTap: () { onStatusChanged('late'); Navigator.pop(context); }),
+            ListTile(title: const Text('Half Day'), onTap: () { onStatusChanged('half_day'); Navigator.pop(context); }),
+            ListTile(title: const Text('On Leave'), onTap: () { onStatusChanged('on_leave'); Navigator.pop(context); }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DatePicker extends StatelessWidget {
+  final DateTime date;
+  final ValueChanged<DateTime> onChanged;
+
+  const _DatePicker({required this.date, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) onChanged(picked);
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: _border),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.calendar_today, size: 16, color: _muted),
+            const SizedBox(width: 6),
+            Text(DateFormat('MMM dd, yyyy').format(date), style: ApexTypography.bodySmall),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final String? value;
+  final VoidCallback onTap;
+
+  const _Chip({required this.label, this.value, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: value != null ? _primary.withOpacity(0.1) : null,
+          border: Border.all(color: value != null ? _primary : _border),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(value ?? label, style: ApexTypography.captionLarge.copyWith(color: value != null ? _primary : _muted)),
+            const SizedBox(width: 4),
+            Icon(value != null ? Icons.close : Icons.arrow_drop_down, size: 14, color: value != null ? _primary : _muted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Summary Cards ───────────────────────────────────────────
+class _SummaryCards extends StatelessWidget {
+  final dynamic summary;
+  const _SummaryCards({required this.summary});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: ApexTypography.bodySmall),
-          Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: color)),
+          _SummaryItem(label: 'Present', value: '${summary.present}', color: _success),
+          _SummaryItem(label: 'Absent', value: '${summary.absent}', color: _danger),
+          _SummaryItem(label: 'Late', value: '${summary.late}', color: _warning),
+          _SummaryItem(label: 'Half Day', value: '${summary.halfDay}', color: _warning),
+          _SummaryItem(label: 'Leave', value: '${summary.onLeave}', color: _primary),
         ],
+      ),
+    );
+  }
+}
+
+class _SummaryItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _SummaryItem({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Text(value, style: ApexTypography.headingMedium.copyWith(color: color)),
+            Text(label, style: ApexTypography.kpiLabel),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Bulk Bar ────────────────────────────────────────────────
+class _BulkBar extends StatelessWidget {
+  final int count;
+  final VoidCallback onClear;
+
+  const _BulkBar({required this.count, required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      color: _primary.withOpacity(0.1),
+      child: Row(
+        children: [
+          Text('$count selected', style: ApexTypography.titleSmall.copyWith(color: _primary)),
+          const Spacer(),
+          TextButton.icon(onPressed: () {}, icon: const Icon(Icons.check, size: 16), label: const Text('Approve')),
+          TextButton.icon(onPressed: () {}, icon: const Icon(Icons.download, size: 16), label: const Text('Export')),
+          TextButton(onPressed: onClear, child: const Text('Clear')),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Attendance Table ────────────────────────────────────────
+class _AttendanceTable extends StatelessWidget {
+  final List<dynamic> records;
+  final Set<String> selected;
+  final void Function(String, bool) onSelect;
+  final void Function(bool) onSelectAll;
+  final void Function(dynamic) onTap;
+
+  const _AttendanceTable({
+    required this.records,
+    required this.selected,
+    required this.onSelect,
+    required this.onSelectAll,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 1200),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              height: 36,
+              color: _bg,
+              child: Row(
+                children: [
+                  _hdr(40, '', isCheckbox: true),
+                  _hdr(160, 'EMPLOYEE'),
+                  _hdr(100, 'SHIFT'),
+                  _hdr(80, 'CLOCK IN'),
+                  _hdr(80, 'CLOCK OUT'),
+                  _hdr(70, 'HOURS'),
+                  _hdr(60, 'OT'),
+                  _hdr(70, 'LATE BY'),
+                  _hdr(70, 'EARLY OUT'),
+                  _hdr(80, 'DEVICE'),
+                  _hdr(80, 'STATUS'),
+                  _hdr(60, ''),
+                ],
+              ),
+            ),
+            // Rows
+            Expanded(
+              child: ListView.builder(
+                itemCount: records.length,
+                itemBuilder: (context, i) => _AttendanceRow(
+                  record: records[i],
+                  index: i,
+                  isSelected: selected.contains(records[i].id),
+                  onSelect: (v) => onSelect(records[i].id, v),
+                  onTap: () => onTap(records[i]),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _hdr(double width, String label, {bool isCheckbox = false}) {
+    return SizedBox(
+      width: width,
+      child: isCheckbox
+          ? Checkbox(value: false, onChanged: (v) => onSelectAll(v ?? false), visualDensity: VisualDensity.compact)
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Align(alignment: Alignment.centerLeft, child: Text(label, style: ApexTypography.tableHeader)),
+            ),
+    );
+  }
+}
+
+class _AttendanceRow extends StatelessWidget {
+  final dynamic record;
+  final int index;
+  final bool isSelected;
+  final ValueChanged<bool> onSelect;
+  final VoidCallback onTap;
+
+  const _AttendanceRow({
+    required this.record,
+    required this.index,
+    required this.isSelected,
+    required this.onSelect,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final r = record;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 40,
+        color: isSelected ? _primary.withOpacity(0.05) : (index.isEven ? _surface : _bg),
+        child: Row(
+          children: [
+            // Checkbox
+            SizedBox(width: 40, child: Checkbox(value: isSelected, onChanged: (v) => onSelect(v ?? false), visualDensity: VisualDensity.compact)),
+            // Employee
+            SizedBox(
+              width: 160,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(r.employeeName ?? 'Unknown', style: ApexTypography.tableCell.copyWith(fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              ),
+            ),
+            // Shift
+            SizedBox(width: 100, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.shiftId ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis))),
+            // Clock In
+            SizedBox(width: 80, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.punchIn != null ? DateFormat('hh:mm a').format(r.punchIn!) : '—', style: ApexTypography.tableCell))),
+            // Clock Out
+            SizedBox(width: 80, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.punchOut != null ? DateFormat('hh:mm a').format(r.punchOut!) : '—', style: ApexTypography.tableCell))),
+            // Hours
+            SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.totalHours != null ? '${r.totalHours!.toStringAsFixed(1)}h' : '—', style: ApexTypography.tableCell))),
+            // OT
+            SizedBox(width: 60, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.overtimeHours != null && r.overtimeHours! > 0 ? '${r.overtimeHours!.toStringAsFixed(1)}h' : '—', style: ApexTypography.tableCell.copyWith(color: r.overtimeHours != null && r.overtimeHours! > 0 ? _success : _muted)))),
+            // Late By
+            SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.isLate ? '${r.lateMinutes}m' : '—', style: ApexTypography.tableCell.copyWith(color: r.isLate ? _warning : _muted)))),
+            // Early Out
+            SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.isEarlyOut ? '${r.earlyOutMinutes}m' : '—', style: ApexTypography.tableCell.copyWith(color: r.isEarlyOut ? _warning : _muted)))),
+            // Device
+            SizedBox(width: 80, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.deviceId ?? 'Manual', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis))),
+            // Status
+            SizedBox(width: 80, child: _StatusBadge(status: r.status)),
+            // Actions
+            SizedBox(
+              width: 60,
+              child: PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, size: 16),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'view', child: Text('View')),
+                  const PopupMenuItem(value: 'correct', child: Text('Correct')),
+                ],
+                onSelected: (v) {
+                  if (v == 'view') context.push('/attendance/detail?employeeId=${r.employeeId}');
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final config = _statusConfig(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: config.$2.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(config.$1, style: ApexTypography.captionSmall.copyWith(color: config.$2, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  (String, Color) _statusConfig(String s) {
+    switch (s) {
+      case 'present': return ('Present', _success);
+      case 'absent': return ('Absent', _danger);
+      case 'late': return ('Late', _warning);
+      case 'half_day': return ('Half Day', _warning);
+      case 'on_leave': return ('Leave', _primary);
+      default: return (s, _muted);
+    }
+  }
+}
+
+// ── Empty State ─────────────────────────────────────────────
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const _EmptyState({required this.icon, required this.title, required this.description, this.actionLabel, this.onAction});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: _muted),
+            const SizedBox(height: 16),
+            Text(title, style: ApexTypography.headingMedium.copyWith(color: _text)),
+            const SizedBox(height: 8),
+            Text(description, style: ApexTypography.bodySmall.copyWith(color: _muted), textAlign: TextAlign.center),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                ),
+                child: Text(actionLabel!),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
