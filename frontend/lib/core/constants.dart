@@ -1,6 +1,10 @@
 class ApiConstants {
   static const String baseUrl = '/api/v1';
-  static const String wsUrl = 'ws://localhost/api/v1/ws/dashboard';
+  static String get wsUrl {
+    final uri = Uri.base;
+    final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
+    return '${scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}/api/v1/ws/dashboard';
+  }
 
   // Auth endpoints
   static const String login = '/auth/login';
