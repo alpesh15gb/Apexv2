@@ -9,9 +9,9 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseBase
 from app.schemas.employee import (
     EmployeeCreate, EmployeeUpdate, EmployeeResponse,
-    DepartmentCreate, DepartmentResponse,
-    DesignationCreate, DesignationResponse,
-    BranchCreate, BranchResponse,
+    DepartmentCreate, DepartmentUpdate, DepartmentResponse,
+    DesignationCreate, DesignationUpdate, DesignationResponse,
+    BranchCreate, BranchUpdate, BranchResponse,
 )
 from app.services.employee import EmployeeService, DepartmentService, DesignationService, BranchService
 
@@ -42,6 +42,28 @@ async def create_department(
     return await service.create_department(current_user.tenant_id, data)
 
 
+@router.put("/departments/{department_id}", response_model=DepartmentResponse)
+async def update_department(
+    department_id: uuid.UUID,
+    data: DepartmentUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = DepartmentService(db)
+    return await service.update_department(department_id, current_user.tenant_id, data)
+
+
+@router.delete("/departments/{department_id}", response_model=ResponseBase)
+async def delete_department(
+    department_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = DepartmentService(db)
+    await service.delete_department(department_id, current_user.tenant_id)
+    return ResponseBase(message="Department deleted")
+
+
 # ── Designations ─────────────────────────────────────
 @router.get("/designations", response_model=PaginatedResponse[DesignationResponse])
 async def list_designations(
@@ -66,6 +88,28 @@ async def create_designation(
     return await service.create_designation(current_user.tenant_id, data)
 
 
+@router.put("/designations/{designation_id}", response_model=DesignationResponse)
+async def update_designation(
+    designation_id: uuid.UUID,
+    data: DesignationUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = DesignationService(db)
+    return await service.update_designation(designation_id, current_user.tenant_id, data)
+
+
+@router.delete("/designations/{designation_id}", response_model=ResponseBase)
+async def delete_designation(
+    designation_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = DesignationService(db)
+    await service.delete_designation(designation_id, current_user.tenant_id)
+    return ResponseBase(message="Designation deleted")
+
+
 # ── Branches ─────────────────────────────────────────
 @router.get("/branches", response_model=PaginatedResponse[BranchResponse])
 async def list_branches(
@@ -88,6 +132,28 @@ async def create_branch(
 ):
     service = BranchService(db)
     return await service.create_branch(current_user.tenant_id, data)
+
+
+@router.put("/branches/{branch_id}", response_model=BranchResponse)
+async def update_branch(
+    branch_id: uuid.UUID,
+    data: BranchUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = BranchService(db)
+    return await service.update_branch(branch_id, current_user.tenant_id, data)
+
+
+@router.delete("/branches/{branch_id}", response_model=ResponseBase)
+async def delete_branch(
+    branch_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = BranchService(db)
+    await service.delete_branch(branch_id, current_user.tenant_id)
+    return ResponseBase(message="Branch deleted")
 
 
 # ── Employees ────────────────────────────────────────

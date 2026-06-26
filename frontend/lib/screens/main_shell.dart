@@ -90,6 +90,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                   ], isDark),
                   _navSection('MANAGEMENT', [
                     _nav(Icons.event_busy_outlined, Icons.event_busy, 'Leave', '/leaves'),
+                    _nav(Icons.calendar_month_outlined, Icons.calendar_month, 'Holidays', '/holidays'),
                     _nav(Icons.card_membership_outlined, Icons.card_membership, 'Visitors', '/visitors'),
                   ], isDark),
                   _navSection('OPERATIONS', [

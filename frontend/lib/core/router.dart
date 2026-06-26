@@ -12,6 +12,7 @@ import '../screens/employees/employee_detail_screen.dart';
 import '../screens/employees/employee_create_screen.dart';
 import '../screens/employees/department_screen.dart';
 import '../screens/employees/branch_screen.dart';
+import '../screens/employees/designation_screen.dart';
 import '../screens/devices/device_list_screen.dart';
 import '../screens/devices/device_detail_screen.dart';
 import '../screens/devices/device_health_screen.dart';
@@ -43,6 +44,7 @@ import '../screens/settings/essl_initial_sync_screen.dart';
 import '../screens/settings/essl_dashboard_screen.dart';
 import '../screens/settings/essl_reprocess_screen.dart';
 import '../screens/settings/essl_locations_screen.dart';
+import '../screens/holidays/holiday_calendar_screen.dart';
 import 'secure_storage.dart';
 import 'constants.dart';
 
@@ -129,6 +131,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/branches',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const BranchScreen(),
+      ),
+      GoRoute(
+        path: '/designations',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DesignationScreen(),
+      ),
+      // Holiday routes
+      GoRoute(
+        path: '/holidays',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const HolidayCalendarScreen(),
       ),
       // Devices routes
       GoRoute(

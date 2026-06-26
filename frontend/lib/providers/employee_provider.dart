@@ -157,27 +157,105 @@ final employeeListProvider = StateNotifierProvider<EmployeeListNotifier, Employe
 });
 
 // Departments Provider
-final departmentsProvider = FutureProvider<List<Department>>((ref) async {
-  final service = ref.read(employeeServiceProvider);
-  final data = await service.getDepartments(page: 1, pageSize: 100);
-  final items = data['items'] as List;
-  return items.map((e) => Department.fromJson(e as Map<String, dynamic>)).toList();
+class DepartmentListNotifier extends StateNotifier<AsyncValue<List<Department>>> {
+  final EmployeeService _service;
+  DepartmentListNotifier(this._service) : super(const AsyncValue.loading()) { fetchDepartments(); }
+
+  Future<void> fetchDepartments({bool isRefresh = false}) async {
+    if (isRefresh) state = const AsyncValue.loading();
+    try {
+      final data = await _service.getDepartments(page: 1, pageSize: 100);
+      final items = (data['items'] as List).map((e) => Department.fromJson(e as Map<String, dynamic>)).toList();
+      state = AsyncValue.data(items);
+    } catch (e, stack) { state = AsyncValue.error(e, stack); }
+  }
+
+  Future<void> addDepartment(Map<String, dynamic> data) async {
+    final dept = await _service.createDepartment(data);
+    if (state.value != null) state = AsyncValue.data([dept, ...state.value!]);
+  }
+
+  Future<void> updateDepartment(String id, Map<String, dynamic> data) async {
+    final updated = await _service.updateDepartment(id, data);
+    if (state.value != null) state = AsyncValue.data(state.value!.map((d) => d.id == id ? updated : d).toList());
+  }
+
+  Future<void> deleteDepartment(String id) async {
+    await _service.deleteDepartment(id);
+    if (state.value != null) state = AsyncValue.data(state.value!.where((d) => d.id != id).toList());
+  }
+}
+
+final departmentsProvider = StateNotifierProvider<DepartmentListNotifier, AsyncValue<List<Department>>>((ref) {
+  return DepartmentListNotifier(ref.read(employeeServiceProvider));
 });
 
 // Branches Provider
-final branchesProvider = FutureProvider<List<Branch>>((ref) async {
-  final service = ref.read(employeeServiceProvider);
-  final data = await service.getBranches(page: 1, pageSize: 100);
-  final items = data['items'] as List;
-  return items.map((e) => Branch.fromJson(e as Map<String, dynamic>)).toList();
+class BranchListNotifier extends StateNotifier<AsyncValue<List<Branch>>> {
+  final EmployeeService _service;
+  BranchListNotifier(this._service) : super(const AsyncValue.loading()) { fetchBranches(); }
+
+  Future<void> fetchBranches({bool isRefresh = false}) async {
+    if (isRefresh) state = const AsyncValue.loading();
+    try {
+      final data = await _service.getBranches(page: 1, pageSize: 100);
+      final items = (data['items'] as List).map((e) => Branch.fromJson(e as Map<String, dynamic>)).toList();
+      state = AsyncValue.data(items);
+    } catch (e, stack) { state = AsyncValue.error(e, stack); }
+  }
+
+  Future<void> addBranch(Map<String, dynamic> data) async {
+    final branch = await _service.createBranch(data);
+    if (state.value != null) state = AsyncValue.data([branch, ...state.value!]);
+  }
+
+  Future<void> updateBranch(String id, Map<String, dynamic> data) async {
+    final updated = await _service.updateBranch(id, data);
+    if (state.value != null) state = AsyncValue.data(state.value!.map((b) => b.id == id ? updated : b).toList());
+  }
+
+  Future<void> deleteBranch(String id) async {
+    await _service.deleteBranch(id);
+    if (state.value != null) state = AsyncValue.data(state.value!.where((b) => b.id != id).toList());
+  }
+}
+
+final branchesProvider = StateNotifierProvider<BranchListNotifier, AsyncValue<List<Branch>>>((ref) {
+  return BranchListNotifier(ref.read(employeeServiceProvider));
 });
 
 // Designations Provider
-final designationsProvider = FutureProvider<List<Designation>>((ref) async {
-  final service = ref.read(employeeServiceProvider);
-  final data = await service.getDesignations(page: 1, pageSize: 100);
-  final items = data['items'] as List;
-  return items.map((e) => Designation.fromJson(e as Map<String, dynamic>)).toList();
+class DesignationListNotifier extends StateNotifier<AsyncValue<List<Designation>>> {
+  final EmployeeService _service;
+  DesignationListNotifier(this._service) : super(const AsyncValue.loading()) { fetchDesignations(); }
+
+  Future<void> fetchDesignations({bool isRefresh = false}) async {
+    if (isRefresh) state = const AsyncValue.loading();
+    try {
+      final data = await _service.getDesignations(page: 1, pageSize: 100);
+      final items = (data['items'] as List).map((e) => Designation.fromJson(e as Map<String, dynamic>)).toList();
+      state = AsyncValue.data(items);
+    } catch (e, stack) { state = AsyncValue.error(e, stack); }
+  }
+
+  Future<void> addDesignation(Map<String, dynamic> data) async {
+    final desg = await _service.createDesignation(data);
+    if (state.value != null) state = AsyncValue.data([desg, ...state.value!]);
+  }
+
+  Future<void> updateDesignation(String id, Map<String, dynamic> data) async {
+    final updated = await _service.updateDesignation(id, data);
+    if (state.value != null) state = AsyncValue.data(state.value!.map((d) => d.id == id ? updated : d).toList());
+  }
+
+  Future<void> deleteDesignation(String id) async {
+    await _service.deleteDesignation(id);
+    if (state.value != null) state = AsyncValue.data(state.value!.where((d) => d.id != id).toList());
+  }
+}
+
+final designationsProvider = StateNotifierProvider<DesignationListNotifier, AsyncValue<List<Designation>>>((ref) {
+  return DesignationListNotifier(ref.read(employeeServiceProvider));
 });
 
 // Current Employee Provider (looks up employee by current user's email)

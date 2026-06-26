@@ -89,6 +89,12 @@ class DepartmentCreate(BaseModel):
     is_active: bool = True
 
 
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=100)
+    code: Optional[str] = Field(None, max_length=20)
+    is_active: Optional[bool] = None
+
+
 class DepartmentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
@@ -103,6 +109,12 @@ class DesignationCreate(BaseModel):
     name: str = Field(..., max_length=100)
     code: str = Field(..., max_length=20)
     is_active: bool = True
+
+
+class DesignationUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=100)
+    code: Optional[str] = Field(None, max_length=20)
+    is_active: Optional[bool] = None
 
 
 class DesignationResponse(BaseModel):
@@ -121,6 +133,14 @@ class BranchCreate(BaseModel):
     address: Optional[str] = None
     city: Optional[str] = None
     is_active: bool = True
+
+
+class BranchUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=100)
+    code: Optional[str] = Field(None, max_length=20)
+    address: Optional[str] = None
+    city: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class BranchResponse(BaseModel):

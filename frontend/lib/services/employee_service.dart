@@ -66,6 +66,15 @@ class EmployeeService {
     return Department.fromJson(response.data);
   }
 
+  Future<Department> updateDepartment(String id, Map<String, dynamic> data) async {
+    final response = await _dio.put('${ApiConstants.departments}/$id', data: data);
+    return Department.fromJson(response.data);
+  }
+
+  Future<void> deleteDepartment(String id) async {
+    await _dio.delete('${ApiConstants.departments}/$id');
+  }
+
   Future<Map<String, dynamic>> getDesignations({int page = 1, int pageSize = 100}) async {
     final response = await _dio.get(
       ApiConstants.designations,
@@ -79,6 +88,15 @@ class EmployeeService {
     return Designation.fromJson(response.data);
   }
 
+  Future<Designation> updateDesignation(String id, Map<String, dynamic> data) async {
+    final response = await _dio.put('${ApiConstants.designations}/$id', data: data);
+    return Designation.fromJson(response.data);
+  }
+
+  Future<void> deleteDesignation(String id) async {
+    await _dio.delete('${ApiConstants.designations}/$id');
+  }
+
   Future<Map<String, dynamic>> getBranches({int page = 1, int pageSize = 100}) async {
     final response = await _dio.get(
       ApiConstants.branches,
@@ -90,6 +108,15 @@ class EmployeeService {
   Future<Branch> createBranch(Map<String, dynamic> data) async {
     final response = await _dio.post(ApiConstants.branches, data: data);
     return Branch.fromJson(response.data);
+  }
+
+  Future<Branch> updateBranch(String id, Map<String, dynamic> data) async {
+    final response = await _dio.put('${ApiConstants.branches}/$id', data: data);
+    return Branch.fromJson(response.data);
+  }
+
+  Future<void> deleteBranch(String id) async {
+    await _dio.delete('${ApiConstants.branches}/$id');
   }
 
   Future<void> bulkImport(String filePath, String fileName) async {

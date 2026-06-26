@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/responsive.dart';
 import '../../design_system/typography.dart';
 import '../../providers/employee_provider.dart';
 
@@ -14,39 +13,39 @@ const _danger = Color(0xFFDC2626);
 const _text = Color(0xFF111827);
 const _muted = Color(0xFF6B7280);
 
-class DepartmentScreen extends ConsumerWidget {
-  const DepartmentScreen({Key? key}) : super(key: key);
+class DesignationScreen extends ConsumerWidget {
+  const DesignationScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final deptsAsync = ref.watch(departmentsProvider);
+    final desgsAsync = ref.watch(designationsProvider);
 
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Departments'),
+        title: const Text('Designations'),
         backgroundColor: _surface,
         foregroundColor: _text,
         elevation: 0,
         bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
       ),
-      body: deptsAsync.when(
-        data: (depts) {
-          if (depts.isEmpty) {
+      body: desgsAsync.when(
+        data: (desgs) {
+          if (desgs.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.business, size: 48, color: _muted),
+                  const Icon(Icons.work_outline, size: 48, color: _muted),
                   const SizedBox(height: 16),
-                  Text('No Departments', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  Text('No Designations', style: ApexTypography.headingMedium.copyWith(color: _text)),
                   const SizedBox(height: 8),
-                  Text('Create departments to organize your workforce', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+                  Text('Create designations for job roles', style: ApexTypography.bodySmall.copyWith(color: _muted)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => _showAddDialog(context, ref),
                     style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-                    child: const Text('Add Department'),
+                    child: const Text('Add Designation'),
                   ),
                 ],
               ),
@@ -54,9 +53,9 @@ class DepartmentScreen extends ConsumerWidget {
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: depts.length,
+            itemCount: desgs.length,
             itemBuilder: (context, i) {
-              final d = depts[i];
+              final d = desgs[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
@@ -74,7 +73,7 @@ class DepartmentScreen extends ConsumerWidget {
                         color: _primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.business, color: _primary, size: 20),
+                      child: const Icon(Icons.work_outline, color: _primary, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -94,10 +93,7 @@ class DepartmentScreen extends ConsumerWidget {
                       ),
                       child: Text(
                         d.isActive ? 'ACTIVE' : 'INACTIVE',
-                        style: ApexTypography.captionSmall.copyWith(
-                          color: d.isActive ? _success : _muted,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: ApexTypography.captionSmall.copyWith(color: d.isActive ? _success : _muted, fontWeight: FontWeight.w600),
                       ),
                     ),
                     PopupMenuButton<String>(
@@ -134,7 +130,7 @@ class DepartmentScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Department'),
+        title: const Text('Add Designation'),
         content: SizedBox(
           width: 350,
           child: Column(
@@ -142,7 +138,7 @@ class DepartmentScreen extends ConsumerWidget {
             children: [
               TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code *', border: OutlineInputBorder(), hintText: 'e.g. HR, IT')),
+              TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code *', border: OutlineInputBorder(), hintText: 'e.g. MGR, DEV')),
             ],
           ),
         ),
@@ -154,7 +150,7 @@ class DepartmentScreen extends ConsumerWidget {
               final code = codeCtrl.text.trim().toUpperCase();
               if (name.isEmpty || code.isEmpty) return;
               try {
-                await ref.read(departmentsProvider.notifier).addDepartment({'name': name, 'code': code});
+                await ref.read(designationsProvider.notifier).addDesignation({'name': name, 'code': code});
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
                 if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: _danger));
@@ -168,13 +164,13 @@ class DepartmentScreen extends ConsumerWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, WidgetRef ref, dynamic dept) {
-    final nameCtrl = TextEditingController(text: dept.name);
-    final codeCtrl = TextEditingController(text: dept.code);
+  void _showEditDialog(BuildContext context, WidgetRef ref, dynamic desg) {
+    final nameCtrl = TextEditingController(text: desg.name);
+    final codeCtrl = TextEditingController(text: desg.code);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Department'),
+        title: const Text('Edit Designation'),
         content: SizedBox(
           width: 350,
           child: Column(
@@ -194,7 +190,7 @@ class DepartmentScreen extends ConsumerWidget {
               final code = codeCtrl.text.trim().toUpperCase();
               if (name.isEmpty || code.isEmpty) return;
               try {
-                await ref.read(departmentsProvider.notifier).updateDepartment(dept.id, {'name': name, 'code': code});
+                await ref.read(designationsProvider.notifier).updateDesignation(desg.id, {'name': name, 'code': code});
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
                 if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: _danger));
@@ -212,13 +208,13 @@ class DepartmentScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Department'),
+        title: const Text('Delete Designation'),
         content: Text('Delete "$name"? This cannot be undone.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              await ref.read(departmentsProvider.notifier).deleteDepartment(id);
+              await ref.read(designationsProvider.notifier).deleteDesignation(id);
               if (ctx.mounted) Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
