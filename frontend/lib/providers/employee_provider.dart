@@ -92,6 +92,8 @@ class EmployeeListNotifier extends StateNotifier<EmployeeListState> {
         hasMore: items.length >= _pageSize,
       );
     } catch (e, stack) {
+      // ignore: avoid_print
+      print('EmployeeProvider error: $e');
       if (isRefresh || state.employees.value == null) {
         state = state.copyWith(employees: AsyncValue.error(e, stack));
       } else {
