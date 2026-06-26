@@ -74,15 +74,11 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
             child: listState.employees.when(
               data: (employees) {
                 if (employees.isEmpty) {
-                  return _EmptyState(
-                    icon: Icons.people_outline,
-                    title: 'No Employees',
-                    description: 'Import employees from eSSL or add manually.',
-                    actionLabel: 'Add Employee',
-                    onAction: () => context.push('/employees/create'),
-                  );
+                  return Center(child: Text('DEBUG: 0 employees in provider. State: ${listState.employees}', style: const TextStyle(fontSize: 16)));
                 }
-                return _EmployeeTable(
+                return Column(children: [
+                  Padding(padding: const EdgeInsets.all(8), child: Text('DEBUG: ${employees.length} employees loaded', style: const TextStyle(fontSize: 16, color: Colors.red))),
+                  Expanded(child: _EmployeeTable(
                   employees: employees,
                   selected: _selected,
                   onSelect: (id, v) => setState(() {
@@ -92,8 +88,9 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                     if (v) _selected.addAll(employees.map((e) => e.id));
                     else _selected.clear();
                   }),
-                  onTap: (emp) => context.push('/employees/${emp.id}'),
-                );
+                    onTap: (emp) => context.push('/employees/${emp.id}'),
+                  )),
+                ]);
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
