@@ -83,11 +83,63 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                   );
                 }
                 return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: employees.length,
-                  itemBuilder: (context, i) => ListTile(
-                    title: Text(employees[i].fullName),
-                    subtitle: Text(employees[i].employeeCode),
-                  ),
+                  itemBuilder: (context, i) {
+                    final emp = employees[i];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: i.isEven ? _surface : _bg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => context.push('/employees/${emp.id}'),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          child: Row(children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: _primary.withOpacity(0.1),
+                              child: Text(
+                                emp.firstName.isNotEmpty ? emp.firstName[0].toUpperCase() : '?',
+                                style: TextStyle(color: _primary, fontWeight: FontWeight.w700, fontSize: 14),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(flex: 3, child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(emp.fullName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+                                const SizedBox(height: 2),
+                                Text(emp.employeeCode, style: const TextStyle(fontSize: 12, color: _muted)),
+                              ],
+                            )),
+                            Expanded(flex: 2, child: Text(emp.departmentName ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
+                            Expanded(flex: 2, child: Text(emp.designationName ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
+                            Expanded(child: Text(emp.branchName ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: emp.status == 'active' ? _success.withOpacity(0.1) : _muted.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                emp.status.toUpperCase(),
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: emp.status == 'active' ? _success : _muted),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_forward_ios, size: 14, color: _muted),
+                              onPressed: () => context.push('/employees/${emp.id}'),
+                            ),
+                          ]),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
