@@ -16,6 +16,7 @@ from app.models.essl_sync import (
 )
 from app.models.essl_mapping import EsslEmployeeMapping, EsslDeviceMapping
 from app.models.essl_cursor import EsslSyncCursor
+from app.models.essl_location import EsslLocation
 from app.models.employee import Employee, Department, Designation, Branch
 from app.models.device import Device, DeviceStatus
 from app.models.attendance import AttendanceRawLog
@@ -36,11 +37,19 @@ class EsslConnectorService:
             server_url=server.server_url,
             username=server.username,
             password=password,
-            location=getattr(server, 'location', '') or '',
             timeout=server.timeout_seconds,
         )
         settings = get_settings()
         self.client = ESSLClient(self.soap, redis_url=settings.REDIS_URL)
+
+    async def _get_active_locations(self) -> List[str]:
+        """Return list of active location codes for this server. Empty list = all locations."""
+        stmt = select(EsslLocation.code).where(
+            EsslLocation.essl_server_id == self.server.id,
+            EsslLocation.is_active == True,
+        )
+        result = await self.db.execute(stmt)
+        return [row[0] for row in result.all()]
 
     # ------------------------------------------------------------------
     # CONNECTION TESTING
@@ -504,21 +513,25 @@ class EsslConnectorService:
         await self.db.refresh(history)
 
         try:
-            # Step 1: Get all codes from eSSL
-            codes_result = await self.client.get_employee_codes(bypass_cache=True)
-            if not codes_result.get("success"):
-                raise Exception(f"GetEmployeeCodes failed: {codes_result.get('error')}")
+            # Step 1: Get all codes from eSSL (per location)
+            locations = await self._get_active_locations()
+            all_codes = set()
 
-            essl_codes = set()
-            raw_codes = codes_result.get("data", [])
-            if isinstance(raw_codes, list):
-                for item in raw_codes:
-                    if isinstance(item, dict):
-                        code = item.get("employee_code") or item.get("EmployeeCode") or item.get("code")
-                    else:
-                        code = str(item)
-                    if code:
-                        essl_codes.add(str(code).strip())
+            for loc in (locations or [""]):
+                codes_result = await self.client.get_employee_codes(bypass_cache=True, location=loc)
+                if not codes_result.get("success"):
+                    raise Exception(f"GetEmployeeCodes failed for location '{loc}': {codes_result.get('error')}")
+                raw_codes = codes_result.get("data", [])
+                if isinstance(raw_codes, list):
+                    for item in raw_codes:
+                        if isinstance(item, dict):
+                            code = item.get("employee_code") or item.get("EmployeeCode") or item.get("code")
+                        else:
+                            code = str(item)
+                        if code:
+                            all_codes.add(str(code).strip())
+
+            essl_codes = all_codes
 
             history.records_fetched = len(essl_codes)
 
@@ -871,11 +884,19 @@ class EsslConnectorService:
         await self.db.refresh(history)
 
         try:
-            devices_result = await self.client.get_devices(bypass_cache=True)
-            if not devices_result.get("success"):
-                raise Exception(f"GetDeviceList failed: {devices_result.get('error')}")
+            locations = await self._get_active_locations()
+            all_essl_devices = []
 
-            essl_devices = devices_result.get("data", [])
+            for loc in (locations or [""]):
+                devices_result = await self.client.get_devices(bypass_cache=True, location=loc)
+                if not devices_result.get("success"):
+                    raise Exception(f"GetDeviceList failed for location '{loc}': {devices_result.get('error')}")
+                batch = devices_result.get("data", [])
+                if isinstance(batch, dict):
+                    batch = [batch]
+                all_essl_devices.extend(batch)
+
+            essl_devices = all_essl_devices
             if isinstance(essl_devices, dict):
                 essl_devices = [essl_devices]
 

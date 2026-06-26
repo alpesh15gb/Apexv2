@@ -11,7 +11,6 @@ class EsslServerCreate(BaseModel):
     server_url: str = Field(..., max_length=512)
     username: str = Field(..., max_length=255)
     password: str
-    location: str = Field(default="", max_length=255)
     timeout_seconds: int = Field(default=30, ge=5, le=120)
     timezone: str = Field(default="Asia/Kolkata", max_length=50)
     auto_sync_enabled: bool = True
@@ -27,7 +26,6 @@ class EsslServerUpdate(BaseModel):
     server_url: Optional[str] = Field(None, max_length=512)
     username: Optional[str] = Field(None, max_length=255)
     password: Optional[str] = None
-    location: Optional[str] = Field(None, max_length=255)
     timeout_seconds: Optional[int] = Field(None, ge=5, le=120)
     timezone: Optional[str] = Field(None, max_length=50)
     auto_sync_enabled: Optional[bool] = None
@@ -47,7 +45,6 @@ class EsslServerResponse(BaseModel):
     name: str
     server_url: str
     username: str
-    location: str
     timeout_seconds: int
     timezone: str
     auto_sync_enabled: bool
@@ -180,3 +177,31 @@ class EnterpriseSyncDashboard(BaseModel):
     avg_processing_lag_minutes: Optional[float] = None
     servers: List[ServerSyncHealth] = []
     throughput_trend: List[SyncThroughputPoint] = []
+
+
+class EsslLocationCreate(BaseModel):
+    code: str = Field(..., max_length=100)
+    name: str = Field(..., max_length=255)
+    description: Optional[str] = None
+    is_active: bool = True
+
+
+class EsslLocationUpdate(BaseModel):
+    code: Optional[str] = Field(None, max_length=100)
+    name: Optional[str] = Field(None, max_length=255)
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class EsslLocationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    essl_server_id: uuid.UUID
+    code: str
+    name: str
+    description: Optional[str] = None
+    is_active: bool
+    synced_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime

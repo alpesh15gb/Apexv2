@@ -31,7 +31,6 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
   final _urlController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _locationController = TextEditingController();
 
   String _timezone = 'Asia/Kolkata';
   bool _autoSync = true;
@@ -45,7 +44,6 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
     _urlController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
-    _locationController.dispose();
     super.dispose();
   }
 
@@ -56,7 +54,6 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
         'server_url': _urlController.text.trim(),
         'username': _usernameController.text.trim(),
         'password': _passwordController.text,
-        'location': _locationController.text.trim(),
         'timezone': _timezone,
         'auto_sync_enabled': _autoSync,
         'attendance_sync_interval_minutes': _attendanceInterval,
@@ -114,7 +111,21 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
                   _field('Server URL', _urlController, required: true, hint: 'http://192.168.1.100:8080/Webservice.asmx'),
                   _field('Username', _usernameController, required: true),
                   _field('Password', _passwordController, required: true, obscure: true),
-                  _field('Location', _locationController, hint: 'eBioserverNew location name'),
+                  if (widget.serverId != null) ...[
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push('/settings/essl/${widget.serverId}/locations'),
+                        icon: const Icon(Icons.location_on_outlined, size: 16),
+                        label: const Text('Manage Locations'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 16),

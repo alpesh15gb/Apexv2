@@ -49,7 +49,6 @@ async def create_essl_server(
         server_url=data.server_url,
         username=data.username,
         password_encrypted=encrypted_pw,
-        location=data.location,
         timeout_seconds=data.timeout_seconds,
         timezone=data.timezone,
         auto_sync_enabled=data.auto_sync_enabled,

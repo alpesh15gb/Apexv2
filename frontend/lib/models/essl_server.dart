@@ -4,7 +4,6 @@ class EsslServer {
   final String name;
   final String serverUrl;
   final String username;
-  final String location;
   final int timeoutSeconds;
   final String timezone;
   final bool autoSyncEnabled;
@@ -27,7 +26,6 @@ class EsslServer {
     required this.name,
     required this.serverUrl,
     required this.username,
-    required this.location,
     required this.timeoutSeconds,
     required this.timezone,
     required this.autoSyncEnabled,
@@ -52,7 +50,6 @@ class EsslServer {
       name: json['name'] as String,
       serverUrl: json['server_url'] as String,
       username: json['username'] as String,
-      location: json['location'] as String? ?? '',
       timeoutSeconds: json['timeout_seconds'] as int,
       timezone: json['timezone'] as String,
       autoSyncEnabled: json['auto_sync_enabled'] as bool,
@@ -66,6 +63,44 @@ class EsslServer {
       lastError: json['last_error'] as String?,
       serverVersion: json['server_version'] as String?,
       isActive: json['is_active'] as bool,
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
+    );
+  }
+}
+
+class EsslLocation {
+  final String id;
+  final String esslServerId;
+  final String code;
+  final String name;
+  final String? description;
+  final bool isActive;
+  final DateTime? syncedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  EsslLocation({
+    required this.id,
+    required this.esslServerId,
+    required this.code,
+    required this.name,
+    this.description,
+    required this.isActive,
+    this.syncedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory EsslLocation.fromJson(Map<String, dynamic> json) {
+    return EsslLocation(
+      id: json['id'] as String,
+      esslServerId: json['essl_server_id'] as String,
+      code: json['code'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      isActive: json['is_active'] as bool,
+      syncedAt: json['synced_at'] != null ? DateTime.parse(json['synced_at']) : null,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );

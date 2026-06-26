@@ -23,11 +23,10 @@ class ESSLSoapService:
     Communicates via raw XML SOAP 1.1 with error retries and circuit breaker.
     """
 
-    def __init__(self, server_url: str, username: str, password: str, location: str = "", timeout: int = 30):
+    def __init__(self, server_url: str, username: str, password: str, timeout: int = 30):
         self.url = server_url
         self.username = username
         self.password = password
-        self.location = location
         self.timeout = float(timeout)
 
     def _build_envelope(self, operation: str, params: Dict[str, Any]) -> bytes:
@@ -171,12 +170,12 @@ class ESSLSoapService:
     # DEVICE OPERATIONS
     # ==========================================
 
-    async def get_device_list(self) -> Dict[str, Any]:
+    async def get_device_list(self, location: str = "") -> Dict[str, Any]:
         """
         Retrieves device list from eBioserver.
         """
         try:
-            raw = await self._execute_soap_call("GetDeviceList", {"Location": self.location})
+            raw = await self._execute_soap_call("GetDeviceList", {"Location": location})
             parsed = self._xml_to_dict_or_list(raw)
             success, data, error = self._evaluate_success("GetDeviceList", parsed)
             return {"success": success, "data": data, "error": error}
@@ -275,12 +274,12 @@ class ESSLSoapService:
     # EMPLOYEE OPERATIONS
     # ==========================================
 
-    async def get_employee_codes(self) -> Dict[str, Any]:
+    async def get_employee_codes(self, location: str = "") -> Dict[str, Any]:
         """
         Retrieves list of employee codes.
         """
         try:
-            raw = await self._execute_soap_call("GetEmployeeCodes", {"EmployeeLocation": self.location})
+            raw = await self._execute_soap_call("GetEmployeeCodes", {"EmployeeLocation": location})
             parsed = self._xml_to_dict_or_list(raw)
             success, data, error = self._evaluate_success("GetEmployeeCodes", parsed)
             return {"success": success, "data": data, "error": error}

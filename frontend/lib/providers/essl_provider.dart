@@ -86,3 +86,48 @@ final enterpriseSyncDashboardProvider =
   final service = ref.read(esslServiceProvider);
   return await service.getEnterpriseDashboard(throughputDays: throughputDays);
 });
+
+class EsslLocationNotifier extends StateNotifier<AsyncValue<List<EsslLocation>>> {
+  final EsslService _service;
+  final String serverId;
+
+  EsslLocationNotifier(this._service, this.serverId) : super(const AsyncValue.loading()) {
+    fetchLocations();
+  }
+
+  Future<void> fetchLocations({bool isRefresh = false}) async {
+    if (isRefresh) state = const AsyncValue.loading();
+    try {
+      final items = await _service.getLocations(serverId);
+      state = AsyncValue.data(items);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> addLocation(Map<String, dynamic> data) async {
+    final location = await _service.createLocation(serverId, data);
+    if (state.value != null) {
+      state = AsyncValue.data([...state.value!, location]);
+    }
+  }
+
+  Future<void> updateLocation(String locationId, Map<String, dynamic> data) async {
+    final updated = await _service.updateLocation(serverId, locationId, data);
+    if (state.value != null) {
+      state = AsyncValue.data(state.value!.map((l) => l.id == locationId ? updated : l).toList());
+    }
+  }
+
+  Future<void> deleteLocation(String locationId) async {
+    await _service.deleteLocation(serverId, locationId);
+    if (state.value != null) {
+      state = AsyncValue.data(state.value!.where((l) => l.id != locationId).toList());
+    }
+  }
+}
+
+final esslLocationProvider = StateNotifierProvider.family<
+    EsslLocationNotifier, AsyncValue<List<EsslLocation>>, String>((ref, serverId) {
+  return EsslLocationNotifier(ref.read(esslServiceProvider), serverId);
+});

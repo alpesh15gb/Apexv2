@@ -119,6 +119,25 @@ class EsslService {
     final response = await _dio.post('/essl/$serverId/reprocess', data: body);
     return response.data as Map<String, dynamic>;
   }
+
+  Future<List<EsslLocation>> getLocations(String serverId) async {
+    final response = await _dio.get('/essl/$serverId/locations');
+    return (response.data as List).map((e) => EsslLocation.fromJson(e)).toList();
+  }
+
+  Future<EsslLocation> createLocation(String serverId, Map<String, dynamic> data) async {
+    final response = await _dio.post('/essl/$serverId/locations', data: data);
+    return EsslLocation.fromJson(response.data);
+  }
+
+  Future<EsslLocation> updateLocation(String serverId, String locationId, Map<String, dynamic> data) async {
+    final response = await _dio.put('/essl/$serverId/locations/$locationId', data: data);
+    return EsslLocation.fromJson(response.data);
+  }
+
+  Future<void> deleteLocation(String serverId, String locationId) async {
+    await _dio.delete('/essl/$serverId/locations/$locationId');
+  }
 }
 
 final esslServiceProvider = Provider<EsslService>((ref) {

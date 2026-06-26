@@ -15,6 +15,7 @@ from app.api.v1.endpoints import (
     dashboard,
     websocket,
     essl_connector,
+    essl_locations,
 )
 
 api_router = APIRouter()
@@ -34,3 +35,4 @@ api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 api_router.include_router(websocket.router, tags=["WebSockets"])
 api_router.include_router(essl_connector.router, prefix="/essl", tags=["eSSL Connector"])
+api_router.include_router(essl_locations.router, prefix="/essl", tags=["eSSL Locations"])

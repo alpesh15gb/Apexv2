@@ -135,7 +135,7 @@ class ESSLClient:
     # DEVICE OPERATIONS
     # ==========================================
 
-    async def get_devices(self, bypass_cache: bool = False, page: Optional[int] = None, page_size: Optional[int] = None) -> Dict[str, Any]:
+    async def get_devices(self, bypass_cache: bool = False, page: Optional[int] = None, page_size: Optional[int] = None, location: str = "") -> Dict[str, Any]:
         """
         Gets all devices with Redis caching and pagination.
         Returns Dict with success, data (items, total, page, page_size, total_pages), error.
@@ -159,7 +159,7 @@ class ESSLClient:
                 cached_data = None
 
         if not cached_data:
-            res = await self.soap.get_device_list()
+            res = await self.soap.get_device_list(location=location)
             if not res["success"]:
                 return res
 
@@ -242,11 +242,11 @@ class ESSLClient:
     # EMPLOYEE OPERATIONS
     # ==========================================
 
-    async def get_employee_codes(self, page: Optional[int] = None, page_size: Optional[int] = None) -> Dict[str, Any]:
+    async def get_employee_codes(self, page: Optional[int] = None, page_size: Optional[int] = None, location: str = "") -> Dict[str, Any]:
         """
         Gets all employee codes.
         """
-        res = await self.soap.get_employee_codes()
+        res = await self.soap.get_employee_codes(location=location)
         if not res["success"]:
             return res
 

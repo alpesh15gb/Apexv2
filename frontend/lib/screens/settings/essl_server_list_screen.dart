@@ -109,6 +109,7 @@ class EsslServerListScreen extends ConsumerWidget {
                       icon: const Icon(Icons.more_vert, size: 18),
                       itemBuilder: (context) => [
                         const PopupMenuItem(value: 'test', child: Text('Test Connection')),
+                        const PopupMenuItem(value: 'locations', child: Text('Locations')),
                         const PopupMenuItem(value: 'edit', child: Text('Edit')),
                         const PopupMenuItem(value: 'sync_attendance', child: Text('Sync Attendance')),
                         const PopupMenuItem(value: 'sync_employees', child: Text('Sync Employees')),
@@ -118,6 +119,7 @@ class EsslServerListScreen extends ConsumerWidget {
                       ],
                       onSelected: (v) async {
                         if (v == 'edit') context.push('/settings/essl/${s.id}');
+                        if (v == 'locations') context.push('/settings/essl/${s.id}/locations');
                         if (v == 'history') context.push('/settings/essl/${s.id}/history');
                         if (v == 'dashboard') context.push('/settings/essl/dashboard');
                         if (v == 'test') {

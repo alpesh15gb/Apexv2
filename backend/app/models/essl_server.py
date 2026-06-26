@@ -35,7 +35,6 @@ class EsslServer(TenantModel):
     server_url = Column(String(512), nullable=False)
     username = Column(String(255), nullable=False)
     password_encrypted = Column(Text, nullable=False)
-    location = Column(String(255), nullable=False, default="")
     timeout_seconds = Column(Integer, default=30, nullable=False)
     timezone = Column(String(50), default="Asia/Kolkata", nullable=False)
     auto_sync_enabled = Column(Boolean, default=True, nullable=False)
@@ -74,6 +73,9 @@ class EsslServer(TenantModel):
     )
     device_mappings = relationship(
         "EsslDeviceMapping", back_populates="essl_server", cascade="all, delete-orphan"
+    )
+    locations = relationship(
+        "EsslLocation", back_populates="essl_server", cascade="all, delete-orphan"
     )
 
     __table_args__ = (

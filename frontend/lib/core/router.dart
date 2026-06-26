@@ -42,6 +42,7 @@ import '../screens/settings/essl_sync_history_screen.dart';
 import '../screens/settings/essl_initial_sync_screen.dart';
 import '../screens/settings/essl_dashboard_screen.dart';
 import '../screens/settings/essl_reprocess_screen.dart';
+import '../screens/settings/essl_locations_screen.dart';
 import 'secure_storage.dart';
 import 'constants.dart';
 
@@ -282,6 +283,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return EsslSyncHistoryScreen(serverId: id);
+        },
+      ),
+      GoRoute(
+        path: '/settings/essl/:id/locations',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EsslLocationsScreen(serverId: id);
         },
       ),
       GoRoute(
