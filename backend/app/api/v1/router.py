@@ -32,7 +32,9 @@ from app.api.v1.endpoints import (
     timeline,
     expense_benefits,
     hr_ops,
+    ess,
 )
+from app.api.v1.endpoints.admin import auth as admin_auth, dashboard as admin_dashboard, tenants as admin_tenants, plans as admin_plans, features as admin_features
 
 api_router = APIRouter()
 
@@ -68,3 +70,9 @@ api_router.include_router(exit_requests.router, prefix="/exit-requests", tags=["
 api_router.include_router(timeline.router, prefix="/timeline", tags=["Employee Timeline"])
 api_router.include_router(expense_benefits.router, prefix="/finance", tags=["Expense & Benefits"])
 api_router.include_router(hr_ops.router, prefix="/hr", tags=["HR Operations"])
+api_router.include_router(ess.router, prefix="/ess", tags=["Employee Self Service"])
+api_router.include_router(admin_auth.router, prefix="/admin/auth", tags=["Super Admin Auth"])
+api_router.include_router(admin_dashboard.router, prefix="/admin/dashboard", tags=["Super Admin Dashboard"])
+api_router.include_router(admin_tenants.router, prefix="/admin/tenants", tags=["Super Admin Tenants"])
+api_router.include_router(admin_plans.router, prefix="/admin/plans", tags=["Super Admin Plans"])
+api_router.include_router(admin_features.router, prefix="/admin/features", tags=["Super Admin Features"])

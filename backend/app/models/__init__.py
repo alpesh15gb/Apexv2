@@ -1,6 +1,6 @@
 """Models initialization file exposing all SQLAlchemy models."""
 
-from app.models.tenant import Tenant, SubscriptionPlan
+from app.models.tenant import Tenant
 from app.models.user import User, UserRole, user_roles
 from app.models.role import Role, Permission, RolePermission, role_permissions
 from app.models.audit_log import AuditLog
@@ -18,10 +18,12 @@ from app.models.essl_sync import EsslSyncHistory, EsslSyncJob, EsslSyncError, Sy
 from app.models.essl_mapping import EsslEmployeeMapping, EsslDeviceMapping
 from app.models.essl_cursor import EsslSyncCursor
 from app.models.attendance import AttendanceRawLog
+from app.models.subscription import SubscriptionPlan, TenantSubscription, ResourceLimit
+from app.models.feature import FeatureFlag, TenantFeature
+from app.models.approval import ApprovalWorkflow, ApprovalStep, ApprovalRequest, ApprovalHistory, LoginHistory, SuperAdminLog
 
 __all__ = [
     "Tenant",
-    "SubscriptionPlan",
     "User",
     "UserRole",
     "user_roles",
@@ -76,4 +78,15 @@ __all__ = [
     "EsslDeviceMapping",
     "EsslSyncCursor",
     "AttendanceRawLog",
+    "SubscriptionPlan",
+    "TenantSubscription",
+    "ResourceLimit",
+    "FeatureFlag",
+    "TenantFeature",
+    "ApprovalWorkflow",
+    "ApprovalStep",
+    "ApprovalRequest",
+    "ApprovalHistory",
+    "LoginHistory",
+    "SuperAdminLog",
 ]
