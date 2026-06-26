@@ -518,7 +518,7 @@ class EsslConnectorService:
             all_codes = set()
 
             for loc in (locations or [""]):
-                codes_result = await self.client.get_employee_codes(bypass_cache=True, location=loc)
+                codes_result = await self.client.get_employee_codes(location=loc)
                 if not codes_result.get("success"):
                     raise Exception(f"GetEmployeeCodes failed for location '{loc}': {codes_result.get('error')}")
                 raw_codes = codes_result.get("data", [])
@@ -1013,7 +1013,7 @@ class EsslConnectorService:
                     created += 1
 
             # Apply conflict policy for local devices NOT in eSSL
-            for serial, mapping in existing_mappings.items():
+            for serial, mapping in this_server_mappings.items():
                 if serial not in essl_serials:
                     await self._resolve_conflict("device", mapping.device_id, history)
 
