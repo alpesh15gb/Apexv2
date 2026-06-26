@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../design_system/typography.dart';
 import '../../services/essl_service.dart';
 import '../../core/dio_client.dart';
+import '../../widgets/apex_app_bar.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -125,13 +126,7 @@ class HolidayCalendarScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: _bg,
-      appBar: AppBar(
-        title: const Text('Holidays'),
-        backgroundColor: _surface,
-        foregroundColor: _text,
-        elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
-        actions: [
+      appBar: ApexAppBar(title: 'Holidays', actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left, size: 20),
             onPressed: () => notifier.fetchHolidays(year: notifier.year - 1, isRefresh: true),
@@ -147,8 +142,7 @@ class HolidayCalendarScreen extends ConsumerWidget {
             tooltip: 'Add Holiday',
             onPressed: () => _showHolidayDialog(context, ref),
           ),
-        ],
-      ),
+        ]),
       body: holidaysAsync.when(
         data: (holidays) {
           if (holidays.isEmpty) {

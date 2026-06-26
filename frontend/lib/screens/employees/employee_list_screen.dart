@@ -82,7 +82,25 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                     onAction: () => context.push('/employees/create'),
                   );
                 }
-                return ListView.builder(
+                return Column(children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: const BoxDecoration(
+                      color: _surface,
+                      border: Border(bottom: BorderSide(color: _border, width: 1)),
+                    ),
+                    child: Row(children: [
+                      const SizedBox(width: 50),
+                      const Expanded(flex: 3, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                      const Expanded(flex: 2, child: Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                      const Expanded(flex: 2, child: Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                      const Expanded(child: Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                      const SizedBox(width: 70, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                      const SizedBox(width: 40),
+                    ]),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: employees.length,
                   itemBuilder: (context, i) {
@@ -140,6 +158,8 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                       ),
                     );
                   },
+                  ),
+                  ]),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),

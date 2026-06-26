@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/responsive.dart';
 import '../../design_system/typography.dart';
 import '../../services/report_service.dart';
+import '../../widgets/apex_app_bar.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -137,13 +138,7 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
 
     return Scaffold(
       backgroundColor: _bg,
-      appBar: AppBar(
-        title: const Text('Report Center'),
-        backgroundColor: _surface,
-        foregroundColor: _text,
-        elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
-      ),
+      appBar: const ApexAppBar(title: 'Report Center'),
       body: isMobile ? _buildMobile() : _buildDesktop(),
     );
   }

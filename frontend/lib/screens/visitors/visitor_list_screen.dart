@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/responsive.dart';
 import '../../design_system/typography.dart';
 import '../../providers/visitor_provider.dart';
+import '../../widgets/apex_app_bar.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -26,17 +27,10 @@ class VisitorListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: _bg,
-      appBar: AppBar(
-        title: const Text('Visitors'),
-        backgroundColor: _surface,
-        foregroundColor: _text,
-        elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
-        actions: [
+      appBar: ApexAppBar(title: 'Visitors', actions: [
           IconButton(icon: const Icon(Icons.person_add, size: 18), tooltip: 'Register Visitor', onPressed: () => context.push('/visitors/register')),
           IconButton(icon: const Icon(Icons.card_membership, size: 18), tooltip: 'Active Visitors', onPressed: () => context.push('/visitors/active')),
-        ],
-      ),
+        ]),
       body: passesState.passes.when(
         data: (visitors) {
           if (visitors.isEmpty) {

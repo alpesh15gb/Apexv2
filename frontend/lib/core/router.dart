@@ -213,6 +213,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Leaves routes
       GoRoute(
+        path: '/leaves',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const LeaveRequestsScreen(),
+      ),
+      GoRoute(
         path: '/leaves/balance',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const LeaveBalanceScreen(),

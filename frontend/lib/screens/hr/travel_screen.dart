@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
+import '../../widgets/apex_app_bar.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -58,12 +59,7 @@ class TravelScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: _bg,
-      appBar: AppBar(
-        title: const Text('Travel Requests'),
-        backgroundColor: _surface, foregroundColor: _text, elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
-        actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))],
-      ),
+      appBar: ApexAppBar(title: 'Travel Requests', actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))]),
       body: travelAsync.when(
         data: (items) {
           if (items.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
