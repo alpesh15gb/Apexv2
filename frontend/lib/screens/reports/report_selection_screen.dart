@@ -1,8 +1,10 @@
-import 'dart:html' as html;
+import 'dart:io' show File, Directory;
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../core/responsive.dart';
 import '../../design_system/typography.dart';
@@ -82,11 +84,28 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
     }
   }
 
-  void _saveFile(Uint8List bytes, String filename) {
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.AnchorElement(href: url)..setAttribute('download', filename)..click();
-    html.Url.revokeObjectUrl(url);
+  void _saveFile(Uint8List bytes, String filename) async {
+    if (kIsWeb) {
+      // Web download not supported on desktop
+      return;
+    }
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/$filename';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Saved to: $filePath'), backgroundColor: _success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Save failed: $e'), backgroundColor: _danger),
+        );
+      }
+    }
   }
 
   String _getFilename() {

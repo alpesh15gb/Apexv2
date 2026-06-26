@@ -86,7 +86,7 @@ class ESSLSoapService:
             
             raise ValueError(f"Could not find {operation}Result element in response")
         except Exception as e:
-            logger.error("Failed parsing SOAP XML response", error=str(e), operation=operation)
+            logger.error("Failed parsing SOAP XML response", error=str(e), operation=operation, response_preview=response_text[:500])
             raise ValueError(f"Response parsing failed: {str(e)}")
 
     def _node_to_dict_or_list(self, node: etree._Element) -> Any:
@@ -147,7 +147,7 @@ class ESSLSoapService:
         """
         Fires async HTTP request with tenacity retries on request/network errors.
         """
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False, verify=False) as client:
             response = await client.post(self.url, headers=headers, content=payload)
             response.raise_for_status()
             return response

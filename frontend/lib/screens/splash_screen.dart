@@ -19,16 +19,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   void _checkAuth() async {
-    // Wait for the authProvider to check status
     await Future.delayed(const Duration(milliseconds: 1500));
-    final authState = ref.read(authProvider);
-    
-    if (mounted) {
+    if (!mounted) return;
+    try {
+      final authState = ref.read(authProvider);
       if (authState.value != null) {
         context.go('/dashboard');
       } else {
         context.go('/login');
       }
+    } catch (_) {
+      context.go('/login');
     }
   }
 

@@ -1,5 +1,6 @@
 class ApiConstants {
   static const String baseUrl = '/api/v1';
+  static const String desktopBaseUrl = 'https://next.apextime.in/api/v1';
   static String get wsUrl {
     final uri = Uri.base;
     final scheme = uri.scheme == 'https' ? 'wss' : 'ws';

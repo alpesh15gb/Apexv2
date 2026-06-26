@@ -2,16 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
-import 'dart:html' as html;
 import 'constants.dart';
 import 'secure_storage.dart';
 
 String _getBaseUrl() {
   if (kIsWeb) {
-    final origin = html.window.location.origin;
-    return '$origin${ApiConstants.baseUrl}';
+    return ApiConstants.baseUrl;
   }
-  return ApiConstants.baseUrl;
+  return ApiConstants.desktopBaseUrl;
 }
 
 final dioProvider = Provider<Dio>((ref) {
@@ -37,6 +35,16 @@ final dioProvider = Provider<Dio>((ref) {
         return handler.next(options);
       },
       onError: (DioException error, handler) async {
+        if (error.type == DioExceptionType.unknown && 
+            error.error != null && 
+            error.error.toString().contains('SystemLiteral')) {
+          return handler.reject(DioException(
+            requestOptions: error.requestOptions,
+            response: error.response,
+            type: DioExceptionType.badResponse,
+            error: 'Server returned an invalid response (expected JSON, got XML/HTML). Check if the API server is running.',
+          ));
+        }
         if (error.response?.statusCode == 401 &&
             error.requestOptions.path != ApiConstants.login &&
             error.requestOptions.path != ApiConstants.refresh) {
@@ -47,7 +55,7 @@ final dioProvider = Provider<Dio>((ref) {
               // Try to refresh token
               final refreshResponse = await Dio(
                 BaseOptions(
-                  baseUrl: ApiConstants.baseUrl,
+                  baseUrl: _getBaseUrl(),
                   headers: {'Content-Type': 'application/json'},
                 ),
               ).post(
