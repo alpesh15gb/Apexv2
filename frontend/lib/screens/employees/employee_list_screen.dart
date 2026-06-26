@@ -381,9 +381,10 @@ class _EmployeeTable extends StatelessWidget {
               ),
             ),
             // Rows
-            Expanded(
-              child: ListView.builder(
-                itemCount: employees.length,
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: employees.length,
                 itemBuilder: (context, i) => _EmployeeRow(
                   employee: employees[i],
                   index: i,
@@ -392,8 +393,7 @@ class _EmployeeTable extends StatelessWidget {
                   onTap: () => onTap(employees[i]),
                 ),
               ),
-            ),
-          ],
+            ],
         ),
       ),
     );
