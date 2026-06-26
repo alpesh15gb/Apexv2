@@ -127,6 +127,18 @@ class Employee(TenantModel):
         nullable=True,
         index=True,
     )
+    shift_group_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("shift_groups.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    shift_roster_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("shift_rosters.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     joining_date = Column(Date, nullable=True)
     date_of_birth = Column(Date, nullable=True)

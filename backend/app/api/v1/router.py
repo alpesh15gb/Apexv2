@@ -19,6 +19,9 @@ from app.api.v1.endpoints import (
     holidays,
     categories,
     tenant_settings,
+    shift_groups,
+    shift_rosters,
+    department_shifts,
 )
 
 api_router = APIRouter()
@@ -42,3 +45,6 @@ api_router.include_router(essl_locations.router, prefix="/essl", tags=["eSSL Loc
 api_router.include_router(holidays.router, prefix="/holidays", tags=["Holidays"])
 api_router.include_router(categories.router, prefix="/categories", tags=["Employee Categories"])
 api_router.include_router(tenant_settings.router, prefix="/tenant-settings", tags=["Tenant Settings"])
+api_router.include_router(shift_groups.router, prefix="/shift-groups", tags=["Shift Groups"])
+api_router.include_router(shift_rosters.router, prefix="/shift-rosters", tags=["Shift Rosters"])
+api_router.include_router(department_shifts.router, prefix="/department-shifts", tags=["Department Shifts"])
