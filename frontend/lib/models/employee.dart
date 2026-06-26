@@ -10,7 +10,7 @@ class Employee {
   final String? designationId;
   final String? branchId;
   final String? shiftId;
-  final DateTime joiningDate;
+  final DateTime? joiningDate;
   final DateTime? dateOfBirth;
   final String? gender;
   final String? address;
@@ -42,7 +42,7 @@ class Employee {
     this.designationId,
     this.branchId,
     this.shiftId,
-    required this.joiningDate,
+    this.joiningDate,
     this.dateOfBirth,
     this.gender,
     this.address,
@@ -78,7 +78,7 @@ class Employee {
       designationId: json['designation_id'] as String?,
       branchId: json['branch_id'] as String?,
       shiftId: json['shift_id'] as String?,
-      joiningDate: DateTime.parse(json['joining_date'] as String),
+      joiningDate: json['joining_date'] != null ? DateTime.parse(json['joining_date'] as String) : null,
       dateOfBirth: json['date_of_birth'] != null ? DateTime.parse(json['date_of_birth'] as String) : null,
       gender: json['gender'] as String?,
       address: json['address'] as String?,
@@ -113,7 +113,7 @@ class Employee {
       'designation_id': designationId,
       'branch_id': branchId,
       'shift_id': shiftId,
-      'joining_date': joiningDate.toIso8601String().substring(0, 10),
+      'joining_date': joiningDate?.toIso8601String().substring(0, 10),
       'date_of_birth': dateOfBirth?.toIso8601String().substring(0, 10),
       'gender': gender,
       'address': address,

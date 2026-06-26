@@ -172,13 +172,13 @@ class BirthdayItem {
 class AnniversaryItem {
   final String id;
   final String name;
-  final String joiningDate;
+  final String? joiningDate;
   final int years;
 
   AnniversaryItem({
     required this.id,
     required this.name,
-    required this.joiningDate,
+    this.joiningDate,
     required this.years,
   });
 
@@ -186,7 +186,7 @@ class AnniversaryItem {
     return AnniversaryItem(
       id: json['id'] as String,
       name: json['name'] as String,
-      joiningDate: json['joining_date'] as String,
+      joiningDate: json['joining_date'] as String?,
       years: json['years'] as int? ?? 0,
     );
   }

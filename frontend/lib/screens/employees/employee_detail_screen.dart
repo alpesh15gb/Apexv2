@@ -285,7 +285,7 @@ class _OverviewTab extends StatelessWidget {
                       _detailRow('Department', employee.departmentName ?? '—'),
                       _detailRow('Designation', employee.designationName ?? '—'),
                       _detailRow('Branch', employee.branchName ?? '—'),
-                      _detailRow('Joined', DateFormat('MMM dd, yyyy').format(employee.joiningDate)),
+                      _detailRow('Joined', employee.joiningDate != null ? DateFormat('MMM dd, yyyy').format(employee.joiningDate!) : '—'),
                     ],
                   ),
                 ),
