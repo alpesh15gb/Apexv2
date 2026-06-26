@@ -34,6 +34,7 @@ from app.api.v1.endpoints import (
     hr_ops,
     ess,
     setup,
+    lifecycle,
 )
 from app.api.v1.endpoints.admin import auth as admin_auth, dashboard as admin_dashboard, tenants as admin_tenants, plans as admin_plans, features as admin_features
 
@@ -78,3 +79,4 @@ api_router.include_router(admin_tenants.router, prefix="/admin/tenants", tags=["
 api_router.include_router(admin_plans.router, prefix="/admin/plans", tags=["Super Admin Plans"])
 api_router.include_router(admin_features.router, prefix="/admin/features", tags=["Super Admin Features"])
 api_router.include_router(setup.router, prefix="/setup", tags=["Setup Wizard"])
+api_router.include_router(lifecycle.router, prefix="/employees", tags=["Employee Lifecycle"])

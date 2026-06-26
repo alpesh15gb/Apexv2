@@ -59,6 +59,8 @@ import '../screens/ess/ess_attendance_screen.dart';
 import '../screens/ess/ess_leave_screen.dart';
 import '../screens/ess/ess_profile_screen.dart';
 import '../screens/setup/setup_wizard_screen.dart';
+import '../screens/employees/employee_directory_screen.dart';
+import '../screens/employees/employee_create_wizard.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -182,7 +184,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/employees',
-            builder: (context, state) => const EmployeeListScreen(),
+            builder: (context, state) => const EmployeeDirectoryScreen(),
+          ),
+          GoRoute(
+            path: '/employees/create',
+            builder: (context, state) => const EmployeeCreateWizard(),
           ),
           GoRoute(
             path: '/attendance',
