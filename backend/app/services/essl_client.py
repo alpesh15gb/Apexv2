@@ -292,7 +292,11 @@ class ESSLClient:
             if not res["success"]:
                 return res
 
-            emp_dict = normalize_keys(res["data"])
+            raw_data = res["data"]
+            if isinstance(raw_data, str) and "=" in raw_data:
+                raw_data = {k.strip(): v.strip() for k, v in
+                            (pair.split("=", 1) for pair in raw_data.split(",") if "=" in pair)}
+            emp_dict = normalize_keys(raw_data)
 
             if redis and emp_dict:
                 try:
