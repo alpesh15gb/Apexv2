@@ -68,6 +68,9 @@ import '../screens/ess/ess_attendance_calendar_screen.dart';
 import '../screens/leaves/leave_dashboard_screen.dart';
 import '../screens/leaves/leave_types_screen.dart';
 import '../screens/leaves/leave_calendar_screen.dart';
+import '../screens/payroll/payroll_dashboard_screen.dart';
+import '../screens/payroll/salary_structures_screen.dart';
+import '../screens/payroll/loans_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -194,8 +197,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => MainShell(child: child),
         routes: [
           GoRoute(
-            path: '/dashboard',
-            builder: (context, state) => const DashboardScreen(),
+            path: '/payroll',
+            builder: (context, state) => const PayrollDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/payroll/salary-structures',
+            builder: (context, state) => const SalaryStructuresScreen(),
+          ),
+          GoRoute(
+            path: '/payroll/loans',
+            builder: (context, state) => const LoansScreen(),
           ),
           GoRoute(
             path: '/employees',
