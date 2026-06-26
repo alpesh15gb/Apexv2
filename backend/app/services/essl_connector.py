@@ -574,6 +574,8 @@ class EsslConnectorService:
                         continue
 
                     emp_data = details.get("data", {})
+                    if hasattr(emp_data, 'model_dump'):
+                        emp_data = emp_data.model_dump()
                     name = emp_data.get("name", "")
                     name_parts = name.strip().split(" ", 1) if name else ["", ""]
                     first_name = name_parts[0] if len(name_parts) > 0 else ""
