@@ -71,6 +71,9 @@ import '../screens/leaves/leave_calendar_screen.dart';
 import '../screens/payroll/payroll_dashboard_screen.dart';
 import '../screens/payroll/salary_structures_screen.dart';
 import '../screens/payroll/loans_screen.dart';
+import '../screens/recruitment/recruitment_dashboard_screen.dart';
+import '../screens/recruitment/candidates_screen.dart';
+import '../screens/recruitment/interviews_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -391,6 +394,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/notifications',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const NotificationListScreen(),
+      ),
+      // Recruitment routes
+      GoRoute(
+        path: '/recruitment',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const RecruitmentDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/recruitment/candidates',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const CandidatesScreen(),
+      ),
+      GoRoute(
+        path: '/recruitment/interviews',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const InterviewsScreen(),
       ),
       // Reports routes
       GoRoute(
