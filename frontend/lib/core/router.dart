@@ -65,6 +65,9 @@ import '../screens/attendance/attendance_dashboard_screen.dart';
 import '../screens/attendance/regularization_screen.dart';
 import '../screens/shifts/shift_management_screen.dart';
 import '../screens/ess/ess_attendance_calendar_screen.dart';
+import '../screens/leaves/leave_dashboard_screen.dart';
+import '../screens/leaves/leave_types_screen.dart';
+import '../screens/leaves/leave_calendar_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -158,10 +161,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/ess/attendance',
         builder: (context, state) => const EssAttendanceCalendarScreen(),
       ),
-      GoRoute(
-        path: '/ess/leaves',
-        builder: (context, state) => const EssLeaveScreen(),
-      ),
+          GoRoute(
+            path: '/leaves',
+            builder: (context, state) => const LeaveDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/leaves/types',
+            builder: (context, state) => const LeaveTypesScreen(),
+          ),
+          GoRoute(
+            path: '/leaves/calendar',
+            builder: (context, state) => const LeaveCalendarScreen(),
+          ),
       GoRoute(
         path: '/ess/profile',
         builder: (context, state) => const EssProfileScreen(),
