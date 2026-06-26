@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/responsive.dart';
 import '../../design_system/typography.dart';
 import '../../providers/essl_provider.dart';
+import '../../services/essl_service.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -107,14 +108,64 @@ class EsslServerListScreen extends ConsumerWidget {
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert, size: 18),
                       itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'test', child: Text('Test Connection')),
                         const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        const PopupMenuItem(value: 'sync_attendance', child: Text('Sync Attendance')),
+                        const PopupMenuItem(value: 'sync_employees', child: Text('Sync Employees')),
+                        const PopupMenuItem(value: 'sync_devices', child: Text('Sync Devices')),
                         const PopupMenuItem(value: 'history', child: Text('Sync History')),
                         const PopupMenuItem(value: 'dashboard', child: Text('Dashboard')),
                       ],
-                      onSelected: (v) {
+                      onSelected: (v) async {
                         if (v == 'edit') context.push('/settings/essl/${s.id}');
                         if (v == 'history') context.push('/settings/essl/${s.id}/history');
                         if (v == 'dashboard') context.push('/settings/essl/dashboard');
+                        if (v == 'test') {
+                          final service = ref.read(esslServiceProvider);
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Testing connection...')));
+                          try {
+                            final result = await service.testConnection(s.id);
+                            if (result.success) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Connected! Server: ${result.serverVersion ?? "OK"} (${result.responseTimeMs}ms)'),
+                                backgroundColor: _success,
+                              ));
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Failed: ${result.error}'),
+                                backgroundColor: _danger,
+                              ));
+                            }
+                            ref.read(esslServerListProvider.notifier).fetchServers(isRefresh: true);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: _danger,
+                            ));
+                          }
+                        }
+                        if (v == 'sync_attendance' || v == 'sync_employees' || v == 'sync_devices') {
+                          final service = ref.read(esslServiceProvider);
+                          final label = v == 'sync_attendance' ? 'attendance' : v == 'sync_employees' ? 'employees' : 'devices';
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Starting $label sync...')));
+                          try {
+                            final result = v == 'sync_attendance'
+                                ? await service.syncAttendance(s.id)
+                                : v == 'sync_employees'
+                                    ? await service.syncEmployees(s.id)
+                                    : await service.syncDevices(s.id);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('$label sync completed: ${result.recordsFetched} fetched, ${result.recordsCreated} created'),
+                              backgroundColor: _success,
+                            ));
+                            ref.read(esslServerListProvider.notifier).fetchServers(isRefresh: true);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('Sync failed: $e'),
+                              backgroundColor: _danger,
+                            ));
+                          }
+                        }
                       },
                     ),
                   ],
