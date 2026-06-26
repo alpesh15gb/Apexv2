@@ -164,8 +164,20 @@ class ESSLClient:
                 return res
 
             raw_items = res["data"]
-            # Ensure it is a list
-            if isinstance(raw_items, dict):
+            if isinstance(raw_items, str) and ";" in raw_items:
+                raw_items = []
+                for entry in res["data"].split(";"):
+                    entry = entry.strip()
+                    if not entry:
+                        continue
+                    parts = entry.split(",")
+                    if len(parts) >= 2:
+                        raw_items.append({
+                            "DeviceName": parts[0].strip(),
+                            "DeviceSerialNumber": parts[1].strip(),
+                            "Location": parts[2].strip() if len(parts) > 2 else "",
+                        })
+            elif isinstance(raw_items, dict):
                 raw_items = [raw_items]
             elif not isinstance(raw_items, list):
                 raw_items = []

@@ -47,6 +47,7 @@ import '../screens/settings/essl_locations_screen.dart';
 import '../screens/holidays/holiday_calendar_screen.dart';
 import '../screens/settings/category_screen.dart';
 import '../screens/settings/tenant_settings_screen.dart';
+import '../screens/finance/expense_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -289,6 +290,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/reports',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ReportSelectionScreen(),
+      ),
+      // Finance routes
+      GoRoute(
+        path: '/expenses',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ExpenseScreen(),
       ),
       // eSSL Connector routes
       GoRoute(
