@@ -79,9 +79,16 @@ class EmployeeListNotifier extends StateNotifier<EmployeeListState> {
         status: state.status,
       );
 
-      final items = (data['items'] as List)
-          .map((e) => Employee.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final rawItems = data['items'] as List;
+      final items = <Employee>[];
+      for (final e in rawItems) {
+        try {
+          items.add(Employee.fromJson(e as Map<String, dynamic>));
+        } catch (parseError) {
+          // ignore: avoid_print
+          print('Failed to parse employee: $parseError - data: $e');
+        }
+      }
 
       final currentList = state.employees.value ?? [];
       final updatedList = isRefresh ? items : [...currentList, ...items];
