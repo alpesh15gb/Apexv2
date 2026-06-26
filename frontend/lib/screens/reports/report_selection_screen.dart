@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 import '../../core/responsive.dart';
 import '../../design_system/typography.dart';
@@ -104,7 +106,10 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
 
   void _saveFile(Uint8List bytes, String filename) async {
     if (kIsWeb) {
-      // Web download not supported on desktop
+      final blob = html.Blob([bytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)..setAttribute('download', filename)..click();
+      html.Url.revokeObjectUrl(url);
       return;
     }
     try {

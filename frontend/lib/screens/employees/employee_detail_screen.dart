@@ -220,7 +220,7 @@ class _ProfileHeader extends StatelessWidget {
   Widget _actions(BuildContext context) {
     return Row(
       children: [
-        IconButton(icon: const Icon(Icons.edit, size: 18), tooltip: 'Edit', onPressed: () {}),
+        IconButton(icon: const Icon(Icons.edit, size: 18), tooltip: 'Edit', onPressed: () => context.push('/employees/${employee.id}/edit')),
         IconButton(icon: const Icon(Icons.calendar_today, size: 18), tooltip: 'Attendance', onPressed: () => context.push('/attendance/detail?employeeId=${employee.id}')),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, size: 18),
@@ -250,9 +250,9 @@ class _OverviewTab extends StatelessWidget {
             title: 'CURRENT STATUS',
             child: Column(
               children: [
-                _statusRow('Today', 'Present (09:05 AM)', _success),
-                _statusRow('Shift', 'General (09:00 - 18:00)', _primary),
-                _statusRow('Leave Balance', '12 days available', _muted),
+                _statusRow('Status', employee.status.toUpperCase(), employee.status == 'active' ? _success : _danger),
+                _statusRow('Shift', employee.shiftName ?? 'Not assigned', _primary),
+                _statusRow('Department', employee.departmentName ?? 'Not assigned', _muted),
               ],
             ),
           ),

@@ -3,6 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/shift_provider.dart';
+import '../../widgets/apex_app_bar.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
 
 class ShiftCreateScreen extends ConsumerStatefulWidget {
   const ShiftCreateScreen({Key? key}) : super(key: key);
@@ -57,14 +67,14 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
         await ref.read(shiftListProvider.notifier).addShift(data);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Shift created successfully'), backgroundColor: Colors.green),
+            const SnackBar(content: Text('Shift created successfully'), backgroundColor: _success),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: _danger),
           );
         }
       }
@@ -74,90 +84,135 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Shift'),
-      ),
+      backgroundColor: _bg,
+      appBar: const ApexAppBar(title: 'Create Shift'),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Shift Name *'),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () async {
-                        final picked = await showTimePicker(context: context, initialTime: _startTime);
-                        if (picked != null) setState(() => _startTime = picked);
-                      },
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: 'Start Time'),
-                        child: Text(_startTime.format(context)),
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('Shift Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Shift Name *',
+                    labelStyle: const TextStyle(color: _muted),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary)),
+                    filled: true,
+                    fillColor: _surface,
+                  ),
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final picked = await showTimePicker(context: context, initialTime: _startTime);
+                          if (picked != null) setState(() => _startTime = picked);
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Start Time',
+                            labelStyle: const TextStyle(color: _muted),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                          ),
+                          child: Text(_startTime.format(context), style: const TextStyle(color: _text)),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () async {
-                        final picked = await showTimePicker(context: context, initialTime: _endTime);
-                        if (picked != null) setState(() => _endTime = picked);
-                      },
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: 'End Time'),
-                        child: Text(_endTime.format(context)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final picked = await showTimePicker(context: context, initialTime: _endTime);
+                          if (picked != null) setState(() => _endTime = picked);
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'End Time',
+                            labelStyle: const TextStyle(color: _muted),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                          ),
+                          child: Text(_endTime.format(context), style: const TextStyle(color: _text)),
+                        ),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: _numberField(_graceController, 'Grace Period (min)')),
+                    const SizedBox(width: 16),
+                    Expanded(child: _numberField(_lateRuleController, 'Late Rule (min)')),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: _numberField(_earlyOutController, 'Early Out (min)')),
+                    const SizedBox(width: 16),
+                    Expanded(child: _numberField(_overtimeThresholdController, 'OT Threshold (min)')),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Night Shift', style: TextStyle(color: _text, fontWeight: FontWeight.w500)),
+                  value: _isNightShift,
+                  activeColor: _primary,
+                  onChanged: (v) => setState(() => _isNightShift = v),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: _save,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Create Shift', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _graceController,
-                decoration: const InputDecoration(labelText: 'Grace Period (minutes)'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _lateRuleController,
-                decoration: const InputDecoration(labelText: 'Late Rule Threshold (minutes)'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _earlyOutController,
-                decoration: const InputDecoration(labelText: 'Early Out Threshold (minutes)'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _overtimeThresholdController,
-                decoration: const InputDecoration(labelText: 'Overtime Threshold (minutes)'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Is Night Shift?'),
-                value: _isNightShift,
-                onChanged: (v) => setState(() => _isNightShift = v),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _save,
-                child: const Text('Create Shift'),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _numberField(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: _muted),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary)),
+        filled: true,
+        fillColor: _surface,
+      ),
+      keyboardType: TextInputType.number,
     );
   }
 }

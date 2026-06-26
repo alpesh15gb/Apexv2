@@ -99,30 +99,34 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
 
               // ── Pending Work + Activity ──────────────────
-              if (Responsive.isDesktop(context))
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _PendingWork()),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: activityAsync.when(
+              statsAsync.when(
+                data: (stats) => Responsive.isDesktop(context)
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _PendingWork(stats: stats)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: activityAsync.when(
+                            data: (a) => _ActivityFeed(data: a),
+                            loading: () => const _LoadingCard(height: 300),
+                            error: (e, _) => _ErrorCard(msg: e.toString()),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(children: [
+                      _PendingWork(stats: stats),
+                      const SizedBox(height: 12),
+                      activityAsync.when(
                         data: (a) => _ActivityFeed(data: a),
                         loading: () => const _LoadingCard(height: 300),
                         error: (e, _) => _ErrorCard(msg: e.toString()),
                       ),
-                    ),
-                  ],
-                )
-              else ...[
-                _PendingWork(),
-                const SizedBox(height: 12),
-                activityAsync.when(
-                  data: (a) => _ActivityFeed(data: a),
-                  loading: () => const _LoadingCard(height: 300),
-                  error: (e, _) => _ErrorCard(msg: e.toString()),
-                ),
-              ],
+                    ]),
+                loading: () => const SizedBox.shrink(),
+                error: (e, _) => const SizedBox.shrink(),
+              ),
               const SizedBox(height: 16),
 
               // ── Quick Actions + Sync Health ──────────────
@@ -370,19 +374,21 @@ class _DeptDistribution extends StatelessWidget {
 
 // ── RULE 3: Pending Work — business purpose ─────────────────
 class _PendingWork extends StatelessWidget {
+  final DashboardStats stats;
+  const _PendingWork({required this.stats});
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
       title: 'Pending Work',
       child: Column(
         children: [
-          _PendingItem(icon: Icons.warning_amber, label: 'Missing Punches', count: '3 employees', color: _warning, onTap: () => context.push('/attendance')),
+          _PendingItem(icon: Icons.warning_amber, label: 'Missing Punches', count: '${stats.missingPunches} employees', color: _warning, onTap: () => context.push('/attendance')),
           const Divider(height: 1, color: _border),
-          _PendingItem(icon: Icons.access_time, label: 'Late Arrivals', count: '5 employees', color: _warning, onTap: () => context.push('/attendance')),
+          _PendingItem(icon: Icons.access_time, label: 'Late Today', count: '${stats.lateToday} employees', color: _warning, onTap: () => context.push('/attendance')),
           const Divider(height: 1, color: _border),
-          _PendingItem(icon: Icons.event_busy, label: 'Pending Approvals', count: '2 requests', color: _primary, onTap: () => context.push('/leaves/requests')),
+          _PendingItem(icon: Icons.event_busy, label: 'Pending Approvals', count: '${stats.pendingLeaves} requests', color: _primary, onTap: () => context.push('/leaves/requests')),
           const Divider(height: 1, color: _border),
-          _PendingItem(icon: Icons.cloud_off, label: 'Offline Devices', count: '1 device', color: _danger, onTap: () => context.push('/devices')),
+          _PendingItem(icon: Icons.cloud_off, label: 'Offline Devices', count: '${stats.offlineDevices} devices', color: _danger, onTap: () => context.push('/devices')),
         ],
       ),
     );
