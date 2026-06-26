@@ -25,6 +25,7 @@ from app.api.v1.endpoints import (
     outdoor_duties,
     ot_register,
     work_codes,
+    payroll,
 )
 
 api_router = APIRouter()
@@ -54,3 +55,4 @@ api_router.include_router(department_shifts.router, prefix="/department-shifts",
 api_router.include_router(outdoor_duties.router, prefix="/outdoor-duties", tags=["Outdoor Duties"])
 api_router.include_router(ot_register.router, prefix="/ot-register", tags=["OT Register"])
 api_router.include_router(work_codes.router, prefix="/work-codes", tags=["Work Codes"])
+api_router.include_router(payroll.router, prefix="/payroll", tags=["Payroll"])

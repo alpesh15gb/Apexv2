@@ -429,3 +429,128 @@ class ReportService:
 
         title = "Device Status Report"
         return self._export_report(title, headers, rows, format_val)
+
+    async def generate_early_going_report(self, tenant_id: uuid.UUID, from_date: date, to_date: date, format_val: str) -> bytes:
+        stmt = (
+            select(Attendance, Employee)
+            .join(Employee, Attendance.employee_id == Employee.id)
+            .where(Attendance.tenant_id == tenant_id, Attendance.date >= from_date, Attendance.date <= to_date, Attendance.is_early_out == True)
+            .order_by(Attendance.date, Employee.employee_code)
+        )
+        result = await self.db.execute(stmt)
+        rows_data = result.all()
+
+        headers = ["Date", "Employee Code", "Employee Name", "Shift End", "Punch Out", "Early Minutes"]
+        rows = []
+        for att, emp in rows_data:
+            punch_out_str = att.punch_out.strftime("%H:%M") if att.punch_out else "N/A"
+            rows.append([str(att.date), emp.employee_code, f"{emp.first_name} {emp.last_name}", "", punch_out_str, str(att.early_out_minutes)])
+
+        return self._export_report("Early Going Report", headers, rows, format_val)
+
+    async def generate_missed_punch_report(self, tenant_id: uuid.UUID, from_date: date, to_date: date, format_val: str) -> bytes:
+        stmt = (
+            select(Attendance, Employee)
+            .join(Employee, Attendance.employee_id == Employee.id)
+            .where(Attendance.tenant_id == tenant_id, Attendance.date >= from_date, Attendance.date <= to_date)
+            .where(
+                or_(
+                    (Attendance.punch_in.isnot(None) & Attendance.punch_out.is_(None)),
+                    (Attendance.punch_in.is_(None) & Attendance.punch_out.isnot(None)),
+                )
+            )
+            .order_by(Attendance.date, Employee.employee_code)
+        )
+        result = await self.db.execute(stmt)
+        rows_data = result.all()
+
+        headers = ["Date", "Employee Code", "Employee Name", "Punch In", "Punch Out", "Status"]
+        rows = []
+        for att, emp in rows_data:
+            pin = att.punch_in.strftime("%H:%M") if att.punch_in else "Missing"
+            pout = att.punch_out.strftime("%H:%M") if att.punch_out else "Missing"
+            rows.append([str(att.date), emp.employee_code, f"{emp.first_name} {emp.last_name}", pin, pout, "Missed Punch"])
+
+        return self._export_report("Missed Punch Report", headers, rows, format_val)
+
+    async def generate_department_summary_report(self, tenant_id: uuid.UUID, from_date: date, to_date: date, format_val: str) -> bytes:
+        stmt = (
+            select(Department.name, Attendance.status, func.count(Attendance.id))
+            .join(Employee, Attendance.employee_id == Employee.id)
+            .join(Department, Employee.department_id == Department.id)
+            .where(Attendance.tenant_id == tenant_id, Attendance.date >= from_date, Attendance.date <= to_date)
+            .group_by(Department.name, Attendance.status)
+            .order_by(Department.name, Attendance.status)
+        )
+        result = await self.db.execute(stmt)
+        rows_data = result.all()
+
+        headers = ["Department", "Status", "Count"]
+        rows = [[dept, status, str(count)] for dept, status, count in rows_data]
+
+        return self._export_report("Department Summary Report", headers, rows, format_val)
+
+    async def generate_ot_summary_report(self, tenant_id: uuid.UUID, month: int, year: int, format_val: str) -> bytes:
+        from app.models.ot_register import OTRegister
+        import calendar as cal
+        _, last_day = cal.monthrange(year, month)
+        from_date = date(year, month, 1)
+        to_date = date(year, month, last_day)
+
+        stmt = (
+            select(OTRegister, Employee)
+            .join(Employee, OTRegister.employee_id == Employee.id)
+            .where(OTRegister.tenant_id == tenant_id, OTRegister.date >= from_date, OTRegister.date <= to_date)
+            .order_by(Employee.employee_code, OTRegister.date)
+        )
+        result = await self.db.execute(stmt)
+        rows_data = result.all()
+
+        headers = ["Employee Code", "Employee Name", "Date", "OT Hours", "OT Type", "Status"]
+        rows = []
+        for ot, emp in rows_data:
+            rows.append([emp.employee_code, f"{emp.first_name} {emp.last_name}", str(ot.date), f"{ot.ot_hours:.1f}", ot.ot_type, ot.status])
+
+        return self._export_report(f"OT Summary Report - {cal.month_name[month]} {year}", headers, rows, format_val)
+
+    async def generate_muster_roll_report(self, tenant_id: uuid.UUID, month: int, year: int, format_val: str) -> bytes:
+        import calendar as cal
+        _, last_day = cal.monthrange(year, month)
+        from_date = date(year, month, 1)
+        to_date = date(year, month, last_day)
+
+        employees_stmt = (
+            select(Employee)
+            .where(Employee.tenant_id == tenant_id, Employee.status == "active")
+            .order_by(Employee.employee_code)
+        )
+        employees = list((await self.db.execute(employees_stmt)).scalars().all())
+
+        attendance_stmt = (
+            select(Attendance)
+            .where(Attendance.tenant_id == tenant_id, Attendance.date >= from_date, Attendance.date <= to_date)
+        )
+        att_result = await self.db.execute(attendance_stmt)
+        att_map: Dict[tuple, Attendance] = {}
+        for a in att_result.scalars().all():
+            att_map[(str(a.employee_id), a.date)] = a
+
+        status_map = {"present": "P", "absent": "A", "half_day": "HD", "late": "L", "early_out": "EO", "holiday": "H", "week_off": "WO"}
+
+        headers = ["Code", "Name"] + [str(d) for d in range(1, last_day + 1)] + ["P", "A", "HD", "WO", "H"]
+        rows = []
+        for emp in employees:
+            row = [emp.employee_code, f"{emp.first_name} {emp.last_name}"]
+            counts = {"P": 0, "A": 0, "HD": 0, "WO": 0, "H": 0}
+            for d in range(1, last_day + 1):
+                att = att_map.get((str(emp.id), date(year, month, d)))
+                if att:
+                    code = status_map.get(att.status, att.status[:2].upper())
+                    row.append(code)
+                    counts[code] = counts.get(code, 0) + 1
+                else:
+                    row.append("")
+            row.extend([str(counts["P"]), str(counts["A"]), str(counts["HD"]), str(counts["WO"]), str(counts["H"])])
+            rows.append(row)
+
+        return self._export_report(f"Muster Roll - {cal.month_name[month]} {year}", headers, rows, format_val)
