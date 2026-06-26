@@ -1,7 +1,7 @@
 """fix_raw_logs_dedup_constraint
 
 Revision ID: ba139397b281
-Revises: a6dacfc268bc
+Revises: d9e0f1a2b3c4
 Create Date: 2026-06-25 04:41:53.554289
 """
 from typing import Sequence, Union
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 
 revision: str = 'ba139397b281'
-down_revision: Union[str, None] = 'a6dacfc268bc'
+down_revision: Union[str, None] = 'd9e0f1a2b3c4'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
