@@ -251,7 +251,9 @@ class ESSLClient:
             return res
 
         raw_codes = res["data"]
-        if isinstance(raw_codes, dict):
+        if isinstance(raw_codes, str):
+            raw_codes = [{"employee_code": c.strip()} for c in raw_codes.split(",") if c.strip()]
+        elif isinstance(raw_codes, dict):
             raw_codes = [raw_codes]
         elif not isinstance(raw_codes, list):
             raw_codes = []
