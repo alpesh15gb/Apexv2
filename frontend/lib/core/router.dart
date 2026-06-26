@@ -51,7 +51,13 @@ import '../screens/finance/expense_screen.dart';
 import '../screens/admin/admin_login_screen.dart';
 import '../screens/admin/admin_dashboard_screen.dart';
 import '../screens/admin/admin_tenant_list_screen.dart';
+import '../screens/admin/admin_tenant_detail_screen.dart';
+import '../screens/admin/admin_plan_screen.dart';
+import '../screens/admin/admin_feature_screen.dart';
 import '../screens/ess/ess_dashboard_screen.dart';
+import '../screens/ess/ess_attendance_screen.dart';
+import '../screens/ess/ess_leave_screen.dart';
+import '../screens/ess/ess_profile_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -119,10 +125,46 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin/tenants',
         builder: (context, state) => const AdminTenantListScreen(),
       ),
+      GoRoute(
+        path: '/admin/tenants/:tenantId',
+        builder: (context, state) => AdminTenantDetailScreen(tenantId: state.pathParameters['tenantId']!),
+      ),
+      GoRoute(
+        path: '/admin/plans',
+        builder: (context, state) => const AdminPlanScreen(),
+      ),
+      GoRoute(
+        path: '/admin/features',
+        builder: (context, state) => const AdminFeatureScreen(),
+      ),
       // ESS routes
       GoRoute(
         path: '/ess/dashboard',
         builder: (context, state) => const EssDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/ess/attendance',
+        builder: (context, state) => const EssAttendanceScreen(),
+      ),
+      GoRoute(
+        path: '/ess/leaves',
+        builder: (context, state) => const EssLeaveScreen(),
+      ),
+      GoRoute(
+        path: '/ess/profile',
+        builder: (context, state) => const EssProfileScreen(),
+      ),
+      GoRoute(
+        path: '/ess/payslips',
+        builder: (context, state) => const EssPayslipScreen(),
+      ),
+      GoRoute(
+        path: '/ess/documents',
+        builder: (context, state) => const EssDocumentScreen(),
+      ),
+      GoRoute(
+        path: '/ess/notifications',
+        builder: (context, state) => const EssNotificationScreen(),
       ),
       ShellRoute(
         navigatorKey: shellNavigatorKey,
