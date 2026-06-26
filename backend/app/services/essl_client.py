@@ -296,6 +296,8 @@ class ESSLClient:
             if isinstance(raw_data, str) and "=" in raw_data:
                 raw_data = {k.strip(): v.strip() for k, v in
                             (pair.split("=", 1) for pair in raw_data.split(",") if "=" in pair)}
+            if isinstance(raw_data, dict) and "EmployeeCode" not in raw_data and "employee_code" not in raw_data:
+                raw_data["EmployeeCode"] = employee_code
             emp_dict = normalize_keys(raw_data)
 
             if redis and emp_dict:
