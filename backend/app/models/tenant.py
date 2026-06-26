@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from app.db.base import BaseModel
 
 
-class SubscriptionPlan(str, enum.Enum):
+class SubscriptionPlanType(str, enum.Enum):
     FREE = "free"
     BASIC = "basic"
     PRO = "pro"
@@ -24,11 +24,24 @@ class Tenant(BaseModel):
     max_employees = Column(Integer, nullable=True)
     subscription_plan = Column(
         String(50),
-        default=SubscriptionPlan.FREE,
+        default=SubscriptionPlanType.FREE,
         nullable=False,
     )
     subscription_expires_at = Column(DateTime(timezone=True), nullable=True)
     settings = Column(JSONB, default=dict, server_default="{}", nullable=False)
+
+    # Subscription and company fields (added by super admin migration)
+    subscription_status = Column(String(50), default="trial", nullable=False)
+    trial_ends_at = Column(DateTime(timezone=True), nullable=True)
+    company_code = Column(String(50), nullable=True)
+    gst_number = Column(String(20), nullable=True)
+    pan_number = Column(String(20), nullable=True)
+    contact_person = Column(String(255), nullable=True)
+    email = Column(String(255), nullable=True)
+    mobile = Column(String(20), nullable=True)
+    timezone = Column(String(100), nullable=True)
+    currency = Column(String(10), default="INR", nullable=False)
+    financial_year_start = Column(String(10), default="04-01", nullable=False)
 
     # Relationships
     users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")

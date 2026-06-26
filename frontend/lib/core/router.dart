@@ -48,6 +48,10 @@ import '../screens/holidays/holiday_calendar_screen.dart';
 import '../screens/settings/category_screen.dart';
 import '../screens/settings/tenant_settings_screen.dart';
 import '../screens/finance/expense_screen.dart';
+import '../screens/admin/admin_login_screen.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/admin/admin_tenant_list_screen.dart';
+import '../screens/ess/ess_dashboard_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -77,8 +81,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final goingToSplash = state.matchedLocation == '/splash';
       final goingToLogin = state.matchedLocation == '/login';
       final goingToRegister = state.matchedLocation == '/register';
+      final goingToAdmin = state.matchedLocation.startsWith('/admin');
 
-      if (!loggedIn && !goingToLogin && !goingToRegister && !goingToSplash) {
+      if (!loggedIn && !goingToLogin && !goingToRegister && !goingToSplash && !goingToAdmin) {
         return '/login';
       }
 
@@ -100,6 +105,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      // Super Admin routes
+      GoRoute(
+        path: '/admin/login',
+        builder: (context, state) => const AdminLoginScreen(),
+      ),
+      GoRoute(
+        path: '/admin/dashboard',
+        builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/tenants',
+        builder: (context, state) => const AdminTenantListScreen(),
+      ),
+      // ESS routes
+      GoRoute(
+        path: '/ess/dashboard',
+        builder: (context, state) => const EssDashboardScreen(),
       ),
       ShellRoute(
         navigatorKey: shellNavigatorKey,

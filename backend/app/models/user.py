@@ -51,6 +51,10 @@ class User(TenantModel):
     is_active = Column(Boolean, default=True, nullable=False)
     is_superuser = Column(Boolean, default=False, nullable=False)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
+    must_change_password = Column(Boolean, default=False, nullable=False)
+    last_password_change = Column(DateTime(timezone=True), nullable=True)
+    failed_login_attempts = Column(Integer, default=0, nullable=False)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     tenant = relationship("Tenant", back_populates="users")
