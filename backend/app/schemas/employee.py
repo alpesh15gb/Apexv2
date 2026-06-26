@@ -16,7 +16,7 @@ class EmployeeBase(BaseModel):
     designation_id: Optional[uuid.UUID] = None
     branch_id: Optional[uuid.UUID] = None
     shift_id: Optional[uuid.UUID] = None
-    joining_date: date
+    joining_date: Optional[date] = None
     date_of_birth: Optional[date] = None
     gender: Optional[str] = Field(None, max_length=10)
     address: Optional[str] = None
