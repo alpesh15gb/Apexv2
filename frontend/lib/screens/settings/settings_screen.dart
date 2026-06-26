@@ -73,7 +73,26 @@ class SettingsScreen extends ConsumerWidget {
                     _SettingsItem(icon: Icons.work_outline, label: 'Work Codes', subtitle: 'Project/task codes', onTap: () => context.push('/settings/work-codes')),
                   ]),
                   const SizedBox(height: 20),
-                  // Security section
+                  // HR section
+                  Text('HR', style: ApexTypography.sectionHeader),
+                  const SizedBox(height: 8),
+                  _SettingsGroup(items: [
+                    _SettingsItem(icon: Icons.description, label: 'Documents', subtitle: 'Employee document storage', onTap: () => context.push('/documents')),
+                    _SettingsItem(icon: Icons.exit_to_app, label: 'Exit Requests', subtitle: 'Employee exit workflow', onTap: () => context.push('/exit-requests')),
+                    _SettingsItem(icon: Icons.inventory_2, label: 'Company Assets', subtitle: 'Track company assets', onTap: () => context.push('/assets')),
+                    _SettingsItem(icon: Icons.flight, label: 'Travel Requests', subtitle: 'Travel management', onTap: () => context.push('/travel')),
+                    _SettingsItem(icon: Icons.campaign, label: 'Announcements', subtitle: 'Company announcements', onTap: () => context.push('/announcements')),
+                  ]),
+                  const SizedBox(height: 20),
+                  // Finance section
+                  Text('FINANCE', style: ApexTypography.sectionHeader),
+                  const SizedBox(height: 8),
+                  _SettingsGroup(items: [
+                    _SettingsItem(icon: Icons.receipt_long, label: 'Expense Claims', subtitle: 'Employee expense management', onTap: () {}),
+                    _SettingsItem(icon: Icons.account_balance, label: 'Tax Declarations', subtitle: 'Employee tax management', onTap: () {}),
+                    _SettingsItem(icon: Icons.card_giftcard, label: 'Benefits', subtitle: 'Perks and benefits', onTap: () {}),
+                  ]),
+                  const SizedBox(height: 20),
                   Text('SECURITY', style: ApexTypography.sectionHeader),
                   const SizedBox(height: 8),
                   _SettingsGroup(items: [

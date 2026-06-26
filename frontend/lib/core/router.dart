@@ -54,6 +54,11 @@ import '../screens/attendance/outdoor_duty_screen.dart';
 import '../screens/attendance/ot_register_screen.dart';
 import '../screens/settings/work_code_screen.dart';
 import '../screens/payroll/payroll_screen.dart';
+import '../screens/hr/document_screen.dart';
+import '../screens/hr/exit_request_screen.dart';
+import '../screens/hr/asset_screen.dart';
+import '../screens/hr/travel_screen.dart';
+import '../screens/hr/announcement_screen.dart';
 import 'secure_storage.dart';
 import 'constants.dart';
 
@@ -375,6 +380,31 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/payroll',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const PayrollScreen(),
+      ),
+      GoRoute(
+        path: '/documents',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DocumentScreen(),
+      ),
+      GoRoute(
+        path: '/exit-requests',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ExitRequestScreen(),
+      ),
+      GoRoute(
+        path: '/assets',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AssetScreen(),
+      ),
+      GoRoute(
+        path: '/travel',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const TravelScreen(),
+      ),
+      GoRoute(
+        path: '/announcements',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AnnouncementScreen(),
       ),
       GoRoute(
         path: '/settings/essl/dashboard',

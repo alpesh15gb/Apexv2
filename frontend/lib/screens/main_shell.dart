@@ -92,16 +92,22 @@ class _MainShellState extends ConsumerState<MainShell> {
                     _nav(Icons.event_busy_outlined, Icons.event_busy, 'Leave', '/leaves'),
                     _nav(Icons.calendar_month_outlined, Icons.calendar_month, 'Holidays', '/holidays'),
                     _nav(Icons.card_membership_outlined, Icons.card_membership, 'Visitors', '/visitors'),
+                    _nav(Icons.campaign_outlined, Icons.campaign, 'Announcements', '/announcements'),
+                    _nav(Icons.exit_to_app_outlined, Icons.exit_to_app, 'Exit Requests', '/exit-requests'),
                   ], isDark),
                   _navSection('OPERATIONS', [
                     _nav(Icons.schedule_outlined, Icons.schedule, 'Shifts', '/shifts'),
                     _nav(Icons.biotech_outlined, Icons.biotech, 'Devices', '/devices'),
                     _nav(Icons.directions_walk_outlined, Icons.directions_walk, 'Outdoor Duty', '/attendance/outdoor-duty'),
                     _nav(Icons.access_time_filled_outlined, Icons.access_time_filled, 'OT Register', '/attendance/ot'),
+                    _nav(Icons.flight_outlined, Icons.flight, 'Travel', '/travel'),
+                    _nav(Icons.inventory_2_outlined, Icons.inventory_2, 'Assets', '/assets'),
                     _nav(Icons.assessment_outlined, Icons.assessment, 'Reports', '/reports'),
                   ], isDark),
-                  _navSection('PAYROLL', [
+                  _navSection('FINANCE', [
                     _nav(Icons.payments_outlined, Icons.payments, 'Payroll', '/payroll'),
+                    _nav(Icons.receipt_long_outlined, Icons.receipt_long, 'Expenses', '/expenses'),
+                    _nav(Icons.folder_outlined, Icons.folder, 'Documents', '/documents'),
                   ], isDark),
                   const Divider(height: 1, indent: 16, endIndent: 16),
                   _nav(Icons.settings_outlined, Icons.settings, 'Administration', '/settings', isDark),
