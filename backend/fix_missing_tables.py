@@ -1,6 +1,6 @@
 """Fix missing tables - run inside backend container"""
 import asyncio
-from app.core.database import engine
+from app.db.session import engine
 
 TABLES_SQL = [
     # essl_locations (from c2d3e4f5a6b7)
