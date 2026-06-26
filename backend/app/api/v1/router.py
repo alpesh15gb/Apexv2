@@ -22,6 +22,9 @@ from app.api.v1.endpoints import (
     shift_groups,
     shift_rosters,
     department_shifts,
+    outdoor_duties,
+    ot_register,
+    work_codes,
 )
 
 api_router = APIRouter()
@@ -48,3 +51,6 @@ api_router.include_router(tenant_settings.router, prefix="/tenant-settings", tag
 api_router.include_router(shift_groups.router, prefix="/shift-groups", tags=["Shift Groups"])
 api_router.include_router(shift_rosters.router, prefix="/shift-rosters", tags=["Shift Rosters"])
 api_router.include_router(department_shifts.router, prefix="/department-shifts", tags=["Department Shifts"])
+api_router.include_router(outdoor_duties.router, prefix="/outdoor-duties", tags=["Outdoor Duties"])
+api_router.include_router(ot_register.router, prefix="/ot-register", tags=["OT Register"])
+api_router.include_router(work_codes.router, prefix="/work-codes", tags=["Work Codes"])
