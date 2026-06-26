@@ -102,6 +102,31 @@ class ReportService {
     );
     return Uint8List.fromList(response.data!);
   }
+
+  Future<Uint8List> downloadEarlyGoingReport({required String fromDate, required String toDate, required String format}) async {
+    final response = await _dio.get<List<int>>('/reports/attendance/early-going', queryParameters: {'from_date': fromDate, 'to_date': toDate, 'format': format}, options: Options(responseType: ResponseType.bytes));
+    return Uint8List.fromList(response.data!);
+  }
+
+  Future<Uint8List> downloadMissedPunchReport({required String fromDate, required String toDate, required String format}) async {
+    final response = await _dio.get<List<int>>('/reports/attendance/missed-punch', queryParameters: {'from_date': fromDate, 'to_date': toDate, 'format': format}, options: Options(responseType: ResponseType.bytes));
+    return Uint8List.fromList(response.data!);
+  }
+
+  Future<Uint8List> downloadDeptSummaryReport({required String fromDate, required String toDate, required String format}) async {
+    final response = await _dio.get<List<int>>('/reports/attendance/department-summary', queryParameters: {'from_date': fromDate, 'to_date': toDate, 'format': format}, options: Options(responseType: ResponseType.bytes));
+    return Uint8List.fromList(response.data!);
+  }
+
+  Future<Uint8List> downloadOtSummaryReport({required int month, required int year, required String format}) async {
+    final response = await _dio.get<List<int>>('/reports/attendance/ot-summary', queryParameters: {'month': month, 'year': year, 'format': format}, options: Options(responseType: ResponseType.bytes));
+    return Uint8List.fromList(response.data!);
+  }
+
+  Future<Uint8List> downloadMusterRollReport({required int month, required int year, required String format}) async {
+    final response = await _dio.get<List<int>>('/reports/attendance/muster-roll', queryParameters: {'month': month, 'year': year, 'format': format}, options: Options(responseType: ResponseType.bytes));
+    return Uint8List.fromList(response.data!);
+  }
 }
 
 final reportServiceProvider = Provider<ReportService>((ref) {

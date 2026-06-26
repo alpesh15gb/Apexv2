@@ -94,8 +94,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                     _nav(Icons.card_membership_outlined, Icons.card_membership, 'Visitors', '/visitors'),
                   ], isDark),
                   _navSection('OPERATIONS', [
+                    _nav(Icons.schedule_outlined, Icons.schedule, 'Shifts', '/shifts'),
                     _nav(Icons.biotech_outlined, Icons.biotech, 'Devices', '/devices'),
+                    _nav(Icons.directions_walk_outlined, Icons.directions_walk, 'Outdoor Duty', '/attendance/outdoor-duty'),
+                    _nav(Icons.access_time_filled_outlined, Icons.access_time_filled, 'OT Register', '/attendance/ot'),
                     _nav(Icons.assessment_outlined, Icons.assessment, 'Reports', '/reports'),
+                  ], isDark),
+                  _navSection('PAYROLL', [
+                    _nav(Icons.payments_outlined, Icons.payments, 'Payroll', '/payroll'),
                   ], isDark),
                   const Divider(height: 1, indent: 16, endIndent: 16),
                   _nav(Icons.settings_outlined, Icons.settings, 'Administration', '/settings', isDark),

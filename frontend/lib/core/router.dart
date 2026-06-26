@@ -47,6 +47,13 @@ import '../screens/settings/essl_locations_screen.dart';
 import '../screens/holidays/holiday_calendar_screen.dart';
 import '../screens/settings/category_screen.dart';
 import '../screens/settings/tenant_settings_screen.dart';
+import '../screens/shifts/shift_group_screen.dart';
+import '../screens/shifts/shift_roster_screen.dart';
+import '../screens/shifts/department_shift_screen.dart';
+import '../screens/attendance/outdoor_duty_screen.dart';
+import '../screens/attendance/ot_register_screen.dart';
+import '../screens/settings/work_code_screen.dart';
+import '../screens/payroll/payroll_screen.dart';
 import 'secure_storage.dart';
 import 'constants.dart';
 
@@ -333,6 +340,41 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings/tenant-settings',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const TenantSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/shift-groups',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ShiftGroupScreen(),
+      ),
+      GoRoute(
+        path: '/shift-rosters',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ShiftRosterScreen(),
+      ),
+      GoRoute(
+        path: '/department-shifts',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DepartmentShiftScreen(),
+      ),
+      GoRoute(
+        path: '/attendance/ot',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const OTRegisterScreen(),
+      ),
+      GoRoute(
+        path: '/attendance/outdoor-duty',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const OutdoorDutyScreen(),
+      ),
+      GoRoute(
+        path: '/settings/work-codes',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const WorkCodeScreen(),
+      ),
+      GoRoute(
+        path: '/payroll',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const PayrollScreen(),
       ),
       GoRoute(
         path: '/settings/essl/dashboard',

@@ -59,6 +59,9 @@ class SettingsScreen extends ConsumerWidget {
                     _SettingsItem(icon: Icons.work_outline, label: 'Designations', subtitle: 'Job roles', onTap: () => context.push('/designations')),
                     _SettingsItem(icon: Icons.store, label: 'Branches', subtitle: 'Manage branches', onTap: () => context.push('/branches')),
                     _SettingsItem(icon: Icons.schedule, label: 'Shifts', subtitle: 'Work schedules', onTap: () => context.push('/shifts')),
+                    _SettingsItem(icon: Icons.group_work, label: 'Shift Groups', subtitle: 'Bundle shifts into groups', onTap: () => context.push('/shift-groups')),
+                    _SettingsItem(icon: Icons.calendar_month, label: 'Shift Rosters', subtitle: 'Rotation patterns', onTap: () => context.push('/shift-rosters')),
+                    _SettingsItem(icon: Icons.swap_horiz, label: 'Department Shifts', subtitle: 'Assign shifts to departments', onTap: () => context.push('/department-shifts')),
                   ]),
                   const SizedBox(height: 20),
                   // Attendance section
@@ -67,6 +70,7 @@ class SettingsScreen extends ConsumerWidget {
                   _SettingsGroup(items: [
                     _SettingsItem(icon: Icons.category, label: 'Categories', subtitle: 'Attendance rules & OT formulas', onTap: () => context.push('/settings/categories')),
                     _SettingsItem(icon: Icons.tune, label: 'Attendance Settings', subtitle: 'Master attendance configuration', onTap: () => context.push('/settings/tenant-settings')),
+                    _SettingsItem(icon: Icons.work_outline, label: 'Work Codes', subtitle: 'Project/task codes', onTap: () => context.push('/settings/work-codes')),
                   ]),
                   const SizedBox(height: 20),
                   // Security section

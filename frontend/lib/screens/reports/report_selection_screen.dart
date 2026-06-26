@@ -37,6 +37,12 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
     _ReportDef('daily', 'Daily Attendance', 'Present/absent/late for a specific date', Icons.calendar_today, _primary),
     _ReportDef('absent', 'Absent Report', 'Employees absent on a specific date', Icons.person_off, _danger),
     _ReportDef('late', 'Late Arrivals', 'Employees who arrived late', Icons.access_time, const Color(0xFFF59E0B)),
+    _ReportDef('early_going', 'Early Going', 'Employees who left early', Icons.exit_to_app, const Color(0xFFF59E0B)),
+    _ReportDef('missed_punch', 'Missed Punch', 'Incomplete punch pairs', Icons.fingerprint, _danger),
+    _ReportDef('monthly', 'Monthly Report', 'Full month attendance grid', Icons.date_range, _primary),
+    _ReportDef('dept_summary', 'Department Summary', 'Attendance by department', Icons.business, _primary),
+    _ReportDef('ot_summary', 'OT Summary', 'Overtime hours by employee', Icons.access_time_filled, const Color(0xFF16A34A)),
+    _ReportDef('muster_roll', 'Muster Roll', 'Statutory attendance register', Icons.menu_book, _primary),
     _ReportDef('devices', 'Device Status', 'Status of all biometric devices', Icons.biotech, _primary),
   ];
 
@@ -45,20 +51,31 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
     try {
       final service = ref.read(reportServiceProvider);
       final dateStr = _selectedDate.toIso8601String().substring(0, 10);
+      final fromDate = DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
       late final Uint8List bytes;
 
       if (_selectedType == 'daily') {
         bytes = await service.downloadDailyReport(date: dateStr, format: _selectedFormat);
       } else if (_selectedType == 'absent') {
         bytes = await service.downloadAbsentReport(date: dateStr, format: _selectedFormat);
+      } else if (_selectedType == 'late') {
+        bytes = await service.downloadLateReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
+      } else if (_selectedType == 'early_going') {
+        bytes = await service.downloadEarlyGoingReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
+      } else if (_selectedType == 'missed_punch') {
+        bytes = await service.downloadMissedPunchReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
+      } else if (_selectedType == 'monthly') {
+        bytes = await service.downloadMonthlyReport(month: _selectedDate.month, year: _selectedDate.year, format: _selectedFormat);
+      } else if (_selectedType == 'dept_summary') {
+        bytes = await service.downloadDeptSummaryReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
+      } else if (_selectedType == 'ot_summary') {
+        bytes = await service.downloadOtSummaryReport(month: _selectedDate.month, year: _selectedDate.year, format: _selectedFormat);
+      } else if (_selectedType == 'muster_roll') {
+        bytes = await service.downloadMusterRollReport(month: _selectedDate.month, year: _selectedDate.year, format: _selectedFormat);
       } else if (_selectedType == 'devices') {
         bytes = await service.downloadDeviceReport(format: _selectedFormat);
       } else {
-        bytes = await service.downloadLateReport(
-          fromDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10),
-          toDate: dateStr,
-          format: _selectedFormat,
-        );
+        bytes = await service.downloadDailyReport(date: dateStr, format: _selectedFormat);
       }
 
       final filename = _getFilename();
