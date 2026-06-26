@@ -4,6 +4,7 @@ class EsslServer {
   final String name;
   final String serverUrl;
   final String username;
+  final String location;
   final int timeoutSeconds;
   final String timezone;
   final bool autoSyncEnabled;
@@ -26,6 +27,7 @@ class EsslServer {
     required this.name,
     required this.serverUrl,
     required this.username,
+    required this.location,
     required this.timeoutSeconds,
     required this.timezone,
     required this.autoSyncEnabled,
@@ -50,6 +52,7 @@ class EsslServer {
       name: json['name'] as String,
       serverUrl: json['server_url'] as String,
       username: json['username'] as String,
+      location: json['location'] as String? ?? '',
       timeoutSeconds: json['timeout_seconds'] as int,
       timezone: json['timezone'] as String,
       autoSyncEnabled: json['auto_sync_enabled'] as bool,

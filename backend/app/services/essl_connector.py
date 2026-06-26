@@ -36,6 +36,7 @@ class EsslConnectorService:
             server_url=server.server_url,
             username=server.username,
             password=password,
+            location=getattr(server, 'location', '') or '',
             timeout=server.timeout_seconds,
         )
         settings = get_settings()

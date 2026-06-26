@@ -31,6 +31,7 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
   final _urlController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _locationController = TextEditingController();
 
   String _timezone = 'Asia/Kolkata';
   bool _autoSync = true;
@@ -44,6 +45,7 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
     _urlController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -54,6 +56,7 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
         'server_url': _urlController.text.trim(),
         'username': _usernameController.text.trim(),
         'password': _passwordController.text,
+        'location': _locationController.text.trim(),
         'timezone': _timezone,
         'auto_sync_enabled': _autoSync,
         'attendance_sync_interval_minutes': _attendanceInterval,
@@ -108,9 +111,10 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
                 title: 'CONNECTION',
                 children: [
                   _field('Server Name', _nameController, required: true),
-                  _field('Server URL', _urlController, required: true, hint: 'http://192.168.1.100:8080'),
+                  _field('Server URL', _urlController, required: true, hint: 'http://192.168.1.100:8080/Webservice.asmx'),
                   _field('Username', _usernameController, required: true),
                   _field('Password', _passwordController, required: true, obscure: true),
+                  _field('Location', _locationController, hint: 'eBioserverNew location name'),
                 ],
               ),
               const SizedBox(height: 16),
