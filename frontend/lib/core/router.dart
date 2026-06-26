@@ -61,6 +61,10 @@ import '../screens/ess/ess_profile_screen.dart';
 import '../screens/setup/setup_wizard_screen.dart';
 import '../screens/employees/employee_directory_screen.dart';
 import '../screens/employees/employee_create_wizard.dart';
+import '../screens/attendance/attendance_dashboard_screen.dart';
+import '../screens/attendance/regularization_screen.dart';
+import '../screens/shifts/shift_management_screen.dart';
+import '../screens/ess/ess_attendance_calendar_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -152,7 +156,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/ess/attendance',
-        builder: (context, state) => const EssAttendanceScreen(),
+        builder: (context, state) => const EssAttendanceCalendarScreen(),
       ),
       GoRoute(
         path: '/ess/leaves',
@@ -192,11 +196,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/attendance',
-            builder: (context, state) => const AttendanceListScreen(),
+            builder: (context, state) => const AttendanceDashboardScreen(),
           ),
           GoRoute(
-            path: '/settings',
-            builder: (context, state) => const SettingsScreen(),
+            path: '/attendance/regularization',
+            builder: (context, state) => const AttendanceRegularizationScreen(),
+          ),
+          GoRoute(
+            path: '/shifts',
+            builder: (context, state) => const ShiftManagementScreen(),
           ),
         ],
       ),
