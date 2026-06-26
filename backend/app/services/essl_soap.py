@@ -147,7 +147,7 @@ class ESSLSoapService:
         """
         Fires async HTTP request with tenacity retries on request/network errors.
         """
-        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False, verify=False) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True, verify=False) as client:
             response = await client.post(self.url, headers=headers, content=payload)
             response.raise_for_status()
             return response
