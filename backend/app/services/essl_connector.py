@@ -522,6 +522,8 @@ class EsslConnectorService:
                 if not codes_result.get("success"):
                     raise Exception(f"GetEmployeeCodes failed for location '{loc}': {codes_result.get('error')}")
                 raw_codes = codes_result.get("data", [])
+                if isinstance(raw_codes, dict):
+                    raw_codes = raw_codes.get("items", [])
                 if isinstance(raw_codes, list):
                     for item in raw_codes:
                         if isinstance(item, dict):
