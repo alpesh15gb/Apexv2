@@ -33,14 +33,14 @@ class ApexTypography {
     fontSize: 14, fontWeight: FontWeight.w400, height: 1.4, color: const Color(0xFF111827),
   );
 
-  // ── Table Header: 12px / 600 uppercase ──────────────────────
+  // ── Table Header: 13px / 600 uppercase ──────────────────────
   static TextStyle get tableHeader => _base.copyWith(
-    fontSize: 12, fontWeight: FontWeight.w600, height: 1.4, letterSpacing: 0.5, color: const Color(0xFF6B7280),
+    fontSize: 13, fontWeight: FontWeight.w600, height: 1.4, letterSpacing: 0.5, color: const Color(0xFF374151),
   );
 
-  // ── Caption: 12px / 500 ─────────────────────────────────────
+  // ── Caption: 13px / 500 ─────────────────────────────────────
   static TextStyle get caption => _base.copyWith(
-    fontSize: 12, fontWeight: FontWeight.w500, height: 1.5, color: const Color(0xFF6B7280),
+    fontSize: 13, fontWeight: FontWeight.w500, height: 1.5, color: const Color(0xFF4B5563),
   );
 
   // ── KPI Value: 34px / 700 ───────────────────────────────────
@@ -48,9 +48,9 @@ class ApexTypography {
     fontSize: 34, fontWeight: FontWeight.w700, height: 1.1, color: const Color(0xFF111827),
   );
 
-  // ── KPI Label: 14px / 500 ───────────────────────────────────
+  // ── KPI Label: 13px / 500 ───────────────────────────────────
   static TextStyle get kpiLabel => _base.copyWith(
-    fontSize: 14, fontWeight: FontWeight.w500, height: 1.4, color: const Color(0xFF6B7280),
+    fontSize: 13, fontWeight: FontWeight.w500, height: 1.4, color: const Color(0xFF4B5563),
   );
 
   // ── Secondary text: 14px / 400 ──────────────────────────────
@@ -73,9 +73,9 @@ class ApexTypography {
     fontSize: 12, fontWeight: FontWeight.w600, height: 1.3, color: const Color(0xFF111827),
   );
 
-  // ── Section Header (uppercase): 11px / 600 ──────────────────
+  // ── Section Header (uppercase): 12px / 600 ──────────────────
   static TextStyle get sectionHeader => _base.copyWith(
-    fontSize: 11, fontWeight: FontWeight.w600, height: 1.4, letterSpacing: 1.2, color: const Color(0xFF6B7280),
+    fontSize: 12, fontWeight: FontWeight.w600, height: 1.4, letterSpacing: 1.2, color: const Color(0xFF4B5563),
   );
 
   // ── Legacy aliases for backward compatibility ────────────────
@@ -89,8 +89,8 @@ class ApexTypography {
   static TextStyle get bodyMedium => body;
   static TextStyle get bodySmall => caption;
   static TextStyle get captionLarge => caption;
-  static TextStyle get captionMedium => _base.copyWith(fontSize: 11, fontWeight: FontWeight.w500, height: 1.5, color: const Color(0xFF6B7280));
-  static TextStyle get captionSmall => _base.copyWith(fontSize: 10, fontWeight: FontWeight.w500, height: 1.5, color: const Color(0xFF6B7280));
+  static TextStyle get captionMedium => _base.copyWith(fontSize: 12, fontWeight: FontWeight.w500, height: 1.5, color: const Color(0xFF4B5563));
+  static TextStyle get captionSmall => _base.copyWith(fontSize: 11, fontWeight: FontWeight.w500, height: 1.5, color: const Color(0xFF4B5563));
   static TextStyle get buttonLarge => button;
   static TextStyle get buttonMedium => _base.copyWith(fontSize: 13, fontWeight: FontWeight.w600, height: 1.3, color: const Color(0xFF111827));
   static TextStyle get buttonSmall => _base.copyWith(fontSize: 12, fontWeight: FontWeight.w600, height: 1.3, color: const Color(0xFF111827));

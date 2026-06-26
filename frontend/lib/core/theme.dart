@@ -128,6 +128,59 @@ class AppTheme {
         ),
         color: ApexColors.darkSurface,
       ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: ApexColors.darkSurface,
+        border: OutlineInputBorder(
+          borderRadius: ApexRadius.smAll,
+          borderSide: const BorderSide(color: ApexColors.neutral600),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: ApexRadius.smAll,
+          borderSide: const BorderSide(color: ApexColors.neutral600),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: ApexRadius.smAll,
+          borderSide: BorderSide(color: ApexColors.primary400, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: ApexColors.primary400,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: ApexRadius.smAll),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: ApexColors.neutral300,
+          side: const BorderSide(color: ApexColors.neutral600),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: ApexRadius.smAll),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: ApexColors.neutral700,
+        thickness: 1,
+        space: 1,
+      ),
+      dataTableTheme: DataTableThemeData(
+        headingTextStyle: ApexTypography.tableHeader,
+        dataTextStyle: ApexTypography.tableCell,
+        dataRowHeight: 44,
+        headingRowHeight: 36,
+        dividerThickness: 0.5,
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: ApexRadius.lgAll),
+        elevation: 8,
+      ),
     );
   }
 }
