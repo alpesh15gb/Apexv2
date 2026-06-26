@@ -45,6 +45,8 @@ import '../screens/settings/essl_dashboard_screen.dart';
 import '../screens/settings/essl_reprocess_screen.dart';
 import '../screens/settings/essl_locations_screen.dart';
 import '../screens/holidays/holiday_calendar_screen.dart';
+import '../screens/settings/category_screen.dart';
+import '../screens/settings/tenant_settings_screen.dart';
 import 'secure_storage.dart';
 import 'constants.dart';
 
@@ -321,6 +323,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return EsslReprocessScreen(serverId: id);
         },
+      ),
+      GoRoute(
+        path: '/settings/categories',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const CategoryScreen(),
+      ),
+      GoRoute(
+        path: '/settings/tenant-settings',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const TenantSettingsScreen(),
       ),
       GoRoute(
         path: '/settings/essl/dashboard',

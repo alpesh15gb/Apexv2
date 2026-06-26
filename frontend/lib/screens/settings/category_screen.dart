@@ -1,0 +1,175 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../design_system/typography.dart';
+import '../../core/dio_client.dart';
+
+const _bg = Color(0xFFF8FAFC);
+const _surface = Color(0xFFFFFFFF);
+const _border = Color(0xFFE5E7EB);
+const _primary = Color(0xFF2563EB);
+const _success = Color(0xFF16A34A);
+const _danger = Color(0xFFDC2626);
+const _text = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
+
+class Category {
+  final String id, name, code, otFormula, weeklyOff2Week;
+  final bool isActive, considerFirstLastPunch, neglectLastInOnMissedOut, considerEarlyComing, considerLateGoing, deductBreakHours, markWoHolidayAbsentIfPrefixAbsent;
+  final int minOtMinutes, maxOtMinutes, graceMinutes, halfDayThresholdMinutes, absentThresholdMinutes, lateAbsentMinutes, lateOccurrencesAbsentCount, weeklyOff1;
+  final int? weeklyOff2;
+
+  Category({required this.id, required this.name, required this.code, required this.isActive, required this.otFormula, required this.minOtMinutes, required this.maxOtMinutes, required this.graceMinutes, required this.halfDayThresholdMinutes, required this.absentThresholdMinutes, required this.lateAbsentMinutes, required this.lateOccurrencesAbsentCount, required this.weeklyOff1, this.weeklyOff2, required this.weeklyOff2Week, required this.considerFirstLastPunch, required this.neglectLastInOnMissedOut, required this.considerEarlyComing, required this.considerLateGoing, required this.deductBreakHours, required this.markWoHolidayAbsentIfPrefixAbsent});
+
+  factory Category.fromJson(Map<String, dynamic> json) => Category(
+    id: json['id'], name: json['name'], code: json['code'], isActive: json['is_active'],
+    otFormula: json['ot_formula'] ?? 'out_punch', minOtMinutes: json['min_ot_minutes'] ?? 0, maxOtMinutes: json['max_ot_minutes'] ?? 0,
+    graceMinutes: json['grace_minutes'] ?? 0, halfDayThresholdMinutes: json['half_day_threshold_minutes'] ?? 240,
+    absentThresholdMinutes: json['absent_threshold_minutes'] ?? 0, lateAbsentMinutes: json['late_absent_minutes'] ?? 0,
+    lateOccurrencesAbsentCount: json['late_occurrences_absent_count'] ?? 0, weeklyOff1: json['weekly_off_1'] ?? 6,
+    weeklyOff2: json['weekly_off_2'], weeklyOff2Week: json['weekly_off_2_week'] ?? 'every',
+    considerFirstLastPunch: json['consider_first_last_punch'] ?? true, neglectLastInOnMissedOut: json['neglect_last_in_on_missed_out'] ?? false,
+    considerEarlyComing: json['consider_early_coming'] ?? true, considerLateGoing: json['consider_late_going'] ?? true,
+    deductBreakHours: json['deduct_break_hours'] ?? true, markWoHolidayAbsentIfPrefixAbsent: json['mark_wo_holiday_absent_if_prefix_absent'] ?? false,
+  );
+}
+
+final categoryListProvider = StateNotifierProvider<CategoryListNotifier, AsyncValue<List<Category>>>((ref) => CategoryListNotifier(ref.read(dioProvider)));
+
+class CategoryListNotifier extends StateNotifier<AsyncValue<List<Category>>> {
+  final dynamic _dio;
+  CategoryListNotifier(this._dio) : super(const AsyncValue.loading()) { fetch(); }
+
+  Future<void> fetch({bool isRefresh = false}) async {
+    if (isRefresh) state = const AsyncValue.loading();
+    try {
+      final r = await _dio.get('/categories/');
+      state = AsyncValue.data((r.data as List).map((e) => Category.fromJson(e)).toList());
+    } catch (e, s) { state = AsyncValue.error(e, s); }
+  }
+
+  Future<void> add(Map<String, dynamic> data) async {
+    final r = await _dio.post('/categories/', data: data);
+    if (state.value != null) state = AsyncValue.data([Category.fromJson(r.data), ...state.value!]);
+  }
+
+  Future<void> update(String id, Map<String, dynamic> data) async {
+    final r = await _dio.put('/categories/$id', data: data);
+    if (state.value != null) state = AsyncValue.data(state.value!.map((c) => c.id == id ? Category.fromJson(r.data) : c).toList());
+  }
+
+  Future<void> delete(String id) async {
+    await _dio.delete('/categories/$id');
+    if (state.value != null) state = AsyncValue.data(state.value!.where((c) => c.id != id).toList());
+  }
+}
+
+class CategoryScreen extends ConsumerWidget {
+  const CategoryScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catsAsync = ref.watch(categoryListProvider);
+
+    return Scaffold(
+      backgroundColor: _bg,
+      appBar: AppBar(
+        title: const Text('Employee Categories'),
+        backgroundColor: _surface, foregroundColor: _text, elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))],
+      ),
+      body: catsAsync.when(
+        data: (cats) {
+          if (cats.isEmpty) return Center(
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Icon(Icons.category_outlined, size: 48, color: _muted),
+              const SizedBox(height: 16),
+              Text('No Categories', style: ApexTypography.headingMedium.copyWith(color: _text)),
+              const SizedBox(height: 8),
+              Text('Create categories to define attendance rules', style: ApexTypography.body.copyWith(color: _muted)),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: () => _showDialog(context, ref), style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: const Text('Add Category')),
+            ]),
+          );
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: cats.length,
+            itemBuilder: (context, i) {
+              final c = cats[i];
+              final days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+                child: Row(children: [
+                  Container(width: 40, height: 40, decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.category, color: _primary, size: 20)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(c.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
+                    Text('Code: ${c.code} | WO: ${days[c.weeklyOff1]}${c.weeklyOff2 != null ? ', ${days[c.weeklyOff2!]} (${c.weeklyOff2Week})' : ''} | Grace: ${c.graceMinutes}m | OT: ${c.otFormula}', style: ApexTypography.caption.copyWith(color: _muted)),
+                  ])),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: c.isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(c.isActive ? 'ACTIVE' : 'INACTIVE', style: ApexTypography.captionSmall.copyWith(color: c.isActive ? _success : _muted, fontWeight: FontWeight.w600))),
+                  PopupMenuButton<String>(icon: const Icon(Icons.more_vert, size: 16), itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Edit')), const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: _danger)))], onSelected: (v) { if (v == 'edit') _showDialog(context, ref, category: c); if (v == 'delete') _confirmDelete(context, ref, c.id, c.name); }),
+                ]),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+      ),
+    );
+  }
+
+  void _showDialog(BuildContext context, WidgetRef ref, {Category? category}) {
+    final nameCtrl = TextEditingController(text: category?.name ?? '');
+    final codeCtrl = TextEditingController(text: category?.code ?? '');
+    String otFormula = category?.otFormula ?? 'out_punch';
+    int grace = category?.graceMinutes ?? 0;
+    int halfDay = category?.halfDayThresholdMinutes ?? 240;
+    int wo1 = category?.weeklyOff1 ?? 6;
+    int? wo2 = category?.weeklyOff2;
+    String wo2Week = category?.weeklyOff2Week ?? 'every';
+
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
+      title: Text(category != null ? 'Edit Category' : 'Add Category'),
+      content: SizedBox(width: 450, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder())),
+        const SizedBox(height: 12),
+        TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code *', border: OutlineInputBorder(), hintText: 'e.g. STAFF, WORKER')),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(value: otFormula, decoration: const InputDecoration(labelText: 'OT Formula', border: OutlineInputBorder()), items: const [DropdownMenuItem(value: 'out_punch', child: Text('Out Punch - Shift End')), DropdownMenuItem(value: 'total_duration', child: Text('Total Duration - Shift Duration')), DropdownMenuItem(value: 'early_late_sum', child: Text('Early Coming + Late Going'))], onChanged: (v) => setS(() => otFormula = v ?? 'out_punch')),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: DropdownButtonFormField<int>(value: wo1, decoration: const InputDecoration(labelText: 'Weekly Off 1', border: OutlineInputBorder()), items: [for (int i = 0; i < 7; i++) DropdownMenuItem(value: i, child: Text(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]))], onChanged: (v) => setS(() => wo1 = v ?? 6))),
+          const SizedBox(width: 12),
+          Expanded(child: DropdownButtonFormField<int>(value: wo2, decoration: const InputDecoration(labelText: 'Weekly Off 2', border: OutlineInputBorder()), items: [const DropdownMenuItem(value: null, child: Text('None')), for (int i = 0; i < 7; i++) DropdownMenuItem(value: i, child: Text(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]))], onChanged: (v) => setS(() => wo2 = v))),
+        ]),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: TextField(decoration: const InputDecoration(labelText: 'Grace (min)', border: OutlineInputBorder()), keyboardType: TextInputType.number, controller: TextEditingController(text: '$grace'), onChanged: (v) => grace = int.tryParse(v) ?? 0)),
+          const SizedBox(width: 12),
+          Expanded(child: TextField(decoration: const InputDecoration(labelText: 'Half Day (min)', border: OutlineInputBorder()), keyboardType: TextInputType.number, controller: TextEditingController(text: '$halfDay'), onChanged: (v) => halfDay = int.tryParse(v) ?? 240)),
+        ]),
+      ]))),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        ElevatedButton(onPressed: () async {
+          final data = {'name': nameCtrl.text.trim(), 'code': codeCtrl.text.trim().toUpperCase(), 'ot_formula': otFormula, 'grace_minutes': grace, 'half_day_threshold_minutes': halfDay, 'weekly_off_1': wo1, 'weekly_off_2': wo2, 'weekly_off_2_week': wo2Week};
+          final notifier = ref.read(categoryListProvider.notifier);
+          if (category != null) { await notifier.update(category.id, data); } else { await notifier.add(data); }
+          if (ctx.mounted) Navigator.pop(ctx);
+        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: Text(category != null ? 'Update' : 'Add')),
+      ],
+    )));
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String id, String name) {
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Delete Category'),
+      content: Text('Delete "$name"?'),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), ElevatedButton(onPressed: () { ref.read(categoryListProvider.notifier).delete(id); Navigator.pop(ctx); }, style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white), child: const Text('Delete'))],
+    ));
+  }
+}

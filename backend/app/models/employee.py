@@ -121,6 +121,12 @@ class Employee(TenantModel):
         nullable=True,
         index=True,
     )
+    category_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("employee_categories.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     joining_date = Column(Date, nullable=True)
     date_of_birth = Column(Date, nullable=True)

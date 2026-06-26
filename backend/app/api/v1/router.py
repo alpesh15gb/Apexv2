@@ -17,6 +17,8 @@ from app.api.v1.endpoints import (
     essl_connector,
     essl_locations,
     holidays,
+    categories,
+    tenant_settings,
 )
 
 api_router = APIRouter()
@@ -38,3 +40,5 @@ api_router.include_router(websocket.router, tags=["WebSockets"])
 api_router.include_router(essl_connector.router, prefix="/essl", tags=["eSSL Connector"])
 api_router.include_router(essl_locations.router, prefix="/essl", tags=["eSSL Locations"])
 api_router.include_router(holidays.router, prefix="/holidays", tags=["Holidays"])
+api_router.include_router(categories.router, prefix="/categories", tags=["Employee Categories"])
+api_router.include_router(tenant_settings.router, prefix="/tenant-settings", tags=["Tenant Settings"])

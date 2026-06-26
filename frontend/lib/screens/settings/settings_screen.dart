@@ -56,8 +56,17 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   _SettingsGroup(items: [
                     _SettingsItem(icon: Icons.business, label: 'Departments', subtitle: 'Manage departments', onTap: () => context.push('/departments')),
+                    _SettingsItem(icon: Icons.work_outline, label: 'Designations', subtitle: 'Job roles', onTap: () => context.push('/designations')),
                     _SettingsItem(icon: Icons.store, label: 'Branches', subtitle: 'Manage branches', onTap: () => context.push('/branches')),
                     _SettingsItem(icon: Icons.schedule, label: 'Shifts', subtitle: 'Work schedules', onTap: () => context.push('/shifts')),
+                  ]),
+                  const SizedBox(height: 20),
+                  // Attendance section
+                  Text('ATTENDANCE', style: ApexTypography.sectionHeader),
+                  const SizedBox(height: 8),
+                  _SettingsGroup(items: [
+                    _SettingsItem(icon: Icons.category, label: 'Categories', subtitle: 'Attendance rules & OT formulas', onTap: () => context.push('/settings/categories')),
+                    _SettingsItem(icon: Icons.tune, label: 'Attendance Settings', subtitle: 'Master attendance configuration', onTap: () => context.push('/settings/tenant-settings')),
                   ]),
                   const SizedBox(height: 20),
                   // Security section
