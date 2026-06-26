@@ -82,17 +82,12 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                     onAction: () => context.push('/employees/create'),
                   );
                 }
-                return _EmployeeTable(
-                  employees: employees,
-                  selected: _selected,
-                  onSelect: (id, v) => setState(() {
-                    v ? _selected.add(id) : _selected.remove(id);
-                  }),
-                  onSelectAll: (v) => setState(() {
-                    if (v) _selected.addAll(employees.map((e) => e.id));
-                    else _selected.clear();
-                  }),
-                    onTap: (emp) => context.push('/employees/${emp.id}'),
+                return ListView.builder(
+                  itemCount: employees.length,
+                  itemBuilder: (context, i) => ListTile(
+                    title: Text(employees[i].fullName),
+                    subtitle: Text(employees[i].employeeCode),
+                  ),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
