@@ -137,6 +137,11 @@ final recentActivityProvider =
   return RecentActivityNotifier(service, wsService);
 });
 
+final recentPunchLogsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final service = ref.read(dashboardServiceProvider);
+  return await service.getRecentPunchLogs(limit: 10);
+});
+
 // Attendance Heatmap Provider
 final attendanceHeatmapProvider =
     FutureProvider.family<List<AttendanceHeatmapItem>, int>((ref, days) async {

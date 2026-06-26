@@ -92,6 +92,15 @@ class DashboardService {
     final response = await _dio.get(ApiConstants.dashboardSyncHealth);
     return SyncHealthStatus.fromJson(response.data as Map<String, dynamic>);
   }
+
+  Future<List<Map<String, dynamic>>> getRecentPunchLogs({int limit = 10}) async {
+    final response = await _dio.get('/attendance/punch-logs', queryParameters: {'page': 1, 'page_size': limit});
+    final data = response.data;
+    if (data is Map && data.containsKey('items')) {
+      return List<Map<String, dynamic>>.from(data['items']);
+    }
+    return [];
+  }
 }
 
 final dashboardServiceProvider = Provider<DashboardService>((ref) {

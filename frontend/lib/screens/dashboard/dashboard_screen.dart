@@ -30,7 +30,7 @@ class DashboardScreen extends ConsumerWidget {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final chartAsync = ref.watch(dashboardChartProvider(7));
     final deptAsync = ref.watch(departmentDistributionProvider);
-    final activityAsync = ref.watch(recentActivityProvider);
+    final activityAsync = ref.watch(recentPunchLogsProvider);
     final syncAsync = ref.watch(syncHealthProvider);
 
     return Scaffold(
@@ -40,7 +40,7 @@ class DashboardScreen extends ConsumerWidget {
           ref.invalidate(dashboardStatsProvider);
           ref.invalidate(dashboardChartProvider(7));
           ref.invalidate(departmentDistributionProvider);
-          ref.invalidate(recentActivityProvider);
+          ref.invalidate(recentPunchLogsProvider);
           ref.invalidate(syncHealthProvider);
         },
         child: SingleChildScrollView(
@@ -108,7 +108,7 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: activityAsync.when(
-                            data: (a) => _ActivityFeed(data: a),
+                            data: (a) => _RecentPunchLogs(data: a),
                             loading: () => const _LoadingCard(height: 300),
                             error: (e, _) => _ErrorCard(msg: e.toString()),
                           ),
@@ -119,7 +119,7 @@ class DashboardScreen extends ConsumerWidget {
                       _PendingWork(stats: stats),
                       const SizedBox(height: 12),
                       activityAsync.when(
-                        data: (a) => _ActivityFeed(data: a),
+                        data: (a) => _RecentPunchLogs(data: a),
                         loading: () => const _LoadingCard(height: 300),
                         error: (e, _) => _ErrorCard(msg: e.toString()),
                       ),
@@ -424,35 +424,39 @@ class _PendingItem extends StatelessWidget {
 }
 
 // ── Activity Feed ───────────────────────────────────────────
-class _ActivityFeed extends StatelessWidget {
-  final List<RecentActivity> data;
-  const _ActivityFeed({required this.data});
+class _RecentPunchLogs extends StatelessWidget {
+  final List<Map<String, dynamic>> data;
+  const _RecentPunchLogs({required this.data});
 
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: 'Recent Activity',
+      title: 'Recent Punch Logs',
       child: data.isEmpty
-          ? const _EmptyBlock(msg: 'No activity yet')
+          ? const _EmptyBlock(msg: 'No punch logs yet')
           : ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: data.length > 6 ? 6 : data.length,
+              itemCount: data.length > 8 ? 8 : data.length,
               separatorBuilder: (_, __) => const Divider(height: 1, color: _border),
               itemBuilder: (context, i) {
-                final a = data[i];
+                final log = data[i];
+                final empName = log['employee_name'] ?? log['employee_code'] ?? 'Unknown';
+                final punchTime = log['punch_time'] ?? '';
+                final punchType = log['punch_type'] ?? '';
+                final isIn = punchType.toString().toLowerCase().contains('in');
                 return ListTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
                     radius: 14,
-                    backgroundColor: _border,
-                    child: Icon(_icon(a.activityType), size: 14, color: _muted),
+                    backgroundColor: isIn ? _success.withOpacity(0.1) : _danger.withOpacity(0.1),
+                    child: Icon(Icons.fingerprint, size: 14, color: isIn ? _success : _danger),
                   ),
-                  title: Text(a.description, style: ApexTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text('$empName', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: _text), maxLines: 1, overflow: TextOverflow.ellipsis),
                   subtitle: Text(
-                    DateFormat('hh:mm a').format(DateTime.tryParse(a.timestamp) ?? DateTime.now()),
-                    style: ApexTypography.captionSmall,
+                    '${punchType.toString().toUpperCase()}  •  ${_formatTime(punchTime)}',
+                    style: const TextStyle(fontSize: 11, color: _muted),
                   ),
                 );
               },
@@ -460,12 +464,14 @@ class _ActivityFeed extends StatelessWidget {
     );
   }
 
-  IconData _icon(String type) {
-    if (type.contains('punch')) return Icons.fingerprint;
-    if (type.contains('device')) return Icons.biotech;
-    if (type.contains('visitor')) return Icons.card_membership;
-    if (type.contains('leave')) return Icons.event_busy;
-    return Icons.notifications_none;
+  String _formatTime(dynamic time) {
+    if (time == null) return '';
+    try {
+      final dt = DateTime.parse(time.toString());
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return time.toString();
+    }
   }
 }
 
