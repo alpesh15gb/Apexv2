@@ -26,6 +26,12 @@ from app.api.v1.endpoints import (
     ot_register,
     work_codes,
     payroll,
+    documents,
+    onboarding,
+    exit_requests,
+    timeline,
+    expense_benefits,
+    hr_ops,
 )
 
 api_router = APIRouter()
@@ -56,3 +62,9 @@ api_router.include_router(outdoor_duties.router, prefix="/outdoor-duties", tags=
 api_router.include_router(ot_register.router, prefix="/ot-register", tags=["OT Register"])
 api_router.include_router(work_codes.router, prefix="/work-codes", tags=["Work Codes"])
 api_router.include_router(payroll.router, prefix="/payroll", tags=["Payroll"])
+api_router.include_router(documents.router, prefix="/documents", tags=["Documents"])
+api_router.include_router(onboarding.router, prefix="/onboarding", tags=["Onboarding"])
+api_router.include_router(exit_requests.router, prefix="/exit-requests", tags=["Exit Requests"])
+api_router.include_router(timeline.router, prefix="/timeline", tags=["Employee Timeline"])
+api_router.include_router(expense_benefits.router, prefix="/finance", tags=["Expense & Benefits"])
+api_router.include_router(hr_ops.router, prefix="/hr", tags=["HR Operations"])
