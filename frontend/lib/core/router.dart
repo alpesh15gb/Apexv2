@@ -58,6 +58,7 @@ import '../screens/ess/ess_dashboard_screen.dart';
 import '../screens/ess/ess_attendance_screen.dart';
 import '../screens/ess/ess_leave_screen.dart';
 import '../screens/ess/ess_profile_screen.dart';
+import '../screens/setup/setup_wizard_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -111,6 +112,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      // Setup Wizard
+      GoRoute(
+        path: '/setup',
+        builder: (context, state) => const SetupWizardScreen(),
       ),
       // Super Admin routes
       GoRoute(
