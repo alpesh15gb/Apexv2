@@ -286,53 +286,50 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
 
   Widget _buildTableView(EmployeeDirectoryState dirState, bool isMobile) {
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 1000),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: _surface,
-              child: Row(children: [
-                SizedBox(
-                  width: 40,
-                  child: Checkbox(
-                    value: _selected.length == dirState.employees.length && dirState.employees.isNotEmpty,
-                    onChanged: (v) => setState(() {
-                      if (v == true) _selected.addAll(dirState.employees.map((e) => e['id'] as String));
-                      else _selected.clear();
-                    }),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 1000),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: _surface,
+                child: Row(children: [
+                  SizedBox(
+                    width: 40,
+                    child: Checkbox(
+                      value: _selected.length == dirState.employees.length && dirState.employees.isNotEmpty,
+                      onChanged: (v) => setState(() {
+                        if (v == true) _selected.addAll(dirState.employees.map((e) => e['id'] as String));
+                        else _selected.clear();
+                      }),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 50),
-                const SizedBox(width: 160, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                const SizedBox(width: 120, child: Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                const SizedBox(width: 120, child: Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                const SizedBox(width: 100, child: Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                const SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                const SizedBox(width: 60),
-              ]),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: dirState.employees.length,
-                itemBuilder: (context, i) {
-                  final emp = dirState.employees[i];
-                  return _EmployeeTableRow(
-                    employee: emp,
-                    isSelected: _selected.contains(emp['id']),
-                    onSelect: (v) => setState(() {
-                      if (v) _selected.add(emp['id']);
-                      else _selected.remove(emp['id']);
-                    }),
-                    onTap: () => context.push('/employees/${emp['id']}'),
-                    index: i,
-                  );
-                },
+                  const SizedBox(width: 50),
+                  const SizedBox(width: 160, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                  const SizedBox(width: 120, child: Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                  const SizedBox(width: 120, child: Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                  const SizedBox(width: 100, child: Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                  const SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                  const SizedBox(width: 60),
+                ]),
               ),
-            ),
-          ],
+              ...List.generate(dirState.employees.length, (i) {
+                final emp = dirState.employees[i];
+                return _EmployeeTableRow(
+                  employee: emp,
+                  isSelected: _selected.contains(emp['id']),
+                  onSelect: (v) => setState(() {
+                    if (v) _selected.add(emp['id']);
+                    else _selected.remove(emp['id']);
+                  }),
+                  onTap: () => context.push('/employees/${emp['id']}'),
+                  index: i,
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
