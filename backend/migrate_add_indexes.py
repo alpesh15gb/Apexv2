@@ -48,7 +48,6 @@ INDEXES = [
     ("leave_requests", "approved_by"),
     # visitors
     ("visitors", "tenant_id"),
-    ("visitors", "host_employee_id"),
     # visitor_passes
     ("visitor_passes", "tenant_id"),
     ("visitor_passes", "visitor_id"),
@@ -253,18 +252,18 @@ INDEXES = [
 
 
 async def migrate():
-    async with engine.begin() as conn:
-        for table, column in INDEXES:
-            index_name = f"ix_{table}_{column}"
-            sql = f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({column})"
-            try:
+    for table, column in INDEXES:
+        index_name = f"ix_{table}_{column}"
+        sql = f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({column})"
+        try:
+            async with engine.begin() as conn:
                 await conn.execute(text(sql))
-                print(f"  created: {index_name}")
-            except Exception as e:
-                if "already exists" in str(e):
-                    print(f"  exists: {index_name}")
-                else:
-                    print(f"  error on {index_name}: {e}")
+            print(f"  created: {index_name}")
+        except Exception as e:
+            if "already exists" in str(e):
+                print(f"  exists: {index_name}")
+            else:
+                print(f"  error on {index_name}: {e}")
     print("Migration complete")
 
 
