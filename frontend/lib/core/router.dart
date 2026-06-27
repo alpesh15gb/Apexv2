@@ -106,17 +106,23 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) async {
       final token = await secureStorage.read(StorageKeys.accessToken);
       final loggedIn = token != null && token.isNotEmpty;
+      final isAdmin = await secureStorage.read('is_admin') == 'true';
       
       final goingToSplash = state.matchedLocation == '/splash';
       final goingToLogin = state.matchedLocation == '/login';
       final goingToRegister = state.matchedLocation == '/register';
       final goingToAdmin = state.matchedLocation.startsWith('/admin');
+      final goingToAdminLogin = state.matchedLocation == '/admin/login';
 
       if (!loggedIn && !goingToLogin && !goingToRegister && !goingToSplash && !goingToAdmin) {
         return '/login';
       }
 
-      if (loggedIn && (goingToLogin || goingToRegister || goingToSplash)) {
+      if (loggedIn && isAdmin && (goingToLogin || goingToRegister || goingToSplash || goingToAdminLogin)) {
+        return '/admin/dashboard';
+      }
+
+      if (loggedIn && !isAdmin && (goingToLogin || goingToRegister || goingToSplash)) {
         return '/dashboard';
       }
 

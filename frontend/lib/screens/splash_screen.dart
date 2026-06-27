@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/secure_storage.dart';
 import '../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -24,7 +25,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     try {
       final authState = ref.read(authProvider);
       if (authState.value != null) {
-        context.go('/dashboard');
+        final isAdmin = await secureStorage.read('is_admin') == 'true';
+        if (isAdmin) {
+          context.go('/admin/dashboard');
+        } else {
+          context.go('/dashboard');
+        }
       } else {
         context.go('/login');
       }

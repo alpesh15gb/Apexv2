@@ -39,6 +39,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
       await secureStorage.write(StorageKeys.accessToken, accessToken);
       await secureStorage.write(StorageKeys.refreshToken, refreshToken);
+      await secureStorage.delete('is_admin');
 
       final user = await _authService.getMe();
       state = AsyncValue.data(user);
@@ -75,6 +76,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       await secureStorage.delete(StorageKeys.accessToken);
       await secureStorage.delete(StorageKeys.refreshToken);
+      await secureStorage.delete('is_admin');
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

@@ -36,6 +36,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       });
       final token = res.data['access_token'];
       await secureStorage.write(StorageKeys.accessToken, token);
+      await secureStorage.write('is_admin', 'true');
       if (mounted) context.go('/admin/dashboard');
     } catch (e) {
       setState(() => _error = 'Invalid credentials or not a super admin');
