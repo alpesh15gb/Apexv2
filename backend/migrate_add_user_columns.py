@@ -1,4 +1,4 @@
-"""Add missing columns to users and tenants tables."""
+"""Add missing columns to database tables."""
 
 import asyncio
 import sys
@@ -27,6 +27,20 @@ async def migrate():
         "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS timezone VARCHAR(100)",
         "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'INR'",
         "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS financial_year_start VARCHAR(10) NOT NULL DEFAULT '04-01'",
+        # Employees table
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS category_id UUID",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS shift_group_id UUID",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS shift_roster_id UUID",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS date_of_birth DATE",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS gender VARCHAR(50)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS address VARCHAR(512)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS city VARCHAR(100)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS state VARCHAR(100)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS pincode VARCHAR(20)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS emergency_contact_name VARCHAR(255)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS emergency_contact_phone VARCHAR(50)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS blood_group VARCHAR(20)",
+        "ALTER TABLE employees ADD COLUMN IF NOT EXISTS photo_url VARCHAR(512)",
     ]
     async with engine.begin() as conn:
         for sql in statements:
