@@ -8,14 +8,6 @@ from circuitbreaker import CircuitBreaker, CircuitBreakerError
 
 logger = structlog.get_logger(__name__)
 
-# Initialize circuit breaker for SOAP operations (5 failures -> open for 60 seconds)
-soap_breaker = CircuitBreaker(
-    name="essl_soap_breaker",
-    failure_threshold=5,
-    recovery_timeout=60,
-    expected_exception=Exception
-)
-
 
 class ESSLSoapService:
     """
@@ -28,6 +20,11 @@ class ESSLSoapService:
         self.username = username
         self.password = password
         self.timeout = float(timeout)
+        self.breaker = CircuitBreaker(
+            failure_threshold=5,
+            recovery_timeout=60,
+            expected_exception=Exception
+        )
 
     def _build_envelope(self, operation: str, params: Dict[str, Any]) -> bytes:
         """
@@ -152,19 +149,16 @@ class ESSLSoapService:
             response.raise_for_status()
             return response
 
-    @soap_breaker
     async def _execute_soap_call(self, operation: str, params: Dict[str, Any]) -> str:
-        """
-        Wraps SOAP call in circuit breaker. If circuit is open or breaks, raises.
-        """
-        payload = self._build_envelope(operation, params)
-        headers = {
-            "Content-Type": "text/xml; charset=utf-8",
-            "SOAPAction": f"http://tempuri.org/{operation}"
-        }
-        
-        response = await self._send_request_raw(headers, payload)
-        return self._parse_response(operation, response.text)
+        async def _do_call() -> str:
+            payload = self._build_envelope(operation, params)
+            headers = {
+                "Content-Type": "text/xml; charset=utf-8",
+                "SOAPAction": f"http://tempuri.org/{operation}"
+            }
+            response = await self._send_request_raw(headers, payload)
+            return self._parse_response(operation, response.text)
+        return await self.breaker.call_async(_do_call)
 
     # ==========================================
     # DEVICE OPERATIONS

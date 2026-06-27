@@ -11,10 +11,7 @@ import '../../widgets/status_badge.dart';
 
 final visitorPassDetailProvider = FutureProvider.family<VisitorPass, String>((ref, id) async {
   final service = ref.read(visitorServiceProvider);
-  // Find pass in lists or retrieve
-  final data = await service.getVisitorPasses(page: 1, pageSize: 100);
-  final items = (data['items'] as List).map((e) => VisitorPass.fromJson(e)).toList();
-  return items.firstWhere((e) => e.id == id);
+  return service.getVisitorPass(id);
 });
 
 class VisitorPassScreen extends ConsumerWidget {

@@ -54,6 +54,11 @@ class VisitorService {
     return list.map((e) => VisitorPass.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<VisitorPass> getVisitorPass(String passId) async {
+    final response = await _dio.get('${ApiConstants.visitorPasses}/$passId');
+    return VisitorPass.fromJson(response.data);
+  }
+
   Future<Map<String, dynamic>> getVisitorPasses({
     required int page,
     required int pageSize,

@@ -50,6 +50,7 @@ async def create_tenant(
 async def get_tenant(
     tenant_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_superuser),
 ) -> TenantResponse:
     """Get a tenant by ID."""
     service = TenantService(db)
@@ -61,6 +62,7 @@ async def update_tenant(
     tenant_id: uuid.UUID,
     tenant_data: TenantUpdate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_superuser),
 ) -> TenantResponse:
     """Update a tenant."""
     service = TenantService(db)
@@ -71,6 +73,7 @@ async def update_tenant(
 async def deactivate_tenant(
     tenant_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_superuser),
 ) -> TenantResponse:
     """Deactivate a tenant."""
     service = TenantService(db)

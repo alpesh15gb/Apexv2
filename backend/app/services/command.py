@@ -59,7 +59,13 @@ class CommandService:
         cmd.status = CommandStatus.SENT.value
         await self.db.commit()
 
-        soap_service = ESSLSoapService()
+        from app.models.essl_server import EsslServer
+        stmt_server = select(EsslServer).where(EsslServer.tenant_id == tenant_id, EsslServer.is_active == True)
+        server_result = await self.db.execute(stmt_server)
+        server = server_result.scalar_one_or_none()
+        if not server:
+            raise HTTPException(status_code=400, detail="No active eSSL server configured")
+        soap_service = ESSLSoapService(server.server_url, server.username, server.password_encrypted)
         serial = cmd.device.serial_number
         t = cmd.command_type
         params = cmd.parameters or {}

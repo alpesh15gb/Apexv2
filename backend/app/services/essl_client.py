@@ -95,15 +95,18 @@ class ESSLClient:
     def __init__(self, soap_service: ESSLSoapService, redis_url: Optional[str] = None):
         self.soap = soap_service
         self.redis_url = redis_url
+        self._redis = None
 
     async def _get_redis(self) -> Optional[Redis]:
         if not self.redis_url:
             return None
-        try:
-            return Redis.from_url(self.redis_url, decode_responses=True)
-        except Exception as e:
-            logger.warning("Redis is unavailable; caching will be bypassed", error=str(e))
-            return None
+        if self._redis is None:
+            try:
+                self._redis = Redis.from_url(self.redis_url, decode_responses=True)
+            except Exception as e:
+                logger.warning("Redis is unavailable; caching will be bypassed", error=str(e))
+                return None
+        return self._redis
 
     def _paginate(self, items: List[Any], page: Optional[int], page_size: Optional[int]) -> Dict[str, Any]:
         """

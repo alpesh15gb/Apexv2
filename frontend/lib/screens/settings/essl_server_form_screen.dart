@@ -39,6 +39,38 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
   int _employeeHour = 2;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.serverId != null) {
+      _loadServer();
+    }
+  }
+
+  Future<void> _loadServer() async {
+    try {
+      final service = ref.read(esslServiceProvider);
+      final server = await service.getServer(widget.serverId!);
+      if (!mounted) return;
+      setState(() {
+        _nameController.text = server.name;
+        _urlController.text = server.serverUrl;
+        _usernameController.text = server.username;
+        _timezone = server.timezone;
+        _autoSync = server.autoSyncEnabled;
+        _attendanceInterval = server.attendanceSyncIntervalMinutes;
+        _deviceInterval = server.deviceSyncIntervalMinutes;
+        _employeeHour = server.employeeSyncHour;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load server: $e'), backgroundColor: _danger),
+        );
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _urlController.dispose();

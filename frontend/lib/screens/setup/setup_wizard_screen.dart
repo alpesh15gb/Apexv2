@@ -35,6 +35,13 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
   int _currentStep = 0;
   bool _loading = false;
   final Map<String, dynamic> _data = {};
+  final _companyKey = GlobalKey<_CompanyStepState>();
+  final _branchKey = GlobalKey<_BranchStepState>();
+  final _departmentKey = GlobalKey<_DepartmentStepState>();
+  final _designationKey = GlobalKey<_DesignationStepState>();
+  final _shiftKey = GlobalKey<_ShiftStepState>();
+  final _leaveKey = GlobalKey<_LeaveStepState>();
+  final _attendanceKey = GlobalKey<_AttendanceStepState>();
 
   static const _steps = [
     {'title': 'Company Info', 'icon': Icons.business, 'key': 'company'},
@@ -170,15 +177,48 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
 
   Widget _buildStepContent() {
     switch (_currentStep) {
-      case 0: return _CompanyStep(data: _data, onNext: _nextStep);
-      case 1: return _BranchStep(data: _data, onNext: _nextStep);
-      case 2: return _DepartmentStep(data: _data, onNext: _nextStep);
-      case 3: return _DesignationStep(data: _data, onNext: _nextStep);
-      case 4: return _ShiftStep(data: _data, onNext: _nextStep);
-      case 5: return _LeaveStep(data: _data, onNext: _nextStep);
-      case 6: return _AttendanceStep(data: _data, onNext: _nextStep);
+      case 0: return _CompanyStep(key: _companyKey, data: _data, onNext: _nextStep);
+      case 1: return _BranchStep(key: _branchKey, data: _data, onNext: _nextStep);
+      case 2: return _DepartmentStep(key: _departmentKey, data: _data, onNext: _nextStep);
+      case 3: return _DesignationStep(key: _designationKey, data: _data, onNext: _nextStep);
+      case 4: return _ShiftStep(key: _shiftKey, data: _data, onNext: _nextStep);
+      case 5: return _LeaveStep(key: _leaveKey, data: _data, onNext: _nextStep);
+      case 6: return _AttendanceStep(key: _attendanceKey, data: _data, onNext: _nextStep);
       case 7: return _CompleteStep(data: _data);
       default: return const SizedBox.shrink();
+    }
+  }
+
+  void _harvestCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        final s = _companyKey.currentState;
+        if (s != null) _data.addAll(s.harvestData());
+        break;
+      case 1:
+        final s = _branchKey.currentState;
+        if (s != null) _data.addAll(s.harvestData());
+        break;
+      case 2:
+        final s = _departmentKey.currentState;
+        if (s != null) _data.addAll(s.harvestData());
+        break;
+      case 3:
+        final s = _designationKey.currentState;
+        if (s != null) _data.addAll(s.harvestData());
+        break;
+      case 4:
+        final s = _shiftKey.currentState;
+        if (s != null) _data.addAll(s.harvestData());
+        break;
+      case 5:
+        final s = _leaveKey.currentState;
+        if (s != null) _data.addAll(s.harvestData());
+        break;
+      case 6:
+        final s = _attendanceKey.currentState;
+        if (s != null) _data.addAll(s.harvestData());
+        break;
     }
   }
 
@@ -193,7 +233,10 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
         children: [
           if (_currentStep > 0)
             OutlinedButton.icon(
-              onPressed: () => setState(() => _currentStep--),
+              onPressed: () {
+                _harvestCurrentStep();
+                setState(() => _currentStep--);
+              },
               icon: const Icon(Icons.arrow_back, size: 16),
               label: const Text('Back'),
               style: OutlinedButton.styleFrom(foregroundColor: _text),
@@ -201,7 +244,10 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
           const Spacer(),
           if (_currentStep < _steps.length - 1)
             ElevatedButton.icon(
-              onPressed: _loading ? null : () => _nextStep(_data),
+              onPressed: _loading ? null : () {
+                _harvestCurrentStep();
+                _nextStep(_data);
+              },
               icon: _loading
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.arrow_forward, size: 16),
@@ -238,7 +284,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
 class _CompanyStep extends StatefulWidget {
   final Map<String, dynamic> data;
   final Function(Map<String, dynamic>) onNext;
-  const _CompanyStep({required this.data, required this.onNext});
+  const _CompanyStep({super.key, required this.data, required this.onNext});
 
   @override
   State<_CompanyStep> createState() => _CompanyStepState();
@@ -255,6 +301,33 @@ class _CompanyStepState extends State<_CompanyStep> {
   String _timezone = 'Asia/Kolkata';
   String _currency = 'INR';
   String _fyStart = '04-01';
+
+  @override
+  void initState() {
+    super.initState();
+    final d = widget.data;
+    _nameCtrl.text = d['company_name'] ?? '';
+    _addressCtrl.text = d['address'] ?? '';
+    _gstCtrl.text = d['gst_number'] ?? '';
+    _panCtrl.text = d['pan_number'] ?? '';
+    _emailCtrl.text = d['company_email'] ?? '';
+    _phoneCtrl.text = d['phone'] ?? '';
+    _timezone = d['timezone'] ?? 'Asia/Kolkata';
+    _currency = d['currency'] ?? 'INR';
+    _fyStart = d['financial_year_start'] ?? '04-01';
+  }
+
+  Map<String, dynamic> harvestData() => {
+    'company_name': _nameCtrl.text,
+    'address': _addressCtrl.text,
+    'gst_number': _gstCtrl.text,
+    'pan_number': _panCtrl.text,
+    'company_email': _emailCtrl.text,
+    'phone': _phoneCtrl.text,
+    'timezone': _timezone,
+    'currency': _currency,
+    'financial_year_start': _fyStart,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -350,16 +423,30 @@ class _CompanyStepState extends State<_CompanyStep> {
 class _BranchStep extends StatefulWidget {
   final Map<String, dynamic> data;
   final Function(Map<String, dynamic>) onNext;
-  const _BranchStep({required this.data, required this.onNext});
+  const _BranchStep({super.key, required this.data, required this.onNext});
 
   @override
   State<_BranchStep> createState() => _BranchStepState();
 }
 
 class _BranchStepState extends State<_BranchStep> {
-  final _branches = [
+  final List<Map<String, dynamic>> _branches = [
     {'name': 'Head Office', 'code': 'HO', 'isDefault': true},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.data['branches'] as List?;
+    if (saved != null && saved.isNotEmpty) {
+      _branches.clear();
+      for (final b in saved) {
+        _branches.add(Map<String, dynamic>.from(b as Map));
+      }
+    }
+  }
+
+  Map<String, dynamic> harvestData() => {'branches': _branches};
 
   @override
   Widget build(BuildContext context) {
@@ -428,19 +515,33 @@ class _BranchStepState extends State<_BranchStep> {
 class _DepartmentStep extends StatefulWidget {
   final Map<String, dynamic> data;
   final Function(Map<String, dynamic>) onNext;
-  const _DepartmentStep({required this.data, required this.onNext});
+  const _DepartmentStep({super.key, required this.data, required this.onNext});
 
   @override
   State<_DepartmentStep> createState() => _DepartmentStepState();
 }
 
 class _DepartmentStepState extends State<_DepartmentStep> {
-  final _departments = [
+  final List<Map<String, dynamic>> _departments = [
     {'name': 'Human Resources', 'code': 'HR'},
     {'name': 'Finance', 'code': 'FIN'},
     {'name': 'Engineering', 'code': 'ENG'},
     {'name': 'Operations', 'code': 'OPS'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.data['departments'] as List?;
+    if (saved != null && saved.isNotEmpty) {
+      _departments.clear();
+      for (final d in saved) {
+        _departments.add(Map<String, dynamic>.from(d as Map));
+      }
+    }
+  }
+
+  Map<String, dynamic> harvestData() => {'departments': _departments};
 
   @override
   Widget build(BuildContext context) {
@@ -503,14 +604,14 @@ class _DepartmentStepState extends State<_DepartmentStep> {
 class _DesignationStep extends StatefulWidget {
   final Map<String, dynamic> data;
   final Function(Map<String, dynamic>) onNext;
-  const _DesignationStep({required this.data, required this.onNext});
+  const _DesignationStep({super.key, required this.data, required this.onNext});
 
   @override
   State<_DesignationStep> createState() => _DesignationStepState();
 }
 
 class _DesignationStepState extends State<_DesignationStep> {
-  final _designations = [
+  final List<Map<String, dynamic>> _designations = [
     {'name': 'CEO', 'code': 'CEO'},
     {'name': 'Manager', 'code': 'MGR'},
     {'name': 'Team Lead', 'code': 'TL'},
@@ -519,6 +620,20 @@ class _DesignationStepState extends State<_DesignationStep> {
     {'name': 'HR Executive', 'code': 'HRE'},
     {'name': 'Accountant', 'code': 'ACC'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.data['designations'] as List?;
+    if (saved != null && saved.isNotEmpty) {
+      _designations.clear();
+      for (final d in saved) {
+        _designations.add(Map<String, dynamic>.from(d as Map));
+      }
+    }
+  }
+
+  Map<String, dynamic> harvestData() => {'designations': _designations};
 
   @override
   Widget build(BuildContext context) {
@@ -581,19 +696,33 @@ class _DesignationStepState extends State<_DesignationStep> {
 class _ShiftStep extends StatefulWidget {
   final Map<String, dynamic> data;
   final Function(Map<String, dynamic>) onNext;
-  const _ShiftStep({required this.data, required this.onNext});
+  const _ShiftStep({super.key, required this.data, required this.onNext});
 
   @override
   State<_ShiftStep> createState() => _ShiftStepState();
 }
 
 class _ShiftStepState extends State<_ShiftStep> {
-  final _shifts = [
+  final List<Map<String, dynamic>> _shifts = [
     {'name': 'General', 'start': '09:00', 'end': '18:00', 'grace': '10'},
     {'name': 'Morning', 'start': '06:00', 'end': '14:00', 'grace': '10'},
     {'name': 'Evening', 'start': '14:00', 'end': '22:00', 'grace': '10'},
     {'name': 'Night', 'start': '22:00', 'end': '06:00', 'grace': '10'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.data['shifts'] as List?;
+    if (saved != null && saved.isNotEmpty) {
+      _shifts.clear();
+      for (final s in saved) {
+        _shifts.add(Map<String, dynamic>.from(s as Map));
+      }
+    }
+  }
+
+  Map<String, dynamic> harvestData() => {'shifts': _shifts};
 
   @override
   Widget build(BuildContext context) {
@@ -657,20 +786,34 @@ class _ShiftStepState extends State<_ShiftStep> {
 class _LeaveStep extends StatefulWidget {
   final Map<String, dynamic> data;
   final Function(Map<String, dynamic>) onNext;
-  const _LeaveStep({required this.data, required this.onNext});
+  const _LeaveStep({super.key, required this.data, required this.onNext});
 
   @override
   State<_LeaveStep> createState() => _LeaveStepState();
 }
 
 class _LeaveStepState extends State<_LeaveStep> {
-  final _leaveTypes = [
+  final List<Map<String, dynamic>> _leaveTypes = [
     {'name': 'Casual Leave', 'code': 'CL', 'days': '12', 'carry': false},
     {'name': 'Sick Leave', 'code': 'SL', 'days': '12', 'carry': false},
     {'name': 'Earned Leave', 'code': 'EL', 'days': '15', 'carry': true},
     {'name': 'Maternity Leave', 'code': 'ML', 'days': '180', 'carry': false},
     {'name': 'Paternity Leave', 'code': 'PL', 'days': '15', 'carry': false},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.data['leave_types'] as List?;
+    if (saved != null && saved.isNotEmpty) {
+      _leaveTypes.clear();
+      for (final l in saved) {
+        _leaveTypes.add(Map<String, dynamic>.from(l as Map));
+      }
+    }
+  }
+
+  Map<String, dynamic> harvestData() => {'leave_types': _leaveTypes};
 
   @override
   Widget build(BuildContext context) {
@@ -737,7 +880,7 @@ class _LeaveStepState extends State<_LeaveStep> {
 class _AttendanceStep extends StatefulWidget {
   final Map<String, dynamic> data;
   final Function(Map<String, dynamic>) onNext;
-  const _AttendanceStep({required this.data, required this.onNext});
+  const _AttendanceStep({super.key, required this.data, required this.onNext});
 
   @override
   State<_AttendanceStep> createState() => _AttendanceStepState();
@@ -748,6 +891,23 @@ class _AttendanceStepState extends State<_AttendanceStep> {
   String _weeklyOff2 = 'Sunday';
   bool _autoShift = true;
   bool _biometricEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final d = widget.data;
+    _weeklyOff1 = d['weekly_off_1'] ?? 'Saturday';
+    _weeklyOff2 = d['weekly_off_2'] ?? 'Sunday';
+    _autoShift = d['auto_shift'] ?? true;
+    _biometricEnabled = d['biometric_enabled'] ?? false;
+  }
+
+  Map<String, dynamic> harvestData() => {
+    'weekly_off_1': _weeklyOff1,
+    'weekly_off_2': _weeklyOff2,
+    'auto_shift': _autoShift,
+    'biometric_enabled': _biometricEnabled,
+  };
 
   @override
   Widget build(BuildContext context) {

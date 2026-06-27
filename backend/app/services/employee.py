@@ -204,7 +204,7 @@ class EmployeeService:
                 await self.db.refresh(cmd)
         return commands
 
-    async def bulk_import(self, tenant_id: uuid.UUID, file_content: bytes) -> Tuple[int, List[str]]:
+    async def bulk_import(self, tenant_id: uuid.UUID, file_content: bytes, filename: str = "import.xlsx") -> Tuple[int, List[str]]:
         errors = []
         rows_to_process = []
         is_excel = file_content.startswith(b"PK\x03\x04")

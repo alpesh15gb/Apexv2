@@ -432,11 +432,11 @@ class AttendanceService:
             stmt = stmt.where(PunchLog.employee_id == employee_id)
             count_stmt = count_stmt.where(PunchLog.employee_id == employee_id)
         if from_date:
-            stmt = stmt.where(PunchLog.punch_time >= datetime.combine(from_date, datetime.min.time()))
-            count_stmt = count_stmt.where(PunchLog.punch_time >= datetime.combine(from_date, datetime.min.time()))
+            stmt = stmt.where(PunchLog.punch_time >= datetime.combine(from_date, datetime.min.time()).replace(tzinfo=timezone.utc))
+            count_stmt = count_stmt.where(PunchLog.punch_time >= datetime.combine(from_date, datetime.min.time()).replace(tzinfo=timezone.utc))
         if to_date:
-            stmt = stmt.where(PunchLog.punch_time <= datetime.combine(to_date, datetime.max.time()))
-            count_stmt = count_stmt.where(PunchLog.punch_time <= datetime.combine(to_date, datetime.max.time()))
+            stmt = stmt.where(PunchLog.punch_time <= datetime.combine(to_date, datetime.max.time()).replace(tzinfo=timezone.utc))
+            count_stmt = count_stmt.where(PunchLog.punch_time <= datetime.combine(to_date, datetime.max.time()).replace(tzinfo=timezone.utc))
 
         total = (await self.db.execute(count_stmt)).scalar() or 0
         offset = (page - 1) * page_size

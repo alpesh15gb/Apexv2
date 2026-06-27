@@ -62,7 +62,13 @@ class VisitorService:
         # Optionally call ValidateVisitorDesk SOAP API
         try:
             from app.services.essl_soap import ESSLSoapService
-            soap_service = ESSLSoapService()
+            from app.models.essl_server import EsslServer
+            stmt_server = select(EsslServer).where(EsslServer.tenant_id == tenant_id, EsslServer.is_active == True)
+            server_result = await self.db.execute(stmt_server)
+            server = server_result.scalar_one_or_none()
+            if not server:
+                raise HTTPException(status_code=400, detail="No active eSSL server configured")
+            soap_service = ESSLSoapService(server.server_url, server.username, server.password_encrypted)
             soap_res = await soap_service.validate_visitor_desk({
                 "uuid": str(visitor_pass.id),
                 "pass_number": visitor_pass.pass_number

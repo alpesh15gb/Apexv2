@@ -335,7 +335,7 @@ class AttendanceProcessor:
         if not shift.start_time:
             return False, 0
 
-        shift_start = datetime.combine(punch_in.date(), shift.start_time)
+        shift_start = datetime.combine(punch_in.date(), shift.start_time).replace(tzinfo=timezone.utc)
         grace = shift.grace_period_minutes or 0
         threshold = shift_start.replace(
             minute=shift_start.minute + grace,
@@ -353,7 +353,7 @@ class AttendanceProcessor:
         if not shift.end_time:
             return False, 0
 
-        shift_end = datetime.combine(punch_out.date(), shift.end_time)
+        shift_end = datetime.combine(punch_out.date(), shift.end_time).replace(tzinfo=timezone.utc)
         early_rule = shift.early_rule_minutes or 0
         threshold = shift_end.replace(
             minute=shift_end.minute - early_rule,
@@ -371,8 +371,8 @@ class AttendanceProcessor:
         if not shift.start_time or not shift.end_time:
             return 0.0
 
-        shift_start = datetime.combine(punch_in.date(), shift.start_time)
-        shift_end = datetime.combine(punch_out.date(), shift.end_time)
+        shift_start = datetime.combine(punch_in.date(), shift.start_time).replace(tzinfo=timezone.utc)
+        shift_end = datetime.combine(punch_out.date(), shift.end_time).replace(tzinfo=timezone.utc)
 
         # Handle night shifts
         if shift_end <= shift_start:

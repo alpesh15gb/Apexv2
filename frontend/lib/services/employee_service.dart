@@ -119,9 +119,9 @@ class EmployeeService {
     await _dio.delete('${ApiConstants.branches}/$id');
   }
 
-  Future<void> bulkImport(String filePath, String fileName) async {
+  Future<void> bulkImport(List<int> bytes, String fileName) async {
     final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      'file': MultipartFile.fromBytes(bytes, filename: fileName),
     });
     await _dio.post(ApiConstants.bulkImport, data: formData);
   }

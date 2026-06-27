@@ -33,6 +33,13 @@ from app.schemas.common import StatusResponse
 settings = get_settings()
 router = APIRouter()
 
+_redis = None
+def get_redis():
+    global _redis
+    if _redis is None:
+        _redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+    return _redis
+
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register(
@@ -202,7 +209,7 @@ async def refresh_token(
 
     # Check if the token has been revoked in Redis
     try:
-        redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        redis_client = get_redis()
         is_revoked = await redis_client.get(f"revoked_token:{token}")
         if is_revoked:
             raise HTTPException(
@@ -210,7 +217,6 @@ async def refresh_token(
                 detail="Refresh token has been revoked.",
             )
     except Exception as e:
-        # Fallback if Redis is down
         pass
 
     sub = payload.get("sub")
@@ -272,7 +278,7 @@ async def logout(
             ttl = int(exp - now)
             if ttl > 0:
                 try:
-                    redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+                    redis_client = get_redis()
                     await redis_client.setex(f"revoked_token:{token}", ttl, "1")
                 except Exception:
                     # If Redis fails, log might not persist, but we avoid 500 error
@@ -334,7 +340,7 @@ async def change_password(
 
     # Invalidate all sessions for this user
     try:
-        redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        redis_client = get_redis()
         await redis_client.set(f"revoked_user:{current_user.id}", datetime.now(timezone.utc).isoformat())
     except Exception:
         pass
@@ -351,7 +357,7 @@ async def logout_all_devices(
 ) -> StatusResponse:
     """Revoke all tokens for the current user across all devices."""
     try:
-        redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        redis_client = get_redis()
         await redis_client.set(f"revoked_user:{current_user.id}", datetime.now(timezone.utc).isoformat())
     except Exception:
         pass

@@ -178,18 +178,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/ess/attendance',
         builder: (context, state) => const EssAttendanceCalendarScreen(),
       ),
-          GoRoute(
-            path: '/leaves',
-            builder: (context, state) => const LeaveDashboardScreen(),
-          ),
-          GoRoute(
-            path: '/leaves/types',
-            builder: (context, state) => const LeaveTypesScreen(),
-          ),
-          GoRoute(
-            path: '/leaves/calendar',
-            builder: (context, state) => const LeaveCalendarScreen(),
-          ),
       GoRoute(
         path: '/ess/profile',
         builder: (context, state) => const EssProfileScreen(),
@@ -246,6 +234,223 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/shifts',
             builder: (context, state) => const ShiftManagementScreen(),
           ),
+          GoRoute(
+            path: '/leaves',
+            builder: (context, state) => const LeaveDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/leaves/types',
+            builder: (context, state) => const LeaveTypesScreen(),
+          ),
+          GoRoute(
+            path: '/leaves/calendar',
+            builder: (context, state) => const LeaveCalendarScreen(),
+          ),
+          GoRoute(
+            path: '/holidays',
+            builder: (context, state) => const HolidayCalendarScreen(),
+          ),
+          GoRoute(
+            path: '/devices',
+            builder: (context, state) => const DeviceListScreen(),
+          ),
+          GoRoute(
+            path: '/devices/health',
+            builder: (context, state) => const DeviceHealthScreen(),
+          ),
+          GoRoute(
+            path: '/devices/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DeviceDetailScreen(deviceId: id);
+            },
+          ),
+          GoRoute(
+            path: '/visitors',
+            builder: (context, state) => const VisitorListScreen(),
+          ),
+          GoRoute(
+            path: '/visitors/register',
+            builder: (context, state) => const VisitorRegisterScreen(),
+          ),
+          GoRoute(
+            path: '/visitors/pass',
+            builder: (context, state) {
+              final passId = state.uri.queryParameters['passId']!;
+              return VisitorPassScreen(passId: passId);
+            },
+          ),
+          GoRoute(
+            path: '/visitors/active',
+            builder: (context, state) => const ActiveVisitorsScreen(),
+          ),
+          GoRoute(
+            path: '/access/zones',
+            builder: (context, state) => const ZoneListScreen(),
+          ),
+          GoRoute(
+            path: '/access/doors',
+            builder: (context, state) => const DoorListScreen(),
+          ),
+          GoRoute(
+            path: '/access/logs',
+            builder: (context, state) => const AccessLogsScreen(),
+          ),
+          GoRoute(
+            path: '/commands',
+            builder: (context, state) => const CommandCenterScreen(),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationListScreen(),
+          ),
+          GoRoute(
+            path: '/recruitment',
+            builder: (context, state) => const RecruitmentDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/recruitment/candidates',
+            builder: (context, state) => const CandidatesScreen(),
+          ),
+          GoRoute(
+            path: '/recruitment/interviews',
+            builder: (context, state) => const InterviewsScreen(),
+          ),
+          GoRoute(
+            path: '/performance',
+            builder: (context, state) => const PerformanceDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/performance/goals',
+            builder: (context, state) => const GoalsScreen(),
+          ),
+          GoRoute(
+            path: '/assets',
+            builder: (context, state) => const AssetDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/reports',
+            builder: (context, state) => const ReportSelectionScreen(),
+          ),
+          GoRoute(
+            path: '/expenses',
+            builder: (context, state) => const ExpenseScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/settings/essl',
+            builder: (context, state) => const EsslServerListScreen(),
+          ),
+          GoRoute(
+            path: '/settings/essl/create',
+            builder: (context, state) => const EsslServerFormScreen(),
+          ),
+          GoRoute(
+            path: '/settings/essl/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return EsslServerFormScreen(serverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/settings/essl/:id/history',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return EsslSyncHistoryScreen(serverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/settings/essl/:id/locations',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return EsslLocationsScreen(serverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/settings/essl/:id/initial-sync',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return EsslInitialSyncScreen(serverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/settings/essl/:id/reprocess',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return EsslReprocessScreen(serverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/settings/essl/dashboard',
+            builder: (context, state) => const EsslDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/settings/categories',
+            builder: (context, state) => const CategoryScreen(),
+          ),
+          GoRoute(
+            path: '/settings/tenant-settings',
+            builder: (context, state) => const TenantSettingsScreen(),
+          ),
+          GoRoute(
+            path: '/settings/work-codes',
+            builder: (context, state) => const WorkCodeScreen(),
+          ),
+          GoRoute(
+            path: '/departments',
+            builder: (context, state) => const DepartmentScreen(),
+          ),
+          GoRoute(
+            path: '/branches',
+            builder: (context, state) => const BranchScreen(),
+          ),
+          GoRoute(
+            path: '/designations',
+            builder: (context, state) => const DesignationScreen(),
+          ),
+          GoRoute(
+            path: '/documents',
+            builder: (context, state) => const DocumentScreen(),
+          ),
+          GoRoute(
+            path: '/exit-requests',
+            builder: (context, state) => const ExitRequestScreen(),
+          ),
+          GoRoute(
+            path: '/travel',
+            builder: (context, state) => const TravelScreen(),
+          ),
+          GoRoute(
+            path: '/announcements',
+            builder: (context, state) => const AnnouncementScreen(),
+          ),
+          GoRoute(
+            path: '/health',
+            builder: (context, state) => const HealthDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/shift-groups',
+            builder: (context, state) => const ShiftGroupScreen(),
+          ),
+          GoRoute(
+            path: '/shift-rosters',
+            builder: (context, state) => const ShiftRosterScreen(),
+          ),
+          GoRoute(
+            path: '/department-shifts',
+            builder: (context, state) => const DepartmentShiftScreen(),
+          ),
+          GoRoute(
+            path: '/attendance/ot',
+            builder: (context, state) => const OTRegisterScreen(),
+          ),
+          GoRoute(
+            path: '/attendance/outdoor-duty',
+            builder: (context, state) => const OutdoorDutyScreen(),
+          ),
         ],
       ),
       GoRoute(
@@ -265,47 +470,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/departments',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DepartmentScreen(),
-      ),
-      GoRoute(
-        path: '/branches',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const BranchScreen(),
-      ),
-      GoRoute(
-        path: '/designations',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DesignationScreen(),
-      ),
-      // Holiday routes
-      GoRoute(
-        path: '/holidays',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const HolidayCalendarScreen(),
-      ),
-      // Devices routes
-      GoRoute(
-        path: '/devices',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DeviceListScreen(),
-      ),
-      GoRoute(
-        path: '/devices/health',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DeviceHealthScreen(),
-      ),
-      GoRoute(
-        path: '/devices/:id',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return DeviceDetailScreen(deviceId: id);
-        },
-      ),
-      // Attendance sub-routes
-      GoRoute(
         path: '/attendance/detail',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
@@ -323,7 +487,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const MarkAttendanceScreen(),
       ),
-      // Shifts routes
       GoRoute(
         path: '/shifts/create',
         parentNavigatorKey: rootNavigatorKey,
@@ -334,7 +497,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ShiftAssignScreen(),
       ),
-      // Leaves routes
       GoRoute(
         path: '/leaves/balance',
         parentNavigatorKey: rootNavigatorKey,
@@ -349,230 +511,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/leaves/requests',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const LeaveRequestsScreen(),
-      ),
-      // Visitors routes
-      GoRoute(
-        path: '/visitors',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const VisitorListScreen(),
-      ),
-      GoRoute(
-        path: '/visitors/register',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const VisitorRegisterScreen(),
-      ),
-      GoRoute(
-        path: '/visitors/pass',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final passId = state.uri.queryParameters['passId']!;
-          return VisitorPassScreen(passId: passId);
-        },
-      ),
-      GoRoute(
-        path: '/visitors/active',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ActiveVisitorsScreen(),
-      ),
-      // Access Control routes
-      GoRoute(
-        path: '/access/zones',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ZoneListScreen(),
-      ),
-      GoRoute(
-        path: '/access/doors',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DoorListScreen(),
-      ),
-      GoRoute(
-        path: '/access/logs',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const AccessLogsScreen(),
-      ),
-      // Command Center routes
-      GoRoute(
-        path: '/commands',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const CommandCenterScreen(),
-      ),
-      // Notifications routes
-      GoRoute(
-        path: '/notifications',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const NotificationListScreen(),
-      ),
-      // Recruitment routes
-      GoRoute(
-        path: '/recruitment',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const RecruitmentDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/recruitment/candidates',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const CandidatesScreen(),
-      ),
-      GoRoute(
-        path: '/recruitment/interviews',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const InterviewsScreen(),
-      ),
-      // Performance routes
-      GoRoute(
-        path: '/performance',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PerformanceDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/performance/goals',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const GoalsScreen(),
-      ),
-      // Asset routes
-      GoRoute(
-        path: '/assets',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const AssetDashboardScreen(),
-      ),
-      // System routes
-      GoRoute(
-        path: '/settings',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/health',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const HealthDashboardScreen(),
-      ),
-      // Reports routes
-      GoRoute(
-        path: '/reports',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ReportSelectionScreen(),
-      ),
-      // Finance routes
-      GoRoute(
-        path: '/expenses',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ExpenseScreen(),
-      ),
-      // eSSL Connector routes
-      GoRoute(
-        path: '/settings/essl',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const EsslServerListScreen(),
-      ),
-      GoRoute(
-        path: '/settings/essl/create',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const EsslServerFormScreen(),
-      ),
-      GoRoute(
-        path: '/settings/essl/:id',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return EsslServerFormScreen(serverId: id);
-        },
-      ),
-      GoRoute(
-        path: '/settings/essl/:id/history',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return EsslSyncHistoryScreen(serverId: id);
-        },
-      ),
-      GoRoute(
-        path: '/settings/essl/:id/locations',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return EsslLocationsScreen(serverId: id);
-        },
-      ),
-      GoRoute(
-        path: '/settings/essl/:id/initial-sync',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return EsslInitialSyncScreen(serverId: id);
-        },
-      ),
-      GoRoute(
-        path: '/settings/essl/:id/reprocess',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return EsslReprocessScreen(serverId: id);
-        },
-      ),
-      GoRoute(
-        path: '/settings/categories',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const CategoryScreen(),
-      ),
-      GoRoute(
-        path: '/settings/tenant-settings',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const TenantSettingsScreen(),
-      ),
-      GoRoute(
-        path: '/shift-groups',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ShiftGroupScreen(),
-      ),
-      GoRoute(
-        path: '/shift-rosters',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ShiftRosterScreen(),
-      ),
-      GoRoute(
-        path: '/department-shifts',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DepartmentShiftScreen(),
-      ),
-      GoRoute(
-        path: '/attendance/ot',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const OTRegisterScreen(),
-      ),
-      GoRoute(
-        path: '/attendance/outdoor-duty',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const OutdoorDutyScreen(),
-      ),
-      GoRoute(
-        path: '/settings/work-codes',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const WorkCodeScreen(),
-      ),
-      GoRoute(
-        path: '/documents',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DocumentScreen(),
-      ),
-      GoRoute(
-        path: '/exit-requests',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ExitRequestScreen(),
-      ),
-      GoRoute(
-        path: '/travel',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const TravelScreen(),
-      ),
-      GoRoute(
-        path: '/announcements',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const AnnouncementScreen(),
-      ),
-      GoRoute(
-        path: '/settings/essl/dashboard',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const EsslDashboardScreen(),
       ),
     ],
   );
