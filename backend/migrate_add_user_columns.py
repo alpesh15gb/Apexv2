@@ -9,13 +9,16 @@ from app.db.session import engine
 
 
 async def migrate():
+    columns = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_password_change TIMESTAMPTZ",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ",
+    ]
     async with engine.begin() as conn:
-        await conn.execute(text("""
-            ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
-            ALTER TABLE users ADD COLUMN IF NOT EXISTS last_password_change TIMESTAMPTZ;
-            ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;
-            ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
-        """))
+        for sql in columns:
+            await conn.execute(text(sql))
+            print(f"  done: {sql.split('NOT EXISTS ')[1]}")
     print("Migration complete: added missing user columns")
 
 
