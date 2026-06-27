@@ -5,7 +5,8 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.models.tenant import Tenant, SubscriptionPlan
+from app.models.tenant import Tenant
+from app.models.subscription import SubscriptionPlan
 
 class TenantService:
     def __init__(self, db: AsyncSession):

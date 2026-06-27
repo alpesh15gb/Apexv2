@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, Any, Dict
 from pydantic import BaseModel, Field, ConfigDict
-from app.models.tenant import SubscriptionPlan
+from app.models.tenant import SubscriptionPlanType
 
 class TenantBase(BaseModel):
     name: str = Field(..., max_length=255)
@@ -10,7 +10,7 @@ class TenantBase(BaseModel):
     domain: Optional[str] = Field(None, max_length=255)
     logo_url: Optional[str] = Field(None, max_length=512)
     max_employees: Optional[int] = None
-    subscription_plan: SubscriptionPlan = SubscriptionPlan.FREE
+    subscription_plan: SubscriptionPlanType = SubscriptionPlanType.FREE
     settings: Dict[str, Any] = Field(default_factory=dict)
 
 class TenantCreate(TenantBase):
@@ -23,7 +23,7 @@ class TenantUpdate(BaseModel):
     logo_url: Optional[str] = Field(None, max_length=512)
     is_active: Optional[bool] = None
     max_employees: Optional[int] = None
-    subscription_plan: Optional[SubscriptionPlan] = None
+    subscription_plan: Optional[SubscriptionPlanType] = None
     subscription_expires_at: Optional[datetime] = None
     settings: Optional[Dict[str, Any]] = None
 
