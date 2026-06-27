@@ -156,10 +156,13 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                               ]),
                             ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+              },
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Center(
                     child: Column(
