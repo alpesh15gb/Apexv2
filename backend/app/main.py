@@ -8,6 +8,7 @@ from app.db.session import engine
 from app.middleware.tenant import TenantMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.audit import AuditMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.api.v1.router import api_router
 
 settings = get_settings()
@@ -59,6 +60,9 @@ app.add_middleware(RateLimitMiddleware)
 
 # Tenant Middleware (outermost on request, innermost on response)
 app.add_middleware(TenantMiddleware)
+
+# Security Headers Middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Include API Router
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)

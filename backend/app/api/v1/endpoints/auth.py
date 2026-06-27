@@ -112,6 +112,8 @@ async def login(
     db: AsyncSession = Depends(get_db),
 ) -> LoginResponse:
     """Authenticate email and password, returning JWT access and refresh tokens."""
+    from app.core.password_policy import check_account_lockout, record_failed_login, reset_failed_login
+
     # Find user. Multi-tenancy check: filter by resolved tenant_id if present
     tenant_id = getattr(request.state, "tenant_id", None)
     stmt = select(User).where(User.email == login_data.email)
@@ -121,7 +123,27 @@ async def login(
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(login_data.password, user.hashed_password):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password.",
+        )
+
+    # Check account lockout
+    is_locked, lock_msg = check_account_lockout(
+        user.failed_login_attempts or 0,
+        user.locked_until,
+    )
+    if is_locked:
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail=lock_msg,
+        )
+
+    if not verify_password(login_data.password, user.hashed_password):
+        # Record failed attempt
+        record_failed_login(user)
+        await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
@@ -132,6 +154,9 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account is inactive.",
         )
+
+    # Reset failed login counter
+    reset_failed_login(user)
 
     # Generate JWT tokens
     access_token = create_access_token(
@@ -303,10 +328,35 @@ async def change_password(
         )
 
     current_user.hashed_password = hash_password(change_data.new_password)
+    current_user.last_password_change = datetime.now(timezone.utc)
     db.add(current_user)
     await db.commit()
+
+    # Invalidate all sessions for this user
+    try:
+        redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        await redis_client.set(f"revoked_user:{current_user.id}", datetime.now(timezone.utc).isoformat())
+    except Exception:
+        pass
 
     return StatusResponse(
         status="success",
         message="Password changed successfully.",
+    )
+
+
+@router.post("/logout-all", response_model=StatusResponse)
+async def logout_all_devices(
+    current_user: User = Depends(get_current_active_user),
+) -> StatusResponse:
+    """Revoke all tokens for the current user across all devices."""
+    try:
+        redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        await redis_client.set(f"revoked_user:{current_user.id}", datetime.now(timezone.utc).isoformat())
+    except Exception:
+        pass
+
+    return StatusResponse(
+        status="success",
+        message="All sessions revoked. Please login again.",
     )

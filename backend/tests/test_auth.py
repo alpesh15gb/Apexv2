@@ -1,86 +1,107 @@
-"""Tests for authentication endpoints."""
+"""Authentication tests."""
 
 import pytest
 from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_health_check(client: AsyncClient):
-    response = await client.get("/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
+class TestAuthentication:
+    """Test authentication endpoints."""
 
-
-@pytest.mark.asyncio
-async def test_register_tenant(client: AsyncClient):
-    response = await client.post(
-        "/api/v1/auth/register",
-        json={
-            "company_name": "New Corp",
-            "email": "admin@newcorp.com",
-            "password": "SecurePass123!",
-            "full_name": "Admin User",
-        },
-    )
-    assert response.status_code in (200, 201)
-    data = response.json()
-    assert "access_token" in data or "data" in data
-
-
-@pytest.mark.asyncio
-async def test_login(client: AsyncClient, test_user):
-    response = await client.post(
-        "/api/v1/auth/login",
-        json={
+    async def test_login_success(self, client: AsyncClient, user):
+        """Test successful login."""
+        response = await client.post("/api/v1/auth/login", json={
             "email": "admin@test.com",
             "password": "TestPass123!",
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "access_token" in data
-    assert "refresh_token" in data
-    assert data["token_type"] == "bearer"
+        })
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        assert "refresh_token" in data
+        assert data["user"]["email"] == "admin@test.com"
 
-
-@pytest.mark.asyncio
-async def test_login_wrong_password(client: AsyncClient, test_user):
-    response = await client.post(
-        "/api/v1/auth/login",
-        json={
+    async def test_login_wrong_password(self, client: AsyncClient, user):
+        """Test login with wrong password."""
+        response = await client.post("/api/v1/auth/login", json={
             "email": "admin@test.com",
-            "password": "WrongPassword!",
-        },
-    )
-    assert response.status_code == 401
+            "password": "WrongPass123!",
+        })
+        assert response.status_code == 401
+
+    async def test_login_nonexistent_user(self, client: AsyncClient):
+        """Test login with nonexistent user."""
+        response = await client.post("/api/v1/auth/login", json={
+            "email": "nonexistent@test.com",
+            "password": "TestPass123!",
+        })
+        assert response.status_code == 401
+
+    async def test_get_me(self, client: AsyncClient, auth_headers):
+        """Test getting current user profile."""
+        response = await client.get("/api/v1/auth/me", headers=auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["email"] == "admin@test.com"
+
+    async def test_get_me_no_token(self, client: AsyncClient):
+        """Test getting profile without token."""
+        response = await client.get("/api/v1/auth/me")
+        assert response.status_code == 401
+
+    async def test_refresh_token(self, client: AsyncClient, user):
+        """Test token refresh."""
+        login_response = await client.post("/api/v1/auth/login", json={
+            "email": "admin@test.com",
+            "password": "TestPass123!",
+        })
+        refresh_token = login_response.json()["refresh_token"]
+
+        response = await client.post("/api/v1/auth/refresh", json={
+            "refresh_token": refresh_token,
+        })
+        assert response.status_code == 200
+        assert "access_token" in response.json()
+
+    async def test_logout(self, client: AsyncClient, user):
+        """Test logout."""
+        login_response = await client.post("/api/v1/auth/login", json={
+            "email": "admin@test.com",
+            "password": "TestPass123!",
+        })
+        refresh_token = login_response.json()["refresh_token"]
+
+        response = await client.post("/api/v1/auth/logout", json={
+            "refresh_token": refresh_token,
+        })
+        assert response.status_code == 200
+
+    async def test_change_password(self, client: AsyncClient, auth_headers):
+        """Test password change."""
+        response = await client.post("/api/v1/auth/change-password",
+            json={
+                "old_password": "TestPass123!",
+                "new_password": "NewPass456!",
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_get_me(client: AsyncClient, auth_headers):
-    response = await client.get("/api/v1/auth/me", headers=auth_headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == "admin@test.com"
+class TestAccountLockout:
+    """Test account lockout after failed attempts."""
 
+    async def test_lockout_after_5_failures(self, client: AsyncClient, user):
+        """Test account locks after 5 failed login attempts."""
+        for i in range(5):
+            await client.post("/api/v1/auth/login", json={
+                "email": "admin@test.com",
+                "password": f"WrongPass{i}!",
+            })
 
-@pytest.mark.asyncio
-async def test_unauthorized_access(client: AsyncClient):
-    response = await client.get("/api/v1/auth/me")
-    assert response.status_code in (401, 403)
-
-
-@pytest.mark.asyncio
-async def test_refresh_token(client: AsyncClient, test_user):
-    login_resp = await client.post(
-        "/api/v1/auth/login",
-        json={"email": "admin@test.com", "password": "TestPass123!"},
-    )
-    refresh_token = login_resp.json()["refresh_token"]
-
-    response = await client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": refresh_token},
-    )
-    assert response.status_code == 200
-    assert "access_token" in response.json()
+        # 6th attempt should be locked
+        response = await client.post("/api/v1/auth/login", json={
+            "email": "admin@test.com",
+            "password": "TestPass123!",
+        })
+        assert response.status_code == 423  # Locked

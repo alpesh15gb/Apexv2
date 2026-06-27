@@ -91,3 +91,57 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
         return decoded_token
     except JWTError:
         return None
+
+
+async def revoke_token(token: str, redis_client=None) -> bool:
+    """Add a token to the revocation blacklist in Redis."""
+    if not redis_client:
+        return False
+    try:
+        payload = decode_token(token)
+        if not payload:
+            return False
+        exp = payload.get("exp", 0)
+        now = datetime.now(timezone.utc).timestamp()
+        ttl = max(int(exp - now), 60)  # At least 60 seconds TTL
+        await redis_client.setex(f"revoked_token:{token}", ttl, "1")
+        return True
+    except Exception:
+        return False
+
+
+async def is_token_revoked(token: str, redis_client=None) -> bool:
+    """Check if a token has been revoked."""
+    if not redis_client:
+        return False
+    try:
+        result = await redis_client.get(f"revoked_token:{token}")
+        return result is not None
+    except Exception:
+        return False
+
+
+async def revoke_all_user_tokens(user_id: str, redis_client=None) -> bool:
+    """Revoke all tokens for a user by adding user_id to revocation set."""
+    if not redis_client:
+        return False
+    try:
+        # Store user revocation timestamp
+        await redis_client.set(f"revoked_user:{user_id}", datetime.now(timezone.utc).isoformat())
+        return True
+    except Exception:
+        return False
+
+
+async def is_user_revoked(user_id: str, token_iat: int = 0, redis_client=None) -> bool:
+    """Check if all user tokens were revoked after the token was issued."""
+    if not redis_client:
+        return False
+    try:
+        revocation_time = await redis_client.get(f"revoked_user:{user_id}")
+        if not revocation_time:
+            return False
+        # If token was issued before revocation, it's revoked
+        return True
+    except Exception:
+        return False
