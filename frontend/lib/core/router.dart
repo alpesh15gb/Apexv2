@@ -135,10 +135,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '/dashboard',
-        builder: (context, state) => const DashboardScreen(),
-      ),
       // Setup Wizard
       GoRoute(
         path: '/setup',
@@ -214,6 +210,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         navigatorKey: shellNavigatorKey,
         builder: (context, state, child) => MainShell(child: child),
         routes: [
+          GoRoute(
+            path: '/dashboard',
+            builder: (context, state) => const DashboardScreen(),
+          ),
           GoRoute(
             path: '/payroll',
             builder: (context, state) => const PayrollDashboardScreen(),
