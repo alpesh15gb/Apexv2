@@ -155,30 +155,27 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                                 ),
                               ]),
                             ),
-                    ),
-                  ],
-                );
-              },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 40, color: _danger),
+                        const SizedBox(height: 12),
+                        Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () => ref.read(employeeListProvider.notifier).fetchEmployees(isRefresh: true),
+                          child: const Text('Retry'),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 40, color: _danger),
-                    const SizedBox(height: 12),
-                    Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () => ref.read(employeeListProvider.notifier).fetchEmployees(isRefresh: true),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ),
         ],
