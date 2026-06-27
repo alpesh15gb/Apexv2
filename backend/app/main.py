@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
@@ -86,7 +87,7 @@ async def health_check():
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Global exception handler - prevents leaking tracebacks."""
-    return __import__('fastapi.responses').JSONResponse(
+    return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
     )
