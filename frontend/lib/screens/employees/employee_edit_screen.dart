@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../models/employee.dart';
@@ -9,15 +8,11 @@ import '../../providers/employee_provider.dart';
 import '../../screens/employees/employee_detail_screen.dart';
 import '../../screens/employees/employee_directory_screen.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_section.dart';
+import '../../widgets/apex_text_field.dart';
 
 class EmployeeEditScreen extends ConsumerStatefulWidget {
   final String employeeId;
@@ -33,7 +28,6 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
   bool _saving = false;
   Employee? _employee;
 
-  // Controllers
   final _codeCtrl = TextEditingController();
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
@@ -114,7 +108,7 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load: $e'), backgroundColor: _danger),
+          SnackBar(content: Text('Failed to load: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -154,14 +148,14 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Employee updated'), backgroundColor: _success),
+          const SnackBar(content: Text('Employee updated'), backgroundColor: Colors.green),
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: _danger),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -190,7 +184,7 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        backgroundColor: _bg,
+        backgroundColor: const Color(0xFFF8FAFC),
         appBar: const ApexAppBar(title: 'Edit Employee'),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -198,24 +192,23 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
 
     if (_employee == null) {
       return Scaffold(
-        backgroundColor: _bg,
+        backgroundColor: const Color(0xFFF8FAFC),
         appBar: const ApexAppBar(title: 'Edit Employee'),
         body: const Center(child: Text('Employee not found')),
       );
     }
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: ApexAppBar(
         title: 'Edit ${_employee!.fullName}',
         actions: [
           TextButton.icon(
             onPressed: _saving ? null : _save,
             icon: _saving
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: _primary))
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.save, size: 18),
             label: Text(_saving ? 'Saving...' : 'Save'),
-            style: TextButton.styleFrom(foregroundColor: _primary),
           ),
           const SizedBox(width: 8),
         ],
@@ -227,259 +220,173 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _section('BASIC INFORMATION', [
+              ApexSection(title: 'BASIC INFORMATION', children: [
                 Row(
                   children: [
-                    Expanded(child: _textField('Employee Code', _codeCtrl, enabled: false)),
+                    Expanded(child: ApexTextField(label: 'Employee Code', controller: _codeCtrl, enabled: false)),
                     const SizedBox(width: 16),
                     Expanded(
                       flex: 2,
-                      child: _dropdownField('Status', _selectedStatus, [
-                        const DropdownMenuItem(value: 'active', child: Text('Active')),
-                        const DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                        const DropdownMenuItem(value: 'terminated', child: Text('Terminated')),
-                        const DropdownMenuItem(value: 'on_leave', child: Text('On Leave')),
-                      ], (v) => setState(() => _selectedStatus = v!)),
+                      child: ApexDropdown<String>(
+                        label: 'Status',
+                        value: _selectedStatus,
+                        items: const [
+                          DropdownMenuItem(value: 'active', child: Text('Active')),
+                          DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                          DropdownMenuItem(value: 'terminated', child: Text('Terminated')),
+                          DropdownMenuItem(value: 'on_leave', child: Text('On Leave')),
+                        ],
+                        onChanged: (v) => setState(() => _selectedStatus = v!),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _textField('First Name', _firstNameCtrl, required: true)),
+                    Expanded(child: ApexTextField(label: 'First Name', controller: _firstNameCtrl, required: true)),
                     const SizedBox(width: 16),
-                    Expanded(child: _textField('Last Name', _lastNameCtrl, required: true)),
+                    Expanded(child: ApexTextField(label: 'Last Name', controller: _lastNameCtrl, required: true)),
                   ],
                 ),
               ]),
               const SizedBox(height: 24),
-              _section('CONTACT', [
+              ApexSection(title: 'CONTACT', children: [
                 Row(
                   children: [
-                    Expanded(child: _textField('Email', _emailCtrl, keyboardType: TextInputType.emailAddress)),
+                    Expanded(child: ApexTextField(label: 'Email', controller: _emailCtrl, keyboardType: TextInputType.emailAddress)),
                     const SizedBox(width: 16),
-                    Expanded(child: _textField('Phone', _phoneCtrl, keyboardType: TextInputType.phone)),
+                    Expanded(child: ApexTextField(label: 'Phone', controller: _phoneCtrl, keyboardType: TextInputType.phone)),
                   ],
                 ),
               ]),
               const SizedBox(height: 24),
-              _section('EMPLOYMENT', [
+              ApexSection(title: 'EMPLOYMENT', children: [
                 Row(
                   children: [
-                    Expanded(child: _dropdownFromList('Department', _selectedDepartmentId, _departments, (v) => setState(() => _selectedDepartmentId = v))),
+                    Expanded(child: ApexDropdown<String>(
+                      label: 'Department',
+                      value: _selectedDepartmentId,
+                      items: _departments.map((d) => DropdownMenuItem(
+                        value: d['id'] as String,
+                        child: Text(d['name'] ?? ''),
+                      )).toList(),
+                      onChanged: (v) => setState(() => _selectedDepartmentId = v),
+                    )),
                     const SizedBox(width: 16),
-                    Expanded(child: _dropdownFromList('Designation', _selectedDesignationId, _designations, (v) => setState(() => _selectedDesignationId = v))),
+                    Expanded(child: ApexDropdown<String>(
+                      label: 'Designation',
+                      value: _selectedDesignationId,
+                      items: _designations.map((d) => DropdownMenuItem(
+                        value: d['id'] as String,
+                        child: Text(d['name'] ?? ''),
+                      )).toList(),
+                      onChanged: (v) => setState(() => _selectedDesignationId = v),
+                    )),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _dropdownFromList('Branch', _selectedBranchId, _branches, (v) => setState(() => _selectedBranchId = v))),
+                    Expanded(child: ApexDropdown<String>(
+                      label: 'Branch',
+                      value: _selectedBranchId,
+                      items: _branches.map((b) => DropdownMenuItem(
+                        value: b['id'] as String,
+                        child: Text(b['name'] ?? ''),
+                      )).toList(),
+                      onChanged: (v) => setState(() => _selectedBranchId = v),
+                    )),
                     const SizedBox(width: 16),
-                    Expanded(child: _dropdownFromList('Shift', _selectedShiftId, _shifts, (v) => setState(() => _selectedShiftId = v))),
+                    Expanded(child: ApexDropdown<String>(
+                      label: 'Shift',
+                      value: _selectedShiftId,
+                      items: _shifts.map((s) => DropdownMenuItem(
+                        value: s['id'] as String,
+                        child: Text(s['name'] ?? ''),
+                      )).toList(),
+                      onChanged: (v) => setState(() => _selectedShiftId = v),
+                    )),
                   ],
                 ),
                 const SizedBox(height: 16),
-                _dateField('Joining Date', _joiningDate, (v) => setState(() => _joiningDate = v)),
+                ApexDatePicker(label: 'Joining Date', value: _joiningDate, onChanged: (v) => setState(() => _joiningDate = v)),
               ]),
               const SizedBox(height: 24),
-              _section('PERSONAL', [
+              ApexSection(title: 'PERSONAL', children: [
                 Row(
                   children: [
                     Expanded(
-                      child: _dropdownField('Gender', _selectedGender, [
-                        const DropdownMenuItem(value: 'male', child: Text('Male')),
-                        const DropdownMenuItem(value: 'female', child: Text('Female')),
-                        const DropdownMenuItem(value: 'other', child: Text('Other')),
-                      ], (v) => setState(() => _selectedGender = v)),
+                      child: ApexDropdown<String>(
+                        label: 'Gender',
+                        value: _selectedGender,
+                        items: const [
+                          DropdownMenuItem(value: 'male', child: Text('Male')),
+                          DropdownMenuItem(value: 'female', child: Text('Female')),
+                          DropdownMenuItem(value: 'other', child: Text('Other')),
+                        ],
+                        onChanged: (v) => setState(() => _selectedGender = v),
+                      ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(child: _dateField('Date of Birth', _dateOfBirth, (v) => setState(() => _dateOfBirth = v))),
+                    Expanded(child: ApexDatePicker(label: 'Date of Birth', value: _dateOfBirth, onChanged: (v) => setState(() => _dateOfBirth = v))),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: _dropdownField('Blood Group', _selectedBloodGroup, [
-                        const DropdownMenuItem(value: 'A+', child: Text('A+')),
-                        const DropdownMenuItem(value: 'A-', child: Text('A-')),
-                        const DropdownMenuItem(value: 'B+', child: Text('B+')),
-                        const DropdownMenuItem(value: 'B-', child: Text('B-')),
-                        const DropdownMenuItem(value: 'AB+', child: Text('AB+')),
-                        const DropdownMenuItem(value: 'AB-', child: Text('AB-')),
-                        const DropdownMenuItem(value: 'O+', child: Text('O+')),
-                        const DropdownMenuItem(value: 'O-', child: Text('O-')),
-                      ], (v) => setState(() => _selectedBloodGroup = v)),
+                      child: ApexDropdown<String>(
+                        label: 'Blood Group',
+                        value: _selectedBloodGroup,
+                        items: const [
+                          DropdownMenuItem(value: 'A+', child: Text('A+')),
+                          DropdownMenuItem(value: 'A-', child: Text('A-')),
+                          DropdownMenuItem(value: 'B+', child: Text('B+')),
+                          DropdownMenuItem(value: 'B-', child: Text('B-')),
+                          DropdownMenuItem(value: 'AB+', child: Text('AB+')),
+                          DropdownMenuItem(value: 'AB-', child: Text('AB-')),
+                          DropdownMenuItem(value: 'O+', child: Text('O+')),
+                          DropdownMenuItem(value: 'O-', child: Text('O-')),
+                        ],
+                        onChanged: (v) => setState(() => _selectedBloodGroup = v),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                _textField('Address', _addressCtrl, maxLines: 2),
+                ApexTextField(label: 'Address', controller: _addressCtrl, maxLines: 2),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _textField('City', _cityCtrl)),
+                    Expanded(child: ApexTextField(label: 'City', controller: _cityCtrl)),
                     const SizedBox(width: 16),
-                    Expanded(child: _textField('State', _stateCtrl)),
+                    Expanded(child: ApexTextField(label: 'State', controller: _stateCtrl)),
                     const SizedBox(width: 16),
-                    Expanded(child: _textField('Pincode', _pincodeCtrl)),
+                    Expanded(child: ApexTextField(label: 'Pincode', controller: _pincodeCtrl)),
                   ],
                 ),
               ]),
               const SizedBox(height: 24),
-              _section('EMERGENCY CONTACT', [
+              ApexSection(title: 'EMERGENCY CONTACT', children: [
                 Row(
                   children: [
-                    Expanded(child: _textField('Contact Name', _emergencyNameCtrl)),
+                    Expanded(child: ApexTextField(label: 'Contact Name', controller: _emergencyNameCtrl)),
                     const SizedBox(width: 16),
-                    Expanded(child: _textField('Contact Phone', _emergencyPhoneCtrl, keyboardType: TextInputType.phone)),
+                    Expanded(child: ApexTextField(label: 'Contact Phone', controller: _emergencyPhoneCtrl, keyboardType: TextInputType.phone)),
                   ],
                 ),
               ]),
               const SizedBox(height: 24),
-              _section('DEVICE', [
-                _textField('Device User ID', _deviceUserIdCtrl),
+              ApexSection(title: 'DEVICE', children: [
+                ApexTextField(label: 'Device User ID', controller: _deviceUserIdCtrl),
               ]),
               const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: _saving ? null : _save,
-                  icon: _saving
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.save),
-                  label: Text(_saving ? 'Saving...' : 'Save Changes'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
+              ApexButton(
+                label: 'Save Changes',
+                icon: Icons.save,
+                loading: _saving,
+                expanded: true,
+                onPressed: _save,
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _section(String title, List<Widget> children) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.2, color: _muted)),
-          const SizedBox(height: 16),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _textField(String label, TextEditingController ctrl, {
-    bool required = false,
-    bool enabled = true,
-    int maxLines = 1,
-    TextInputType? keyboardType,
-  }) {
-    return TextFormField(
-      controller: ctrl,
-      enabled: enabled,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      style: const TextStyle(fontSize: 14, color: _text, fontWeight: FontWeight.w500),
-      validator: required ? (v) => v == null || v.trim().isEmpty ? '$label is required' : null : null,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(fontSize: 13, color: _text, fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
-        hintStyle: const TextStyle(fontSize: 13, color: _muted),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary, width: 2)),
-        disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _danger, width: 1.5)),
-        filled: true,
-        fillColor: enabled ? _surface : _bg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      ),
-    );
-  }
-
-  Widget _dropdownField(String label, String? value, List<DropdownMenuItem<String>> items, ValueChanged<String?> onChanged) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      items: items,
-      onChanged: onChanged,
-      style: const TextStyle(fontSize: 14, color: _text, fontWeight: FontWeight.w500),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(fontSize: 13, color: _text, fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary, width: 2)),
-        filled: true,
-        fillColor: _surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      ),
-    );
-  }
-
-  Widget _dropdownFromList(String label, String? value, List<Map<String, dynamic>> items, ValueChanged<String?> onChanged) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      items: items.map((item) => DropdownMenuItem(
-        value: item['id'] as String,
-        child: Text(item['name'] ?? '', overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: _text)),
-      )).toList(),
-      onChanged: onChanged,
-      style: const TextStyle(fontSize: 14, color: _text, fontWeight: FontWeight.w500),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(fontSize: 13, color: _text, fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary, width: 2)),
-        filled: true,
-        fillColor: _surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      ),
-    );
-  }
-
-  Widget _dateField(String label, DateTime? value, ValueChanged<DateTime?> onChanged) {
-    return InkWell(
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: value ?? DateTime.now(),
-          firstDate: DateTime(1950),
-          lastDate: DateTime(2100),
-        );
-        if (picked != null) onChanged(picked);
-      },
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(fontSize: 13, color: _text, fontWeight: FontWeight.w500),
-          floatingLabelStyle: const TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border, width: 1.5)),
-          filled: true,
-          fillColor: _surface,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          suffixIcon: const Icon(Icons.calendar_today, size: 18, color: _muted),
-        ),
-        child: Text(
-          value != null ? DateFormat('MMM dd, yyyy').format(value) : 'Select date',
-          style: TextStyle(fontSize: 14, color: value != null ? _text : _muted, fontWeight: value != null ? FontWeight.w500 : FontWeight.w400),
         ),
       ),
     );

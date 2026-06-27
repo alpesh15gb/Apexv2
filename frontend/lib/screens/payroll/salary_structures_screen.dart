@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../design_system/typography.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -34,17 +37,17 @@ class SalaryStructuresScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
-        backgroundColor: _surface,
+        title: Text('Salary Structures', style: ApexTypography.sectionTitle),
+        backgroundColor: Colors.white,
         foregroundColor: _text,
         elevation: 0,
-        title: const Text('Salary Structures', style: TextStyle(fontWeight: FontWeight.w600)),
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/payroll')),
         actions: [
-          ElevatedButton.icon(
+          ApexButton(
+            label: 'New Structure',
+            icon: Icons.add,
             onPressed: () => _showCreateDialog(context, ref),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('New Structure'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -73,13 +76,12 @@ class SalaryStructuresScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           const Text('No Salary Structures', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
           const SizedBox(height: 8),
-          const Text('Create salary templates for your organization', style: TextStyle(fontSize: 13, color: _muted)),
+          Text('Create salary templates for your organization', style: ApexTypography.body.copyWith(color: _muted)),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
+          ApexButton(
+            label: 'Create Structure',
+            icon: Icons.add,
             onPressed: () => _showCreateDialog(context, ref),
-            icon: const Icon(Icons.add),
-            label: const Text('Create Structure'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
           ),
         ],
       ),
@@ -129,7 +131,8 @@ class SalaryStructuresScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(
+            label: 'Create',
             onPressed: () async {
               try {
                 final dio = ref.read(dioProvider);
@@ -150,8 +153,6 @@ class SalaryStructuresScreen extends ConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-            child: const Text('Create'),
           ),
         ],
       ),
@@ -173,11 +174,11 @@ class _StructureCard extends StatelessWidget {
     final da = structure['da'] ?? 0;
     final total = (basic as num) + (hra as num) + (da as num);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ApexCard(
+        padding: const EdgeInsets.all(18),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
@@ -188,10 +189,10 @@ class _StructureCard extends StatelessWidget {
             ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
-              Text('Effective: ${structure['effective_from'] ?? '—'}', style: const TextStyle(fontSize: 12, color: _muted)),
+              Text(name, style: ApexTypography.cardTitle.copyWith(fontSize: 15)),
+              Text('Effective: ${structure['effective_from'] ?? '—'}', style: ApexTypography.captionSmall),
             ])),
-            Text('₹${total.toStringAsFixed(0)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _success)),
+            Text('₹${total.toStringAsFixed(0)}', style: ApexTypography.sectionTitle.copyWith(color: _success)),
           ]),
           const SizedBox(height: 14),
           Wrap(
@@ -208,6 +209,7 @@ class _StructureCard extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -215,7 +217,7 @@ class _StructureCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(color: _bg, borderRadius: BorderRadius.circular(6)),
-      child: Text('$label: ₹${(amount as num).toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: _text)),
+      child: Text('$label: ₹${(amount as num).toStringAsFixed(0)}', style: ApexTypography.captionMedium),
     );
   }
 }

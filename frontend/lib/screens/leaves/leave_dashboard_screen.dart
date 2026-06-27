@@ -1,21 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
-import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_text_field.dart';
 
 final leaveStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -131,12 +125,12 @@ class LeaveDashboardScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Leave Management', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Leave Management', style: ApexTypography.sectionTitle),
         actions: [
           TextButton.icon(
             onPressed: () => context.push('/leaves/types'),
@@ -157,18 +151,30 @@ class LeaveDashboardScreen extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             statsAsync.when(
               data: (stats) => _StatsRow(stats: stats),
-              loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text('Error: $e', style: const TextStyle(color: _danger)),
+              loading: () => const SizedBox(
+                height: 100,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => ApexCard(
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: ApexColors.error),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text('Failed to load stats', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+                    ApexButton(label: 'Retry', type: ApexButtonType.outline, onPressed: () => ref.invalidate(leaveStatsProvider)),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             _FiltersBar(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             _LeaveRequestsTable(state: reqState, isMobile: isMobile),
           ],
         ),
@@ -185,15 +191,15 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
     final cards = [
-      _StatCard(title: 'On Leave Today', value: '${stats['on_leave_today'] ?? 0}', icon: Icons.event_busy, color: _primary),
-      _StatCard(title: 'Pending Requests', value: '${stats['pending'] ?? 0}', icon: Icons.pending, color: _warning),
-      _StatCard(title: 'Approved', value: '${stats['approved'] ?? 0}', icon: Icons.check_circle, color: _success),
-      _StatCard(title: 'Rejected', value: '${stats['rejected'] ?? 0}', icon: Icons.cancel, color: _danger),
+      _StatCard(title: 'On Leave Today', value: '${stats['on_leave_today'] ?? 0}', icon: Icons.event_busy, color: ApexColors.primary),
+      _StatCard(title: 'Pending Requests', value: '${stats['pending'] ?? 0}', icon: Icons.pending, color: ApexColors.warning),
+      _StatCard(title: 'Approved', value: '${stats['approved'] ?? 0}', icon: Icons.check_circle, color: ApexColors.success),
+      _StatCard(title: 'Rejected', value: '${stats['rejected'] ?? 0}', icon: Icons.cancel, color: ApexColors.error),
     ];
 
     return Wrap(
-      spacing: 12,
-      runSpacing: 12,
+      spacing: 16,
+      runSpacing: 16,
       children: cards.map((c) => SizedBox(
         width: isMobile ? double.infinity : (MediaQuery.of(context).size.width - 80) / 4,
         child: c,
@@ -212,27 +218,24 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
-      ),
+    return ApexCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
             Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-              child: Icon(icon, size: 16, color: color),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 18, color: color),
             ),
             const Spacer(),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
+            Text(value, style: ApexTypography.kpiValue.copyWith(color: color)),
           ]),
           const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 12, color: _muted, fontWeight: FontWeight.w500)),
+          Text(title, style: ApexTypography.kpiLabel),
         ],
       ),
     );
@@ -247,9 +250,8 @@ class _FiltersBar extends ConsumerStatefulWidget {
 class _FiltersBarState extends ConsumerState<_FiltersBar> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+    return ApexCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           _statusChip('All', null),
@@ -258,7 +260,10 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
           _statusChip('Rejected', 'rejected'),
           _statusChip('Cancelled', 'cancelled'),
           const Spacer(),
-          IconButton(icon: const Icon(Icons.download, size: 18, color: _muted), onPressed: () {}),
+          IconButton(
+            icon: Icon(Icons.download, size: 18, color: ApexColors.neutral500),
+            onPressed: () {},
+          ),
         ],
       ),
     );
@@ -270,11 +275,14 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label, style: TextStyle(fontSize: 12, color: isActive ? _primary : _muted)),
+        label: Text(label, style: ApexTypography.captionSmall.copyWith(
+          color: isActive ? ApexColors.primary : ApexColors.neutral500,
+          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+        )),
         selected: isActive,
         onSelected: (_) => ref.read(leaveRequestsProvider.notifier).setFilter(status: status),
-        selectedColor: _primary.withOpacity(0.1),
-        side: BorderSide(color: isActive ? _primary : _border),
+        selectedColor: ApexColors.primary50,
+        side: BorderSide(color: isActive ? ApexColors.primary : ApexColors.neutral200),
       ),
     );
   }
@@ -289,32 +297,50 @@ class _LeaveRequestsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (state.loading && state.requests.isEmpty) {
-      return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+      return const ApexCard(
+        child: SizedBox(
+          height: 200,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
     }
     if (state.requests.isEmpty) {
-      return Container(
-        height: 200,
-        decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-        child: const Center(child: Text('No leave requests', style: TextStyle(color: _muted))),
+      return ApexCard(
+        child: SizedBox(
+          height: 200,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.event_busy, size: 40, color: ApexColors.neutral300),
+                const SizedBox(height: 12),
+                Text('No leave requests', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+    return ApexCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           if (!isMobile)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: _bg,
-              child: Row(children: const [
-                SizedBox(width: 180, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('LEAVE TYPE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('FROM', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('TO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 60, child: Text('DAYS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 120, child: Text('ACTIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: ApexColors.neutral50,
+                border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
+              ),
+              child: Row(children: [
+                SizedBox(width: 180, child: Text('EMPLOYEE', style: ApexTypography.sectionHeader)),
+                SizedBox(width: 100, child: Text('LEAVE TYPE', style: ApexTypography.sectionHeader)),
+                SizedBox(width: 100, child: Text('FROM', style: ApexTypography.sectionHeader)),
+                SizedBox(width: 100, child: Text('TO', style: ApexTypography.sectionHeader)),
+                SizedBox(width: 60, child: Text('DAYS', style: ApexTypography.sectionHeader)),
+                SizedBox(width: 80, child: Text('STATUS', style: ApexTypography.sectionHeader)),
+                SizedBox(width: 120, child: Text('ACTIONS', style: ApexTypography.sectionHeader)),
               ]),
             ),
           ...state.requests.asMap().entries.map((entry) {
@@ -325,50 +351,55 @@ class _LeaveRequestsTable extends ConsumerWidget {
 
             if (isMobile) {
               return Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _border, width: 0.5))),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: ApexColors.neutral100, width: 0.5)),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(children: [
                       CircleAvatar(
-                        radius: 14,
-                        backgroundColor: _primary.withOpacity(0.1),
-                        child: Text((r['employee_name'] ?? '?')[0].toUpperCase(), style: const TextStyle(fontSize: 11, color: _primary, fontWeight: FontWeight.w700)),
+                        radius: 16,
+                        backgroundColor: ApexColors.primary50,
+                        child: Text(
+                          (r['employee_name'] ?? '?')[0].toUpperCase(),
+                          style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700),
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(r['employee_name'] ?? '—', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
-                        Text(r['leave_type_name'] ?? '—', style: const TextStyle(fontSize: 11, color: _muted)),
+                        Text(r['employee_name'] ?? '—', style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                        Text(r['leave_type_name'] ?? '—', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                       ])),
                       _statusBadge(status),
                     ]),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Row(children: [
-                      Text('${r['start_date'] ?? ''} → ${r['end_date'] ?? ''}', style: const TextStyle(fontSize: 12, color: _muted)),
+                      Text('${r['start_date'] ?? ''} → ${r['end_date'] ?? ''}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                       const Spacer(),
-                      Text('${r['days'] ?? 1} day(s)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _text)),
+                      Text('${r['days'] ?? 1} day(s)', style: ApexTypography.captionMedium.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                     ]),
                     if (r['reason'] != null && r['reason'].toString().isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(r['reason'], style: const TextStyle(fontSize: 12, color: _muted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(r['reason'], style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                     if (isPending) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Row(children: [
                         Expanded(
-                          child: OutlinedButton(
+                          child: ApexButton(
+                            label: 'Reject',
+                            type: ApexButtonType.danger,
                             onPressed: () => _rejectDialog(context, ref, r['id']),
-                            style: OutlinedButton.styleFrom(foregroundColor: _danger, side: const BorderSide(color: _danger)),
-                            child: const Text('Reject', style: TextStyle(fontSize: 12)),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: ElevatedButton(
+                          child: ApexButton(
+                            label: 'Approve',
+                            type: ApexButtonType.success,
                             onPressed: () => ref.read(leaveRequestsProvider.notifier).approve(r['id']),
-                            style: ElevatedButton.styleFrom(backgroundColor: _success, foregroundColor: Colors.white),
-                            child: const Text('Approve', style: TextStyle(fontSize: 12)),
                           ),
                         ),
                       ]),
@@ -379,34 +410,37 @@ class _LeaveRequestsTable extends ConsumerWidget {
             }
 
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: i.isEven ? _surface : _bg,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: i.isEven ? Colors.white : ApexColors.neutral50,
               child: Row(children: [
                 SizedBox(width: 180, child: Row(children: [
                   CircleAvatar(
                     radius: 14,
-                    backgroundColor: _primary.withOpacity(0.1),
-                    child: Text((r['employee_name'] ?? '?')[0].toUpperCase(), style: const TextStyle(fontSize: 11, color: _primary, fontWeight: FontWeight.w700)),
+                    backgroundColor: ApexColors.primary50,
+                    child: Text(
+                      (r['employee_name'] ?? '?')[0].toUpperCase(),
+                      style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(r['employee_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
+                  Expanded(child: Text(r['employee_name'] ?? '—', style: ApexTypography.table, overflow: TextOverflow.ellipsis)),
                 ])),
-                SizedBox(width: 100, child: Text(r['leave_type_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _muted))),
-                SizedBox(width: 100, child: Text(r['start_date'] ?? '—', style: const TextStyle(fontSize: 13, color: _text))),
-                SizedBox(width: 100, child: Text(r['end_date'] ?? '—', style: const TextStyle(fontSize: 13, color: _text))),
-                SizedBox(width: 60, child: Text('${r['days'] ?? 1}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text))),
+                SizedBox(width: 100, child: Text(r['leave_type_name'] ?? '—', style: ApexTypography.table.copyWith(color: ApexColors.neutral600))),
+                SizedBox(width: 100, child: Text(r['start_date'] ?? '—', style: ApexTypography.table)),
+                SizedBox(width: 100, child: Text(r['end_date'] ?? '—', style: ApexTypography.table)),
+                SizedBox(width: 60, child: Text('${r['days'] ?? 1}', style: ApexTypography.table.copyWith(fontWeight: FontWeight.w600))),
                 SizedBox(width: 80, child: _statusBadge(status)),
                 SizedBox(
                   width: 120,
                   child: isPending
                       ? Row(children: [
                           IconButton(
-                            icon: const Icon(Icons.check, size: 16, color: _success),
+                            icon: Icon(Icons.check, size: 16, color: ApexColors.success),
                             onPressed: () => ref.read(leaveRequestsProvider.notifier).approve(r['id']),
                             tooltip: 'Approve',
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, size: 16, color: _danger),
+                            icon: Icon(Icons.close, size: 16, color: ApexColors.error),
                             onPressed: () => _rejectDialog(context, ref, r['id']),
                             tooltip: 'Reject',
                           ),
@@ -419,17 +453,17 @@ class _LeaveRequestsTable extends ConsumerWidget {
           if (state.totalPages > 1)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(border: Border(top: BorderSide(color: _border))),
+              decoration: BoxDecoration(border: Border(top: BorderSide(color: ApexColors.neutral200))),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('${state.total} requests', style: const TextStyle(fontSize: 13, color: _muted)),
+                  Text('${state.total} requests', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                   const SizedBox(width: 24),
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
                     onPressed: state.page > 1 ? () => ref.read(leaveRequestsProvider.notifier).fetch(page: state.page - 1) : null,
                   ),
-                  Text('Page ${state.page} of ${state.totalPages}', style: const TextStyle(fontSize: 13, color: _text)),
+                  Text('Page ${state.page} of ${state.totalPages}', style: ApexTypography.caption),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
                     onPressed: state.page < state.totalPages ? () => ref.read(leaveRequestsProvider.notifier).fetch(page: state.page + 1) : null,
@@ -443,23 +477,17 @@ class _LeaveRequestsTable extends ConsumerWidget {
   }
 
   Widget _statusBadge(String status) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: _statusColor(status).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
-    );
-  }
-
-  Color _statusColor(String status) {
     switch (status) {
-      case 'approved': return _success;
-      case 'rejected': return _danger;
-      case 'pending': return _warning;
-      case 'cancelled': return _muted;
-      default: return _muted;
+      case 'approved':
+        return ApexBadge.success('Approved');
+      case 'rejected':
+        return ApexBadge.danger('Rejected');
+      case 'pending':
+        return ApexBadge.warning('Pending');
+      case 'cancelled':
+        return ApexBadge(label: 'Cancelled');
+      default:
+        return ApexBadge(label: status);
     }
   }
 
@@ -468,22 +496,19 @@ class _LeaveRequestsTable extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reject Leave Request'),
-        content: TextField(
+        title: Text('Reject Leave Request', style: ApexTypography.sectionTitle),
+        content: ApexTextField(
+          label: 'Rejection Reason',
           controller: reasonCtrl,
-          decoration: const InputDecoration(labelText: 'Rejection Reason', border: OutlineInputBorder()),
           maxLines: 3,
+          required: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(leaveRequestsProvider.notifier).reject(requestId, reasonCtrl.text);
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
-            child: const Text('Reject'),
-          ),
+          ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+          ApexButton(label: 'Reject', type: ApexButtonType.danger, onPressed: () {
+            ref.read(leaveRequestsProvider.notifier).reject(requestId, reasonCtrl.text);
+            Navigator.pop(ctx);
+          }),
         ],
       ),
     );

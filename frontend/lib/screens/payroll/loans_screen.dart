@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../design_system/typography.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -35,17 +39,17 @@ class LoansScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
-        backgroundColor: _surface,
+        title: Text('Loans & Advances', style: ApexTypography.sectionTitle),
+        backgroundColor: Colors.white,
         foregroundColor: _text,
         elevation: 0,
-        title: const Text('Loans & Advances', style: TextStyle(fontWeight: FontWeight.w600)),
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/payroll')),
         actions: [
-          ElevatedButton.icon(
+          ApexButton(
+            label: 'New Loan',
+            icon: Icons.add,
             onPressed: () => _showCreateDialog(context, ref),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('New Loan'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -74,7 +78,7 @@ class LoansScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           const Text('No Loans or Advances', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
           const SizedBox(height: 8),
-          const Text('Employee loans and salary advances will appear here', style: TextStyle(fontSize: 13, color: _muted)),
+          Text('Employee loans and salary advances will appear here', style: ApexTypography.body.copyWith(color: _muted)),
         ],
       ),
     );
@@ -118,7 +122,8 @@ class LoansScreen extends ConsumerWidget {
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
+            ApexButton(
+              label: 'Create',
               onPressed: () async {
                 try {
                   final dio = ref.read(dioProvider);
@@ -136,8 +141,6 @@ class LoansScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-              child: const Text('Create'),
             ),
           ],
         ),
@@ -160,11 +163,11 @@ class _LoanCard extends StatelessWidget {
     final status = loan['status'] ?? 'active';
     final outstanding = amount - (emi * paid);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ApexCard(
+        padding: const EdgeInsets.all(18),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
@@ -175,19 +178,12 @@ class _LoanCard extends StatelessWidget {
             ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(_loanTypeName(type), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
-              Text('Started: ${loan['start_date'] ?? '—'}', style: const TextStyle(fontSize: 12, color: _muted)),
+              Text(_loanTypeName(type), style: ApexTypography.cardTitle.copyWith(fontSize: 15)),
+              Text('Started: ${loan['start_date'] ?? '—'}', style: ApexTypography.captionSmall),
             ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('₹${amount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _statusColor(status).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
-              ),
+              Text('₹${amount.toStringAsFixed(0)}', style: ApexTypography.sectionTitle),
+              _statusBadge(status),
             ]),
           ]),
           const SizedBox(height: 14),
@@ -207,6 +203,7 @@ class _LoanCard extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -214,10 +211,21 @@ class _LoanCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: _muted)),
-        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
+        Text(label, style: ApexTypography.captionSmall),
+        Text(value, style: ApexTypography.titleMedium),
       ],
     );
+  }
+
+  Widget _statusBadge(String status) {
+    ApexBadgeType type;
+    switch (status) {
+      case 'active': type = ApexBadgeType.success; break;
+      case 'closed': type = ApexBadgeType.neutral; break;
+      case 'defaulted': type = ApexBadgeType.danger; break;
+      default: type = ApexBadgeType.neutral;
+    }
+    return ApexBadge(label: status, type: type);
   }
 
   String _loanTypeName(String type) {
@@ -231,12 +239,4 @@ class _LoanCard extends StatelessWidget {
     }
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'active': return _success;
-      case 'closed': return _muted;
-      case 'defaulted': return _danger;
-      default: return _muted;
-    }
-  }
 }

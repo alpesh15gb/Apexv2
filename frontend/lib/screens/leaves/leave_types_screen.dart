@@ -3,16 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
-import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_text_field.dart';
 
 final leaveTypesProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -32,19 +28,18 @@ class LeaveTypesScreen extends ConsumerWidget {
     final typesAsync = ref.watch(leaveTypesProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Leave Types', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Leave Types', style: ApexTypography.sectionTitle),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/leaves')),
         actions: [
-          ElevatedButton.icon(
+          ApexButton(
+            label: 'New Type',
+            icon: Icons.add,
             onPressed: () => _showCreateDialog(context, ref),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('New Type'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -53,13 +48,31 @@ class LeaveTypesScreen extends ConsumerWidget {
         data: (types) {
           if (types.isEmpty) return _buildEmptyState(context, ref);
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             itemCount: types.length,
-            itemBuilder: (context, i) => _LeaveTypeCard(type: types[i], ref: ref),
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _LeaveTypeCard(type: types[i], ref: ref),
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: _danger))),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 40, color: ApexColors.error),
+              const SizedBox(height: 16),
+              Text('Failed to load leave types', style: ApexTypography.body.copyWith(color: ApexColors.neutral600)),
+              const SizedBox(height: 16),
+              ApexButton(
+                label: 'Retry',
+                type: ApexButtonType.outline,
+                onPressed: () => ref.invalidate(leaveTypesProvider),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -69,17 +82,16 @@ class LeaveTypesScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.category, size: 64, color: _muted.withOpacity(0.3)),
+          Icon(Icons.category, size: 48, color: ApexColors.neutral300),
           const SizedBox(height: 16),
-          const Text('No Leave Types Configured', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+          Text('No Leave Types Configured', style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Create leave types for your organization', style: TextStyle(fontSize: 13, color: _muted)),
+          Text('Create leave types for your organization', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
+          ApexButton(
+            label: 'Create Leave Type',
+            icon: Icons.add,
             onPressed: () => _showCreateDialog(context, ref),
-            icon: const Icon(Icons.add),
-            label: const Text('Create Leave Type'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
           ),
         ],
       ),
@@ -98,26 +110,42 @@ class LeaveTypesScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Create Leave Type'),
+          title: Text('Create Leave Type', style: ApexTypography.sectionTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Leave Type Name *', border: OutlineInputBorder())),
-                const SizedBox(height: 12),
-                TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code *', border: OutlineInputBorder())),
-                const SizedBox(height: 12),
-                TextField(controller: daysCtrl, decoration: const InputDecoration(labelText: 'Annual Days *', border: OutlineInputBorder()), keyboardType: TextInputType.number),
-                const SizedBox(height: 12),
-                SwitchListTile(title: const Text('Carry Forward'), value: carryForward, onChanged: (v) => setDialogState(() => carryForward = v), contentPadding: EdgeInsets.zero),
-                SwitchListTile(title: const Text('Half Day Allowed'), value: halfDay, onChanged: (v) => setDialogState(() => halfDay = v), contentPadding: EdgeInsets.zero),
-                SwitchListTile(title: const Text('Active'), value: isActive, onChanged: (v) => setDialogState(() => isActive = v), contentPadding: EdgeInsets.zero),
+                ApexTextField(label: 'Leave Type Name', controller: nameCtrl, required: true),
+                const SizedBox(height: 16),
+                ApexTextField(label: 'Code', controller: codeCtrl, required: true),
+                const SizedBox(height: 16),
+                ApexTextField(label: 'Annual Days', controller: daysCtrl, required: true, keyboardType: TextInputType.number),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: Text('Carry Forward', style: ApexTypography.body),
+                  value: carryForward,
+                  onChanged: (v) => setDialogState(() => carryForward = v),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                SwitchListTile(
+                  title: Text('Half Day Allowed', style: ApexTypography.body),
+                  value: halfDay,
+                  onChanged: (v) => setDialogState(() => halfDay = v),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                SwitchListTile(
+                  title: Text('Active', style: ApexTypography.body),
+                  value: isActive,
+                  onChanged: (v) => setDialogState(() => isActive = v),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
+            ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+            ApexButton(
+              label: 'Create',
               onPressed: () async {
                 try {
                   final dio = ref.read(dioProvider);
@@ -129,13 +157,15 @@ class LeaveTypesScreen extends ConsumerWidget {
                   });
                   Navigator.pop(ctx);
                   ref.invalidate(leaveTypesProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Leave type created'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Leave type created'), backgroundColor: ApexColors.success),
+                  );
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error),
+                  );
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-              child: const Text('Create'),
             ),
           ],
         ),
@@ -157,57 +187,47 @@ class _LeaveTypeCard extends StatelessWidget {
     final days = type['max_days_per_year'] ?? 0;
     final isActive = type['is_active'] == true;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+    return ApexCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
-      ),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: _primary.withOpacity(0.1),
+              color: ApexColors.primary50,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
-              child: Text(code.isNotEmpty ? code.substring(0, 2) : 'LT', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _primary)),
+              child: Text(
+                code.isNotEmpty ? code.substring(0, 2) : 'LT',
+                style: ApexTypography.titleSmall.copyWith(color: ApexColors.primary),
+              ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+                  Text(name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: (isActive ? _success : _muted).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(isActive ? 'ACTIVE' : 'INACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: isActive ? _success : _muted)),
-                  ),
+                  isActive ? ApexBadge.success('ACTIVE') : ApexBadge(label: 'INACTIVE'),
                 ]),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Row(children: [
                   _infoChip(Icons.calendar_today, '$days days/year'),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   _infoChip(Icons.repeat, type['carry_forward'] == true ? 'Carry forward' : 'No carry forward'),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   _infoChip(Icons.access_time, type['half_day_allowed'] == true ? 'Half day OK' : 'Full day only'),
                 ]),
               ],
             ),
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, size: 18, color: _muted),
+            icon: Icon(Icons.more_vert, size: 18, color: ApexColors.neutral500),
             itemBuilder: (ctx) => [
               const PopupMenuItem(value: 'edit', child: Text('Edit')),
               PopupMenuItem(value: 'toggle', child: Text(isActive ? 'Deactivate' : 'Activate')),
@@ -230,9 +250,9 @@ class _LeaveTypeCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: _muted),
+        Icon(icon, size: 12, color: ApexColors.neutral400),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: _muted)),
+        Text(label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
       ],
     );
   }

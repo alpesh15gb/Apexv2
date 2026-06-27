@@ -28,7 +28,7 @@ class DeviceListScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Device Operations'),
+        title: Text('Device Operations', style: ApexTypography.sectionTitle.copyWith(color: _text)),
         backgroundColor: _surface,
         foregroundColor: _text,
         elevation: 0,

@@ -6,6 +6,10 @@ import 'package:intl/intl.dart';
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
 import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../design_system/typography.dart';
 
 const _bg = Color(0xFFF8FAFC);
 const _surface = Color(0xFFFFFFFF);
@@ -113,10 +117,11 @@ class PayrollDashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
-        backgroundColor: _surface,
+        title: Text('Payroll', style: ApexTypography.sectionTitle),
+        backgroundColor: Colors.white,
         foregroundColor: _text,
         elevation: 0,
-        title: const Text('Payroll', style: TextStyle(fontWeight: FontWeight.w600)),
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
         actions: [
           TextButton.icon(
             onPressed: () => context.push('/payroll/salary-structures'),
@@ -181,17 +186,16 @@ class _MonthSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final monthName = DateFormat('MMMM').format(DateTime(year, month));
-    return Container(
+    return ApexCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
       child: Row(
         children: [
           IconButton(icon: const Icon(Icons.chevron_left), onPressed: onPrev),
           const Spacer(),
           Column(
             children: [
-              Text(monthName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text)),
-              Text('$year', style: const TextStyle(fontSize: 13, color: _muted)),
+              Text(monthName, style: ApexTypography.sectionTitle.copyWith(fontSize: 18)),
+              Text('$year', style: ApexTypography.caption),
             ],
           ),
           const Spacer(),
@@ -247,9 +251,8 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ApexCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -263,7 +266,7 @@ class _StatCard extends StatelessWidget {
             Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
           ]),
           const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 12, color: _muted, fontWeight: FontWeight.w500)),
+          Text(title, style: ApexTypography.captionMedium),
         ],
       ),
     );
@@ -278,36 +281,36 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ApexCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
       child: Row(
         children: [
-          ElevatedButton.icon(
-            onPressed: loading ? null : onProcess,
-            icon: loading
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.play_arrow, size: 18),
-            label: Text(loading ? 'Processing...' : 'Run Payroll'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+          ApexButton(
+            label: loading ? 'Processing...' : 'Run Payroll',
+            icon: loading ? null : Icons.play_arrow,
+            loading: loading,
+            onPressed: onProcess,
           ),
           const SizedBox(width: 12),
-          OutlinedButton.icon(
+          ApexButton(
+            label: 'Export',
+            icon: Icons.download,
+            type: ApexButtonType.outline,
             onPressed: () {},
-            icon: const Icon(Icons.download, size: 16),
-            label: const Text('Export'),
           ),
           const SizedBox(width: 12),
-          OutlinedButton.icon(
+          ApexButton(
+            label: 'Bank Advice',
+            icon: Icons.receipt,
+            type: ApexButtonType.outline,
             onPressed: () {},
-            icon: const Icon(Icons.receipt, size: 16),
-            label: const Text('Bank Advice'),
           ),
           const Spacer(),
-          OutlinedButton.icon(
+          ApexButton(
+            label: 'Lock Payroll',
+            icon: Icons.lock,
+            type: ApexButtonType.outline,
             onPressed: () {},
-            icon: const Icon(Icons.lock, size: 16),
-            label: const Text('Lock Payroll'),
           ),
         ],
       ),
@@ -327,28 +330,30 @@ class _PayslipsTable extends StatelessWidget {
       return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
     }
     if (state.payslips.isEmpty) {
-      return Container(
-        height: 200,
-        decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-        child: const Center(child: Text('No payslips for this month', style: TextStyle(color: _muted))),
+      return ApexCard(
+        padding: const EdgeInsets.all(32),
+        child: SizedBox(
+          height: 136,
+          child: Center(child: Text('No payslips for this month', style: ApexTypography.body.copyWith(color: _muted))),
+        ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+    return ApexCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           if (!isMobile)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               color: _bg,
-              child: Row(children: const [
-                SizedBox(width: 180, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('GROSS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('DEDUCTIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('NET PAY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted))),
+              child: Row(children: [
+                SizedBox(width: 180, child: Text('EMPLOYEE', style: ApexTypography.tableHeader)),
+                SizedBox(width: 100, child: Text('GROSS', style: ApexTypography.tableHeader)),
+                SizedBox(width: 100, child: Text('DEDUCTIONS', style: ApexTypography.tableHeader)),
+                SizedBox(width: 100, child: Text('NET PAY', style: ApexTypography.tableHeader)),
+                SizedBox(width: 80, child: Text('STATUS', style: ApexTypography.tableHeader)),
+                const SizedBox(width: 60),
               ]),
             ),
           ...state.payslips.asMap().entries.map((entry) {
@@ -367,9 +372,9 @@ class _PayslipsTable extends StatelessWidget {
                     child: Text((p['employee_name'] ?? '?')[0].toUpperCase(), style: const TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(p['employee_name'] ?? '—', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
-                    Text('Net: ₹${p['net_pay'] ?? 0}', style: const TextStyle(fontSize: 12, color: _success, fontWeight: FontWeight.w600)),
+                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(p['employee_name'] ?? '—', style: ApexTypography.titleMedium),
+                    Text('Net: ₹${p['net_pay'] ?? 0}', style: ApexTypography.captionMedium.copyWith(color: _success)),
                   ])),
                   _statusBadge(status),
                 ]),
@@ -387,18 +392,18 @@ class _PayslipsTable extends StatelessWidget {
                     child: Text((p['employee_name'] ?? '?')[0].toUpperCase(), style: const TextStyle(fontSize: 11, color: _primary, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(child: Column(
+                    Expanded(child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(p['employee_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis),
-                      Text(p['employee_code'] ?? '', style: const TextStyle(fontSize: 11, color: _muted)),
+                      Text(p['employee_name'] ?? '—', style: ApexTypography.table, overflow: TextOverflow.ellipsis),
+                      Text(p['employee_code'] ?? '', style: ApexTypography.captionSmall),
                     ],
                   )),
                 ])),
-                SizedBox(width: 100, child: Text('₹${p['gross_earnings'] ?? 0}', style: const TextStyle(fontSize: 13, color: _text))),
-                SizedBox(width: 100, child: Text('₹${p['total_deductions'] ?? 0}', style: const TextStyle(fontSize: 13, color: _danger))),
-                SizedBox(width: 100, child: Text('₹${p['net_pay'] ?? 0}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _success))),
+                SizedBox(width: 100, child: Text('₹${p['gross_earnings'] ?? 0}', style: ApexTypography.table)),
+                SizedBox(width: 100, child: Text('₹${p['total_deductions'] ?? 0}', style: ApexTypography.table.copyWith(color: _danger))),
+                SizedBox(width: 100, child: Text('₹${p['net_pay'] ?? 0}', style: ApexTypography.table.copyWith(fontWeight: FontWeight.w600, color: _success))),
                 SizedBox(width: 80, child: _statusBadge(status)),
                 SizedBox(
                   width: 60,
@@ -417,23 +422,14 @@ class _PayslipsTable extends StatelessWidget {
   }
 
   Widget _statusBadge(String status) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: _statusColor(status).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
-    );
+    ApexBadgeType type;
+    switch (status) {
+      case 'paid': type = ApexBadgeType.success; break;
+      case 'processed': type = ApexBadgeType.info; break;
+      case 'locked': type = ApexBadgeType.warning; break;
+      default: type = ApexBadgeType.neutral;
+    }
+    return ApexBadge(label: status, type: type);
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'paid': return _success;
-      case 'processed': return _primary;
-      case 'draft': return _muted;
-      case 'locked': return _warning;
-      default: return _muted;
-    }
-  }
 }

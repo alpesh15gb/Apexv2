@@ -4,18 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/leave_provider.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_text_field.dart';
 
 class LeaveRequestsScreen extends ConsumerStatefulWidget {
   const LeaveRequestsScreen({Key? key}) : super(key: key);
@@ -33,12 +28,10 @@ class _LeaveRequestsScreenState extends ConsumerState<LeaveRequestsScreen> {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       body: Column(
         children: [
-          // Header
           _Header(isMobile: isMobile),
-          // Status filters
           _StatusFilters(
             selected: _statusFilter,
             onChanged: (v) {
@@ -46,7 +39,6 @@ class _LeaveRequestsScreenState extends ConsumerState<LeaveRequestsScreen> {
               ref.read(leaveRequestsProvider.notifier).setFilters(status: v);
             },
           ),
-          // List
           Expanded(
             child: listState.requests.when(
               data: (requests) {
@@ -70,13 +62,14 @@ class _LeaveRequestsScreenState extends ConsumerState<LeaveRequestsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 40, color: _danger),
-                    const SizedBox(height: 12),
-                    Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
+                    Icon(Icons.error_outline, size: 40, color: ApexColors.error),
+                    const SizedBox(height: 16),
+                    Text('Failed to load requests', style: ApexTypography.body.copyWith(color: ApexColors.neutral600)),
+                    const SizedBox(height: 16),
+                    ApexButton(
+                      label: 'Retry',
+                      type: ApexButtonType.outline,
                       onPressed: () => ref.read(leaveRequestsProvider.notifier).fetchRequests(isRefresh: true),
-                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -87,7 +80,7 @@ class _LeaveRequestsScreenState extends ConsumerState<LeaveRequestsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/leaves/apply'),
-        backgroundColor: _primary,
+        backgroundColor: ApexColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -101,18 +94,21 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(isMobile ? 16 : 20, 12, isMobile ? 16 : 20, 8),
-      decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+      padding: EdgeInsets.fromLTRB(isMobile ? 16 : 24, 16, isMobile ? 16 : 24, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Row(
         children: [
-          Text('Leave Requests', style: ApexTypography.pageTitle.copyWith(color: _text)),
+          Text('Leave Requests', style: ApexTypography.sectionTitle),
           const Spacer(),
-          if (!isMobile) ...[
-            IconButton(icon: const Icon(Icons.history, size: 18), tooltip: 'Leave Balances', onPressed: () => context.push('/leaves/balance')),
-          ],
+          if (!isMobile)
+            IconButton(
+              icon: Icon(Icons.history, size: 18, color: ApexColors.neutral600),
+              tooltip: 'Leave Balances',
+              onPressed: () => context.push('/leaves/balance'),
+            ),
         ],
       ),
     );
@@ -128,10 +124,10 @@ class _StatusFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -156,16 +152,16 @@ class _StatusFilters extends StatelessWidget {
     final isSelected = selected == value;
     return InkWell(
       onTap: () => onChanged(value),
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? _primary.withOpacity(0.1) : null,
-          border: Border.all(color: isSelected ? _primary : _border),
-          borderRadius: BorderRadius.circular(6),
+          color: isSelected ? ApexColors.primary50 : null,
+          border: Border.all(color: isSelected ? ApexColors.primary : ApexColors.neutral200),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(label, style: ApexTypography.captionLarge.copyWith(
-          color: isSelected ? _primary : _muted,
+          color: isSelected ? ApexColors.primary : ApexColors.neutral500,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
         )),
       ),
@@ -183,7 +179,7 @@ class _LeaveList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       itemCount: requests.length,
       itemBuilder: (context, i) {
         final r = requests[i];
@@ -203,76 +199,83 @@ class _LeaveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = request;
-    final statusConfig = _statusConfig(r.status);
+    final statusBadge = _statusBadge(r.status);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                child: Text((r.employeeName ?? 'U')[0].toUpperCase(), style: ApexTypography.captionSmall),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(r.employeeName ?? 'Unknown', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                    Text('${r.leaveTypeName ?? 'Leave'} • ${DateFormat('MMM dd').format(r.startDate)} - ${DateFormat('MMM dd').format(r.endDate)}',
-                      style: ApexTypography.captionMedium.copyWith(color: _muted)),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusConfig.$2.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(statusConfig.$1, style: ApexTypography.captionSmall.copyWith(color: statusConfig.$2, fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
-          if (r.reason != null && r.reason!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(r.reason!, style: ApexTypography.bodySmall.copyWith(color: _muted), maxLines: 2, overflow: TextOverflow.ellipsis),
-          ],
-          if (r.status == 'pending') ...[
-            const SizedBox(height: 10),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: ApexCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
-                  onPressed: () => _showRejectDialog(context),
-                  child: const Text('Reject', style: TextStyle(color: _danger)),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: onApprove,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _success,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: ApexColors.primary50,
+                  child: Text(
+                    (r.employeeName ?? 'U')[0].toUpperCase(),
+                    style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700),
                   ),
-                  child: const Text('Approve'),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(r.employeeName ?? 'Unknown', style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                      Text(
+                        '${r.leaveTypeName ?? 'Leave'} · ${DateFormat('MMM dd').format(r.startDate)} - ${DateFormat('MMM dd').format(r.endDate)}',
+                        style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500),
+                      ),
+                    ],
+                  ),
+                ),
+                statusBadge,
               ],
             ),
+            if (r.reason != null && r.reason!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(r.reason!, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500), maxLines: 2, overflow: TextOverflow.ellipsis),
+            ],
+            if (r.status == 'pending') ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ApexButton(
+                    label: 'Reject',
+                    type: ApexButtonType.danger,
+                    onPressed: () => _showRejectDialog(context),
+                  ),
+                  const SizedBox(width: 12),
+                  ApexButton(
+                    label: 'Approve',
+                    type: ApexButtonType.success,
+                    onPressed: onApprove,
+                  ),
+                ],
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
+  }
+
+  ApexBadge _statusBadge(String status) {
+    switch (status) {
+      case 'pending':
+        return ApexBadge.warning('Pending');
+      case 'approved':
+        return ApexBadge.success('Approved');
+      case 'rejected':
+        return ApexBadge.danger('Rejected');
+      case 'cancelled':
+        return ApexBadge(label: 'Cancelled');
+      default:
+        return ApexBadge(label: status);
+    }
   }
 
   void _showRejectDialog(BuildContext context) {
@@ -280,35 +283,26 @@ class _LeaveCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Leave'),
-        content: TextField(
+        title: Text('Reject Leave', style: ApexTypography.sectionTitle),
+        content: ApexTextField(
+          label: 'Reason for rejection',
           controller: controller,
-          decoration: const InputDecoration(hintText: 'Reason for rejection'),
           maxLines: 3,
+          required: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(context)),
+          ApexButton(
+            label: 'Reject',
+            type: ApexButtonType.danger,
             onPressed: () {
               onReject(controller.text);
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
-            child: const Text('Reject'),
           ),
         ],
       ),
     );
-  }
-
-  (String, Color) _statusConfig(String s) {
-    switch (s) {
-      case 'pending': return ('Pending', _warning);
-      case 'approved': return ('Approved', _success);
-      case 'rejected': return ('Rejected', _danger);
-      case 'cancelled': return ('Cancelled', _muted);
-      default: return (s, _muted);
-    }
   }
 }
 
@@ -329,22 +323,14 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: _muted),
+            Icon(icon, size: 48, color: ApexColors.neutral300),
             const SizedBox(height: 16),
-            Text(title, style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text(title, style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text(description, style: ApexTypography.bodySmall.copyWith(color: _muted), textAlign: TextAlign.center),
+            Text(description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                ),
-                child: Text(actionLabel!),
-              ),
+              const SizedBox(height: 24),
+              ApexButton(label: actionLabel!, type: ApexButtonType.primary, onPressed: onAction),
             ],
           ],
         ),
