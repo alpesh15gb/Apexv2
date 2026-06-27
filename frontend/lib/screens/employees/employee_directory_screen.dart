@@ -176,7 +176,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
 
   Widget _buildToolbar(EmployeeDirectoryState dirState, bool isMobile) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: const BoxDecoration(color: _surface, border: Border(bottom: BorderSide(color: _border))),
       child: Row(
         children: [
@@ -287,51 +287,65 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
   Widget _buildTableView(EmployeeDirectoryState dirState, bool isMobile) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
         return SingleChildScrollView(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    color: _surface,
-                    child: Row(children: [
-                      SizedBox(
-                        width: 40,
-                        child: Checkbox(
-                          value: _selected.length == dirState.employees.length && dirState.employees.isNotEmpty,
-                          onChanged: (v) => setState(() {
-                            if (v == true) _selected.addAll(dirState.employees.map((e) => e['id'] as String));
-                            else _selected.clear();
-                          }),
-                        ),
+          child: SizedBox(
+            width: availableWidth,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  color: _surface,
+                  child: Row(children: [
+                    SizedBox(
+                      width: 40,
+                      child: Checkbox(
+                        value: _selected.length == dirState.employees.length && dirState.employees.isNotEmpty,
+                        onChanged: (v) => setState(() {
+                          if (v == true) _selected.addAll(dirState.employees.map((e) => e['id'] as String));
+                          else _selected.clear();
+                        }),
                       ),
-                      const SizedBox(width: 50),
-                      const SizedBox(width: 160, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      Expanded(flex: 2, child: Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      Expanded(flex: 2, child: Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      Expanded(flex: 2, child: Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      const SizedBox(width: 60),
-                    ]),
-                  ),
-                  ...List.generate(dirState.employees.length, (i) {
-                    final emp = dirState.employees[i];
-                    return _EmployeeTableRow(
-                      employee: emp,
-                      isSelected: _selected.contains(emp['id']),
-                      onSelect: (v) => setState(() {
-                        if (v) _selected.add(emp['id']);
-                        else _selected.remove(emp['id']);
-                      }),
-                      onTap: () => context.push('/employees/${emp['id']}'),
-                      index: i,
-                    );
-                  }),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 50),
+                    SizedBox(
+                      width: availableWidth * 0.18,
+                      child: const Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: const Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: const Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: const Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                    ),
+                    SizedBox(
+                      width: 80,
+                      child: const Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                    ),
+                    const SizedBox(width: 60),
+                  ]),
+                ),
+                ...List.generate(dirState.employees.length, (i) {
+                  final emp = dirState.employees[i];
+                  return _EmployeeTableRow(
+                    employee: emp,
+                    isSelected: _selected.contains(emp['id']),
+                    onSelect: (v) => setState(() {
+                      if (v) _selected.add(emp['id']);
+                      else _selected.remove(emp['id']);
+                    }),
+                    onTap: () => context.push('/employees/${emp['id']}'),
+                    index: i,
+                    employeeWidth: availableWidth * 0.18,
+                  );
+                }),
+              ],
             ),
           ),
         );
@@ -472,8 +486,9 @@ class _EmployeeTableRow extends StatelessWidget {
   final Function(bool) onSelect;
   final VoidCallback onTap;
   final int index;
+  final double employeeWidth;
 
-  const _EmployeeTableRow({required this.employee, required this.isSelected, required this.onSelect, required this.onTap, required this.index});
+  const _EmployeeTableRow({required this.employee, required this.isSelected, required this.onSelect, required this.onTap, required this.index, this.employeeWidth = 160});
 
   @override
   Widget build(BuildContext context) {
@@ -485,7 +500,7 @@ class _EmployeeTableRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         color: isSelected ? _primary.withOpacity(0.03) : (index.isEven ? _surface : _bg),
         child: Row(children: [
           SizedBox(width: 40, child: Checkbox(value: isSelected, onChanged: (v) => onSelect(v ?? false), visualDensity: VisualDensity.compact)),
@@ -495,14 +510,17 @@ class _EmployeeTableRow extends StatelessWidget {
             child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(color: _primary, fontWeight: FontWeight.w700, fontSize: 12)),
           ),
           const SizedBox(width: 18),
-          SizedBox(width: 160, child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text), maxLines: 1, overflow: TextOverflow.ellipsis),
-              Text(code, style: const TextStyle(fontSize: 11, color: _muted)),
-            ],
-          )),
+          SizedBox(
+            width: employeeWidth,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(code, style: const TextStyle(fontSize: 11, color: _muted)),
+              ],
+            ),
+          ),
           Expanded(flex: 2, child: Text(employee['department_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Text(employee['designation_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Text(employee['branch_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
