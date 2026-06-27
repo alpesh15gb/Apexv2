@@ -185,3 +185,19 @@ class Employee(TenantModel):
         UniqueConstraint("tenant_id", "email", name="uq_employees_tenant_email"),
         UniqueConstraint("tenant_id", "device_user_id", name="uq_employees_tenant_device_user_id"),
     )
+
+    @property
+    def department_name(self):
+        return self.department.name if self.department else None
+
+    @property
+    def designation_name(self):
+        return self.designation.name if self.designation else None
+
+    @property
+    def branch_name(self):
+        return self.branch.name if self.branch else None
+
+    @property
+    def shift_name(self):
+        return self.shift.name if self.shift else None
