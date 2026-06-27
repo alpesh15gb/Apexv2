@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS
-    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS: list[str] = ["https://next.apextime.in", "http://localhost:3000", "http://localhost:8080"]
 
     # Encryption (Fernet key for eSSL passwords)
     ENCRYPTION_KEY: str = ""

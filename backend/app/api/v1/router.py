@@ -10,7 +10,6 @@ from app.api.v1.endpoints import (
     visitors,
     access_control,
     commands,
-    notifications,
     reports,
     dashboard,
     websocket,
@@ -56,7 +55,6 @@ api_router.include_router(leaves.router, prefix="/leaves", tags=["Leaves"])
 api_router.include_router(visitors.router, prefix="/visitors", tags=["Visitors"])
 api_router.include_router(access_control.router, prefix="/access-control", tags=["Access Control"])
 api_router.include_router(commands.router, prefix="/commands", tags=["Device Commands"])
-api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 api_router.include_router(websocket.router, tags=["WebSockets"])

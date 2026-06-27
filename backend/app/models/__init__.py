@@ -21,6 +21,29 @@ from app.models.attendance import AttendanceRawLog
 from app.models.subscription import SubscriptionPlan, TenantSubscription, ResourceLimit
 from app.models.feature import FeatureFlag, TenantFeature
 from app.models.approval import ApprovalWorkflow, ApprovalStep, ApprovalRequest, ApprovalHistory, LoginHistory, SuperAdminLog
+from app.models.announcement import Announcement, Poll, PollResponse
+from app.models.benefit import Benefit, EmployeeBenefit
+from app.models.category import EmployeeCategory
+from app.models.department_shift import DepartmentShift
+from app.models.document import Document
+from app.models.essl_location import EsslLocation
+from app.models.exit import ExitRequest
+from app.models.expense import ExpenseCategory, ExpenseClaim
+from app.models.holiday import Holiday
+from app.models.notification_template import NotificationTemplate
+from app.models.onboarding import OnboardingTask
+from app.models.ot_register import OTRegister
+from app.models.outdoor_duty import OutdoorDuty
+from app.models.payroll import SalaryStructure, PaySlip, Loan
+from app.models.performance import ReviewCycle, Goal, PerformanceReview, Competency, PerformanceRecommendation
+from app.models.recruitment import JobRequisition, JobOpening, Candidate, Interview, Offer
+from app.models.shift_group import ShiftGroup, ShiftGroupMember
+from app.models.shift_roster import ShiftRoster, ShiftRosterEntry
+from app.models.tax import TaxDeclaration
+from app.models.tenant_settings import TenantSettings
+from app.models.timeline import EmployeeEvent
+from app.models.work_code import WorkCode
+from app.models.asset_travel import CompanyAsset, TravelRequest
 
 __all__ = [
     "Tenant",
@@ -89,4 +112,44 @@ __all__ = [
     "ApprovalHistory",
     "LoginHistory",
     "SuperAdminLog",
+    "Announcement",
+    "Poll",
+    "PollResponse",
+    "Benefit",
+    "EmployeeBenefit",
+    "EmployeeCategory",
+    "DepartmentShift",
+    "Document",
+    "EsslLocation",
+    "ExitRequest",
+    "ExpenseCategory",
+    "ExpenseClaim",
+    "Holiday",
+    "NotificationTemplate",
+    "OnboardingTask",
+    "OTRegister",
+    "OutdoorDuty",
+    "SalaryStructure",
+    "PaySlip",
+    "Loan",
+    "ReviewCycle",
+    "Goal",
+    "PerformanceReview",
+    "Competency",
+    "PerformanceRecommendation",
+    "JobRequisition",
+    "JobOpening",
+    "Candidate",
+    "Interview",
+    "Offer",
+    "ShiftGroup",
+    "ShiftGroupMember",
+    "ShiftRoster",
+    "ShiftRosterEntry",
+    "TaxDeclaration",
+    "TenantSettings",
+    "EmployeeEvent",
+    "WorkCode",
+    "CompanyAsset",
+    "TravelRequest",
 ]

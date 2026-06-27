@@ -22,6 +22,11 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Database connection verification failed: {e}")
         raise e
+
+    # Security check: warn if SECRET_KEY is default
+    if "change-this" in settings.SECRET_KEY:
+        print("WARNING: SECRET_KEY is using default value. Set a proper key in .env for production!")
+
     yield
     # Shutdown: Close DB Connections
     await engine.dispose()
@@ -30,8 +35,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
     lifespan=lifespan,
 )
 
@@ -60,4 +66,23 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["Health"])
 async def health_check():
     """Health check endpoint to verify service status."""
-    return {"status": "healthy", "message": "Service is running"}
+    db_ok = False
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        pass
+    return {
+        "status": "healthy" if db_ok else "degraded",
+        "database": "connected" if db_ok else "disconnected",
+        "version": settings.VERSION,
+    }
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Global exception handler - prevents leaking tracebacks."""
+    return __import__('fastapi.responses').JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
