@@ -128,14 +128,11 @@ class _MainShellState extends ConsumerState<MainShell> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Container(
+          Image.asset(
+            'assets/images/logo.png',
             width: 32,
             height: 32,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [ApexColors.primary, Color(0xFF3B82F6)]),
-              borderRadius: ApexRadius.smAll,
-            ),
-            child: const Center(child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16))),
+            fit: BoxFit.contain,
           ),
           if (_sidebarExpanded) ...[
             const SizedBox(width: 10),

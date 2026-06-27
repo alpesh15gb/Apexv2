@@ -59,7 +59,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.admin_panel_settings, size: 48, color: _primary),
+              Image.asset(
+                'assets/images/logo.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.contain,
+              ),
               const SizedBox(height: 16),
               const Text('Super Admin Portal', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: _text)),
               const SizedBox(height: 4),

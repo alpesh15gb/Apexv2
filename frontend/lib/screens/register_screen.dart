@@ -78,18 +78,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [_primary, Color(0xFF3B82F6)]),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 28)),
-                  ),
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Text('Create Account', style: ApexTypography.headingLarge.copyWith(color: _text)),
                 const SizedBox(height: 4),
                 Text('Set up your company and admin account', style: ApexTypography.bodyMedium.copyWith(color: _muted)),

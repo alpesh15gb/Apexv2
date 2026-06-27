@@ -19,7 +19,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   void _checkAuth() async {
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
     try {
       final authState = ref.read(authProvider);
@@ -35,40 +35,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: const Color(0xFF0F172A),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.fingerprint,
-              size: 80,
-              color: Colors.white,
+            Image.asset(
+              'assets/images/logo.png',
+              width: 200,
+              height: 200,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             const Text(
-              'APEX ATTENDANCE',
+              'APEX HRMS',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2.0,
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 3.0,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'SaaS Attendance & Access Platform',
+              'Enterprise HR Management Platform',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withOpacity(0.7),
                 fontSize: 14,
+                letterSpacing: 1.0,
               ),
             ),
             const SizedBox(height: 48),
             const CircularProgressIndicator(
-              color: Colors.white,
+              color: Color(0xFF3B82F6),
+              strokeWidth: 3,
             ),
           ],
         ),
