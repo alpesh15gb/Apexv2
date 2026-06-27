@@ -248,12 +248,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Employees sub-routes
-      GoRoute(
-        path: '/employees/create',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const EmployeeCreateScreen(),
-      ),
       GoRoute(
         path: '/employees/:id',
         parentNavigatorKey: rootNavigatorKey,
@@ -331,11 +325,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Shifts routes
       GoRoute(
-        path: '/shifts',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ShiftListScreen(),
-      ),
-      GoRoute(
         path: '/shifts/create',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ShiftCreateScreen(),
@@ -346,11 +335,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ShiftAssignScreen(),
       ),
       // Leaves routes
-      GoRoute(
-        path: '/leaves',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const LeaveRequestsScreen(),
-      ),
       GoRoute(
         path: '/leaves/balance',
         parentNavigatorKey: rootNavigatorKey,
@@ -452,11 +436,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AssetDashboardScreen(),
       ),
       // System routes
-      GoRoute(
-        path: '/notifications',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const NotificationCenterScreen(),
-      ),
       GoRoute(
         path: '/settings',
         parentNavigatorKey: rootNavigatorKey,
@@ -571,11 +550,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WorkCodeScreen(),
       ),
       GoRoute(
-        path: '/payroll',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PayrollScreen(),
-      ),
-      GoRoute(
         path: '/documents',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const DocumentScreen(),
@@ -584,11 +558,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/exit-requests',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ExitRequestScreen(),
-      ),
-      GoRoute(
-        path: '/assets',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const AssetScreen(),
       ),
       GoRoute(
         path: '/travel',

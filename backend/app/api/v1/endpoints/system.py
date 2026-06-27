@@ -68,7 +68,7 @@ async def system_metrics(
         select(func.count(Notification.id)).where(
             Notification.tenant_id == tid,
             Notification.user_id == current_user.id,
-            Notification.is_read == False,
+            Notification.status != "read",
         )
     )).scalar() or 0
 

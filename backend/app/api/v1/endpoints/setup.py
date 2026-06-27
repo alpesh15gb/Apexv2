@@ -286,7 +286,7 @@ async def setup_leaves(
                 tenant_id=current_user.tenant_id,
                 name=item.name,
                 code=item.code,
-                max_days_per_year=item.days,
+                default_days=item.days,
                 is_active=True,
             ))
     await db.commit()

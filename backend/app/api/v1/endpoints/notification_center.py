@@ -29,14 +29,20 @@ async def list_notifications(
         Notification.user_id == current_user.id,
     )
     if is_read is not None:
-        stmt = stmt.where(Notification.is_read == is_read)
+        if is_read:
+            stmt = stmt.where(Notification.status == "read")
+        else:
+            stmt = stmt.where(Notification.status != "read")
 
     count_stmt = select(func.count(Notification.id)).where(
         Notification.tenant_id == current_user.tenant_id,
         Notification.user_id == current_user.id,
     )
     if is_read is not None:
-        count_stmt = count_stmt.where(Notification.is_read == is_read)
+        if is_read:
+            count_stmt = count_stmt.where(Notification.status == "read")
+        else:
+            count_stmt = count_stmt.where(Notification.status != "read")
 
     total = (await db.execute(count_stmt)).scalar() or 0
     stmt = stmt.order_by(Notification.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
@@ -50,7 +56,7 @@ async def list_notifications(
                 "title": n.title,
                 "message": n.message,
                 "type": n.notification_type if hasattr(n, 'notification_type') else 'info',
-                "is_read": n.is_read,
+                "is_read": n.status == "read",
                 "created_at": n.created_at.isoformat() if n.created_at else None,
             }
             for n in items
@@ -60,7 +66,7 @@ async def list_notifications(
             select(func.count(Notification.id)).where(
                 Notification.tenant_id == current_user.tenant_id,
                 Notification.user_id == current_user.id,
-                Notification.is_read == False,
+                Notification.status != "read",
             )
         )).scalar() or 0,
     }
@@ -75,7 +81,8 @@ async def mark_read(
     notification = await db.get(Notification, notification_id)
     if not notification or notification.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Notification not found")
-    notification.is_read = True
+    notification.status = "read"
+    notification.read_at = datetime.now(timezone.utc)
     await db.commit()
     return {"id": str(notification.id), "is_read": True}
 
@@ -90,9 +97,9 @@ async def mark_all_read(
         .where(
             Notification.tenant_id == current_user.tenant_id,
             Notification.user_id == current_user.id,
-            Notification.is_read == False,
+            Notification.status != "read",
         )
-        .values(is_read=True)
+        .values(status="read")
     )
     await db.commit()
     return {"message": "All notifications marked as read"}
@@ -107,7 +114,7 @@ async def unread_count(
         select(func.count(Notification.id)).where(
             Notification.tenant_id == current_user.tenant_id,
             Notification.user_id == current_user.id,
-            Notification.is_read == False,
+            Notification.status != "read",
         )
     )).scalar() or 0
     return {"count": count}

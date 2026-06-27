@@ -62,7 +62,7 @@ async def ess_dashboard(
     )).scalar() or 0
 
     balance_stmt = (
-        select(LeaveType.name, LeaveBalance.balance, LeaveBalance.used)
+        select(LeaveType.name, LeaveBalance.total_days, LeaveBalance.used_days)
         .join(LeaveType, LeaveType.id == LeaveBalance.leave_type_id)
         .where(
             LeaveBalance.tenant_id == current_user.tenant_id,
@@ -75,7 +75,7 @@ async def ess_dashboard(
         select(func.count(Notification.id)).where(
             Notification.tenant_id == current_user.tenant_id,
             Notification.user_id == current_user.id,
-            Notification.is_read == False,
+            Notification.status != "read",
         )
     )).scalar() or 0
 
@@ -89,8 +89,8 @@ async def ess_dashboard(
         },
         "today_attendance": {
             "status": today_attendance.status if today_attendance else "not_marked",
-            "check_in": str(today_attendance.check_in) if today_attendance and today_attendance.check_in else None,
-            "check_out": str(today_attendance.check_out) if today_attendance and today_attendance.check_out else None,
+            "punch_in": str(today_attendance.punch_in) if today_attendance and today_attendance.punch_in else None,
+            "punch_out": str(today_attendance.punch_out) if today_attendance and today_attendance.punch_out else None,
         } if today_attendance else None,
         "pending_leaves": pending_leaves,
         "leave_balances": [
@@ -137,9 +137,9 @@ async def my_attendance(
             "id": str(r.id),
             "date": str(r.date),
             "status": r.status,
-            "check_in": str(r.check_in) if r.check_in else None,
-            "check_out": str(r.check_out) if r.check_out else None,
-            "working_hours": r.working_hours,
+            "punch_in": str(r.punch_in) if r.punch_in else None,
+            "punch_out": str(r.punch_out) if r.punch_out else None,
+            "total_hours": r.total_hours,
         }
         for r in records
     ]
@@ -169,12 +169,12 @@ async def clock_in(
         tenant_id=current_user.tenant_id,
         employee_id=employee.id,
         date=today,
-        check_in=datetime.now(timezone.utc),
+        punch_in=datetime.now(timezone.utc),
         status="present",
     )
     db.add(attendance)
     await db.commit()
-    return {"message": "Clocked in successfully", "time": attendance.check_in.isoformat()}
+    return {"message": "Clocked in successfully", "time": attendance.punch_in.isoformat()}
 
 
 @router.post("/attendance/clock-out")
@@ -196,15 +196,15 @@ async def clock_out(
 
     if not attendance:
         raise HTTPException(status_code=400, detail="No clock-in record found")
-    if attendance.check_out:
+    if attendance.punch_out:
         raise HTTPException(status_code=400, detail="Already clocked out")
 
-    attendance.check_out = datetime.now(timezone.utc)
-    if attendance.check_in:
-        delta = attendance.check_out - attendance.check_in
-        attendance.working_hours = round(delta.total_seconds() / 3600, 2)
+    attendance.punch_out = datetime.now(timezone.utc)
+    if attendance.punch_in:
+        delta = attendance.punch_out - attendance.punch_in
+        attendance.total_hours = round(delta.total_seconds() / 3600, 2)
     await db.commit()
-    return {"message": "Clocked out successfully", "time": attendance.check_out.isoformat()}
+    return {"message": "Clocked out successfully", "time": attendance.punch_out.isoformat()}
 
 
 @router.get("/leaves")
@@ -250,7 +250,7 @@ async def my_leave_balance(
     """Get my leave balance."""
     employee = await get_current_employee(db, current_user)
     stmt = (
-        select(LeaveType.name, LeaveBalance.balance, LeaveBalance.used)
+        select(LeaveType.name, LeaveBalance.total_days, LeaveBalance.used_days)
         .join(LeaveType, LeaveType.id == LeaveBalance.leave_type_id)
         .where(
             LeaveBalance.tenant_id == current_user.tenant_id,
@@ -421,7 +421,7 @@ async def my_notifications(
             "id": str(n.id),
             "title": n.title,
             "message": n.message,
-            "is_read": n.is_read,
+            "is_read": n.status == "read",
             "created_at": n.created_at.isoformat() if n.created_at else None,
         }
         for n in items

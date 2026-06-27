@@ -21,14 +21,8 @@ class AssetCreate(BaseModel):
     asset_code: str
     category: str = "other"
     serial_number: Optional[str] = None
-    model: Optional[str] = None
-    brand: Optional[str] = None
-    vendor: Optional[str] = None
     purchase_date: Optional[date] = None
-    purchase_cost: Optional[float] = None
-    warranty_start: Optional[date] = None
-    warranty_end: Optional[date] = None
-    location: Optional[str] = None
+    warranty_expiry: Optional[date] = None
     description: Optional[str] = None
 
 
@@ -77,14 +71,8 @@ async def list_assets(
                 "asset_code": a.asset_code,
                 "category": a.category,
                 "serial_number": a.serial_number,
-                "model": a.model,
-                "brand": a.brand,
-                "vendor": a.vendor,
                 "purchase_date": str(a.purchase_date) if a.purchase_date else None,
-                "purchase_cost": a.purchase_cost,
-                "warranty_start": str(a.warranty_start) if a.warranty_start else None,
-                "warranty_end": str(a.warranty_end) if a.warranty_end else None,
-                "location": a.location,
+                "warranty_expiry": str(a.warranty_expiry) if a.warranty_expiry else None,
                 "status": a.status,
                 "assigned_to": str(a.assigned_to) if a.assigned_to else None,
                 "description": a.description,
@@ -139,14 +127,8 @@ async def get_asset(
         "asset_code": asset.asset_code,
         "category": asset.category,
         "serial_number": asset.serial_number,
-        "model": asset.model,
-        "brand": asset.brand,
-        "vendor": asset.vendor,
         "purchase_date": str(asset.purchase_date) if asset.purchase_date else None,
-        "purchase_cost": asset.purchase_cost,
-        "warranty_start": str(asset.warranty_start) if asset.warranty_start else None,
-        "warranty_end": str(asset.warranty_end) if asset.warranty_end else None,
-        "location": asset.location,
+        "warranty_expiry": str(asset.warranty_expiry) if asset.warranty_expiry else None,
         "status": asset.status,
         "assigned_to": str(asset.assigned_to) if asset.assigned_to else None,
         "description": asset.description,
@@ -245,15 +227,11 @@ async def asset_stats(
         select(func.count(CompanyAsset.id)).where(CompanyAsset.tenant_id == tid, CompanyAsset.status == "maintenance")
     )).scalar() or 0
 
-    total_value = (await db.execute(
-        select(func.sum(CompanyAsset.purchase_cost)).where(CompanyAsset.tenant_id == tid)
-    )).scalar() or 0
-
     warranty_expiring = (await db.execute(
         select(func.count(CompanyAsset.id)).where(
             CompanyAsset.tenant_id == tid,
-            CompanyAsset.warranty_end.isnot(None),
-            CompanyAsset.warranty_end <= date.today().replace(month=date.today().month + 1 if date.today().month < 12 else 1),
+            CompanyAsset.warranty_expiry.isnot(None),
+            CompanyAsset.warranty_expiry <= date.today().replace(month=date.today().month + 1 if date.today().month < 12 else 1),
         )
     )).scalar() or 0
 
@@ -263,5 +241,4 @@ async def asset_stats(
         "available": available,
         "maintenance": maintenance,
         "warranty_expiring": warranty_expiring,
-        "total_value": total_value,
     }

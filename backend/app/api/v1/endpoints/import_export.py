@@ -3,7 +3,7 @@
 import uuid
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
@@ -188,15 +188,16 @@ async def import_leave_balances(
             )
             lb = existing.scalar_one_or_none()
             if lb:
-                lb.balance = balance
+                lb.total_days = balance
                 results["updated"] += 1
             else:
                 db.add(LeaveBalance(
                     tenant_id=current_user.tenant_id,
                     employee_id=employee.id,
                     leave_type_id=leave_type.id,
-                    balance=balance,
-                    used=0,
+                    year=date.today().year,
+                    total_days=balance,
+                    used_days=0,
                 ))
                 results["created"] += 1
 

@@ -25,7 +25,7 @@ async def list_tenants(
     return PaginatedResponse(
         success=True,
         message="Tenants retrieved successfully",
-        data=tenants,
+        items=tenants,
         total=total,
         page=page,
         page_size=page_size,
