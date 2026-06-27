@@ -104,7 +104,7 @@ class TestAssets:
         assert response.status_code == 200
 
     async def test_assign_asset(self, client: AsyncClient, auth_headers, db, tenant):
-        from app.models.company_asset import CompanyAsset
+        from app.models.asset_travel import CompanyAsset
         from app.models.employee import Employee
 
         emp = Employee(tenant_id=tenant.id, employee_code="ASSET01", first_name="Asset", last_name="Test", status="active")

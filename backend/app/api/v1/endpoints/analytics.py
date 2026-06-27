@@ -12,7 +12,7 @@ from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.employee import Employee
 from app.models.subscription import TenantSubscription
-from app.models.login_history import LoginHistory
+from app.models.approval import LoginHistory
 
 router = APIRouter()
 
