@@ -37,6 +37,7 @@ from app.api.v1.endpoints import (
     lifecycle,
     recruitment,
     performance,
+    assets,
 )
 from app.api.v1.endpoints.admin import auth as admin_auth, dashboard as admin_dashboard, tenants as admin_tenants, plans as admin_plans, features as admin_features
 
@@ -84,3 +85,4 @@ api_router.include_router(setup.router, prefix="/setup", tags=["Setup Wizard"])
 api_router.include_router(lifecycle.router, prefix="/employees", tags=["Employee Lifecycle"])
 api_router.include_router(recruitment.router, prefix="/recruitment", tags=["Recruitment"])
 api_router.include_router(performance.router, prefix="/performance", tags=["Performance"])
+api_router.include_router(assets.router, prefix="/assets", tags=["Assets"])

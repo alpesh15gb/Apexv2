@@ -76,6 +76,7 @@ import '../screens/recruitment/candidates_screen.dart';
 import '../screens/recruitment/interviews_screen.dart';
 import '../screens/performance/performance_dashboard_screen.dart';
 import '../screens/performance/goals_screen.dart';
+import '../screens/assets/asset_dashboard_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -423,6 +424,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/performance/goals',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const GoalsScreen(),
+      ),
+      // Asset routes
+      GoRoute(
+        path: '/assets',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AssetDashboardScreen(),
       ),
       // Reports routes
       GoRoute(
