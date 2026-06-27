@@ -6,7 +6,7 @@ from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, Foreign
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.db.base import TenantModel
+from app.db.base import TenantModel, Base
 
 
 class ApprovalWorkflow(TenantModel):
