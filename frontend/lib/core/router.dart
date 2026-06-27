@@ -263,6 +263,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/employees/:id/edit',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EmployeeDetailScreen(employeeId: id);
+        },
+      ),
+      GoRoute(
         path: '/departments',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const DepartmentScreen(),
