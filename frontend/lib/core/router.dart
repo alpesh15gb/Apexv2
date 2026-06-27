@@ -460,7 +460,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const SystemSettingsScreen(),
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/health',
