@@ -12,7 +12,7 @@ from app.models.tenant import Tenant
 from app.models.employee import Department, Designation, Branch
 from app.models.shift import Shift
 from app.models.leave import LeaveType
-from app.models.categories import EmployeeCategory
+from app.models.category import EmployeeCategory
 
 router = APIRouter()
 
@@ -300,7 +300,7 @@ async def setup_attendance(
     current_user: User = Depends(get_current_active_user),
 ):
     """Save attendance settings."""
-    from app.models.categories import TenantSettings
+    from app.models.tenant_settings import TenantSettings
     existing = await db.execute(
         select(TenantSettings).where(TenantSettings.tenant_id == current_user.tenant_id)
     )
