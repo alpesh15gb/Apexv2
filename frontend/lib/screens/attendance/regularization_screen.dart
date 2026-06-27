@@ -148,7 +148,7 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
             ElevatedButton(
               onPressed: () async {
                 try {
-                  final dio = context.read(dioProvider);
+                  final dio = ref.read(dioProvider);
                   await dio.post('/attendance/regularization', data: {
                     'request_type': requestType,
                     'date': DateFormat('yyyy-MM-dd').format(selectedDate),

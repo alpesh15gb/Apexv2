@@ -151,7 +151,7 @@ class _TodayCard extends StatelessWidget {
         final att = dash?['today_attendance'];
         final status = att?['status'] ?? 'not_marked';
         final checkIn = att?['check_in'];
-        final checkOut = att?['check_out';
+        final checkOut = att?['check_out'];
 
         return Container(
           width: double.infinity,

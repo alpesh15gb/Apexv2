@@ -51,7 +51,7 @@ class LeaveTypesScreen extends ConsumerWidget {
       ),
       body: typesAsync.when(
         data: (types) {
-          if (types.isEmpty) return _buildEmptyState(context);
+          if (types.isEmpty) return _buildEmptyState(context, ref);
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: types.length,
@@ -64,7 +64,7 @@ class LeaveTypesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

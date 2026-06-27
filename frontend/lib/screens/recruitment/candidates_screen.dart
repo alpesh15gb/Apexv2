@@ -241,7 +241,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  final dio = context.read(dioProvider);
+                  final dio = ref.read(dioProvider);
                   await dio.post('/recruitment/candidates', data: {
                     'first_name': firstNameCtrl.text.trim(),
                     'last_name': lastNameCtrl.text.trim(),

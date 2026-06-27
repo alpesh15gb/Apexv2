@@ -309,12 +309,12 @@ class _PipelineView extends StatelessWidget {
   }
 }
 
-class _OpeningCard extends StatelessWidget {
+class _OpeningCard extends ConsumerWidget {
   final Map<String, dynamic> opening;
   const _OpeningCard({required this.opening});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final title = opening['title'] ?? '';
     final status = opening['status'] ?? 'draft';
     final candidates = opening['candidates'] ?? 0;
@@ -370,10 +370,10 @@ class _OpeningCard extends StatelessWidget {
             ],
             onSelected: (v) async {
               if (v == 'publish') {
-                final dio = context.read(dioProvider);
+                final dio = ref.read(dioProvider);
                 await dio.post('/recruitment/openings/${opening['id']}/publish');
               } else if (v == 'close') {
-                final dio = context.read(dioProvider);
+                final dio = ref.read(dioProvider);
                 await dio.post('/recruitment/openings/${opening['id']}/close');
               } else if (v == 'candidates') {
                 context.push('/recruitment/candidates?opening=${opening['id']}');

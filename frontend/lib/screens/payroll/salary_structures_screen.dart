@@ -51,7 +51,7 @@ class SalaryStructuresScreen extends ConsumerWidget {
       ),
       body: structuresAsync.when(
         data: (structures) {
-          if (structures.isEmpty) return _buildEmptyState(context);
+          if (structures.isEmpty) return _buildEmptyState(context, ref);
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: structures.length,
@@ -64,7 +64,7 @@ class SalaryStructuresScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

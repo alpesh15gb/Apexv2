@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
 import '../../core/dio_client.dart';
+import '../../core/secure_storage.dart';
 
 const _bg = Color(0xFF0F172A);
 const _surface = Color(0xFF1E293B);
@@ -34,7 +35,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
         'password': _passCtrl.text,
       });
       final token = res.data['access_token'];
-      await storage.write(key: StorageKeys.accessToken, value: token);
+      await secureStorage.write(StorageKeys.accessToken, token);
       if (mounted) context.go('/admin/dashboard');
     } catch (e) {
       setState(() => _error = 'Invalid credentials or not a super admin');

@@ -172,7 +172,7 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
           ElevatedButton(
             onPressed: () async {
               try {
-                final dio = context.read(dioProvider);
+                final dio = ref.read(dioProvider);
                 await dio.post('/finance/expense-claims', data: {
                   'amount': double.tryParse(amountCtrl.text) ?? 0,
                   'date': DateTime.now().toIso8601String().substring(0, 10),

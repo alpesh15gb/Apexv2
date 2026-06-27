@@ -224,7 +224,7 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = [
-      _StatCard(title: 'Active Cycles', value: '${stats['active_cycles'] ?? 0}', icon: Icons循环, color: _primary),
+      _StatCard(title: 'Active Cycles', value: '${stats['active_cycles'] ?? 0}', icon: Icons.loop, color: _primary),
       _StatCard(title: 'Goals', value: '${stats['total_goals'] ?? 0}', icon: Icons.flag, color: _success),
       _StatCard(title: 'Goals Completed', value: '${stats['completed_goals'] ?? 0}', icon: Icons.check_circle, color: _success),
       _StatCard(title: 'Pending Reviews', value: '${stats['pending_reviews'] ?? 0}', icon: Icons.pending, color: _warning),
@@ -295,12 +295,12 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _CycleCard extends StatelessWidget {
+class _CycleCard extends ConsumerWidget {
   final Map<String, dynamic> cycle;
   const _CycleCard({required this.cycle});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final name = cycle['name'] ?? '';
     final type = cycle['cycle_type'] ?? '';
     final status = cycle['status'] ?? 'draft';
@@ -317,7 +317,7 @@ class _CycleCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons循环, size: 22, color: _primary),
+            child: const Icon(Icons.loop, size: 22, color: _primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -341,7 +341,7 @@ class _CycleCard extends StatelessWidget {
           if (status == 'draft')
             ElevatedButton(
               onPressed: () async {
-                final dio = context.read(dioProvider);
+                final dio = ref.read(dioProvider);
                 await dio.post('/performance/cycles/${cycle['id']}/publish');
               },
               style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
