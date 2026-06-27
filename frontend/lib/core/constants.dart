@@ -1,8 +1,19 @@
 class ApiConstants {
-  static const String baseUrl = '/api/v1';
+  static String get baseUrl {
+    final uri = Uri.base;
+    if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
+      return 'http://localhost:8000/api/v1';
+    }
+    return '/api/v1';
+  }
+
   static const String desktopBaseUrl = 'https://next.apextime.in/api/v1';
+
   static String get wsUrl {
     final uri = Uri.base;
+    if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
+      return 'ws://localhost:8000/api/v1/ws/dashboard';
+    }
     final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
     return '${scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}/api/v1/ws/dashboard';
   }
