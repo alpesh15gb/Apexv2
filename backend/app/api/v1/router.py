@@ -38,6 +38,9 @@ from app.api.v1.endpoints import (
     recruitment,
     performance,
     assets,
+    notification_center,
+    settings_api,
+    system,
 )
 from app.api.v1.endpoints.admin import auth as admin_auth, dashboard as admin_dashboard, tenants as admin_tenants, plans as admin_plans, features as admin_features
 
@@ -86,3 +89,6 @@ api_router.include_router(lifecycle.router, prefix="/employees", tags=["Employee
 api_router.include_router(recruitment.router, prefix="/recruitment", tags=["Recruitment"])
 api_router.include_router(performance.router, prefix="/performance", tags=["Performance"])
 api_router.include_router(assets.router, prefix="/assets", tags=["Assets"])
+api_router.include_router(notification_center.router, prefix="/notifications", tags=["Notification Center"])
+api_router.include_router(settings_api.router, prefix="/settings", tags=["System Settings"])
+api_router.include_router(system.router, prefix="/system", tags=["System Health"])

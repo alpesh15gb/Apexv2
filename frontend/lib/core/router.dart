@@ -77,6 +77,9 @@ import '../screens/recruitment/interviews_screen.dart';
 import '../screens/performance/performance_dashboard_screen.dart';
 import '../screens/performance/goals_screen.dart';
 import '../screens/assets/asset_dashboard_screen.dart';
+import '../screens/system/notification_center_screen.dart';
+import '../screens/system/settings_screen.dart';
+import '../screens/system/health_screen.dart';
 import '../screens/shifts/shift_group_screen.dart';
 import '../screens/shifts/shift_roster_screen.dart';
 import '../screens/shifts/department_shift_screen.dart';
@@ -430,6 +433,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/assets',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const AssetDashboardScreen(),
+      ),
+      // System routes
+      GoRoute(
+        path: '/notifications',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const NotificationCenterScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const SystemSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/health',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const HealthDashboardScreen(),
       ),
       // Reports routes
       GoRoute(
