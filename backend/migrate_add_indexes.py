@@ -103,22 +103,6 @@ INDEXES = [
     ("holidays", "tenant_id"),
     # essl_servers
     ("essl_servers", "tenant_id"),
-    # essl_sync_history
-    ("essl_sync_history", "server_id"),
-    # essl_sync_jobs
-    ("essl_sync_jobs", "server_id"),
-    # essl_sync_errors
-    ("essl_sync_errors", "job_id"),
-    # essl_employee_mappings
-    ("essl_employee_mappings", "tenant_id"),
-    ("essl_employee_mappings", "employee_id"),
-    # essl_device_mappings
-    ("essl_device_mappings", "tenant_id"),
-    ("essl_device_mappings", "device_id"),
-    # essl_sync_cursors
-    ("essl_sync_cursors", "server_id"),
-    # essl_locations
-    ("essl_locations", "server_id"),
     # announcements
     ("announcements", "tenant_id"),
     # notification_templates
@@ -149,9 +133,6 @@ INDEXES = [
     # onboarding_tasks
     ("onboarding_tasks", "tenant_id"),
     ("onboarding_tasks", "employee_id"),
-    # ot_registers
-    ("ot_registers", "tenant_id"),
-    ("ot_registers", "employee_id"),
     # outdoor_duties
     ("outdoor_duties", "tenant_id"),
     ("outdoor_duties", "employee_id"),
@@ -198,12 +179,10 @@ INDEXES = [
     ("shift_groups", "tenant_id"),
     # shift_group_members
     ("shift_group_members", "group_id"),
-    ("shift_group_members", "employee_id"),
     # shift_rosters
     ("shift_rosters", "tenant_id"),
     # shift_roster_entries
     ("shift_roster_entries", "roster_id"),
-    ("shift_roster_entries", "employee_id"),
     ("shift_roster_entries", "shift_id"),
     # department_shifts
     ("department_shifts", "tenant_id"),
@@ -222,10 +201,8 @@ INDEXES = [
     ("approval_requests", "tenant_id"),
     ("approval_requests", "workflow_id"),
     ("approval_requests", "requester_id"),
-    ("approval_requests", "current_step_id"),
     # approval_history
     ("approval_history", "request_id"),
-    ("approval_history", "step_id"),
     ("approval_history", "approver_id"),
     # login_history
     ("login_history", "tenant_id"),
@@ -252,18 +229,20 @@ INDEXES = [
 
 
 async def migrate():
-    for table, column in INDEXES:
-        index_name = f"ix_{table}_{column}"
-        sql = f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({column})"
-        try:
-            async with engine.begin() as conn:
+    async with engine.connect() as conn:
+        for table, column in INDEXES:
+            index_name = f"ix_{table}_{column}"
+            sql = f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({column})"
+            try:
                 await conn.execute(text(sql))
-            print(f"  created: {index_name}")
-        except Exception as e:
-            if "already exists" in str(e):
-                print(f"  exists: {index_name}")
-            else:
-                print(f"  error on {index_name}: {e}")
+                await conn.commit()
+                print(f"  created: {index_name}")
+            except Exception as e:
+                await conn.rollback()
+                if "already exists" in str(e):
+                    print(f"  exists: {index_name}")
+                else:
+                    print(f"  error on {index_name}: {e}")
     print("Migration complete")
 
 
