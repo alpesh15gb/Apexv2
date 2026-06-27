@@ -844,14 +844,23 @@ class EsslConnectorService:
             if max_punch_time:
                 await self._update_cursor("attendance", last_punch_time=max_punch_time)
 
+            # Process raw logs into attendance records
+            from app.services.attendance_processor import AttendanceProcessor
+            processor = AttendanceProcessor(self.db)
+            processing_result = await processor.process_raw_logs(self.server.tenant_id)
+            attendance_created = processing_result.get("created", 0)
+            attendance_updated = processing_result.get("updated", 0)
+            processing_errors = processing_result.get("errors", 0)
+
             # Finalize
-            history.status = SyncStatus.COMPLETED if failed == 0 else SyncStatus.PARTIAL
+            history.status = SyncStatus.COMPLETED if (failed == 0 and processing_errors == 0) else SyncStatus.PARTIAL
             history.completed_at = datetime.now(timezone.utc)
             history.duration_seconds = (history.completed_at - history.started_at).total_seconds()
             history.records_fetched = created + skipped + failed
-            history.records_created = created
+            history.records_created = attendance_created
+            history.records_updated = attendance_updated
             history.records_skipped = skipped
-            history.records_failed = failed
+            history.records_failed = failed + processing_errors
             await self.db.commit()
 
         except Exception as e:

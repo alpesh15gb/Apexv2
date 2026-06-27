@@ -163,6 +163,7 @@ class AttendanceProcessor:
                 employee = emp_result.scalar_one_or_none()
 
                 if not employee:
+                    logger.warning("attendance_employee_not_found", employee_code=punches[0].employee_code, employee_id=str(punches[0].employee_id) if punches[0].employee_id else None, tenant_id=str(tenant_id))
                     for p in punches:
                         p.processed = True
                         p.processing_error = "Employee not found"

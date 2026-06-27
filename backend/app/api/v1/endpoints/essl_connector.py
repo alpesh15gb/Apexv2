@@ -264,6 +264,12 @@ async def sync_attendance(
 
     history = await connector.sync_attendance(triggered_by="manual")
 
+    from app.services.attendance_processor import AttendanceProcessor
+    processor = AttendanceProcessor(db)
+    processing_result = await processor.process_raw_logs(current_user.tenant_id)
+    history.records_created = processing_result.get("created", 0)
+    history.records_updated = processing_result.get("updated", 0)
+
     await audit.log_sync_completed(
         tenant_id=current_user.tenant_id,
         server_id=server_id,
