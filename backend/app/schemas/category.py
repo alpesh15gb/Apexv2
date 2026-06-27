@@ -1,6 +1,7 @@
 """Employee Category schemas."""
 
 import uuid
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -76,5 +77,5 @@ class CategoryResponse(BaseModel):
     consider_late_going: bool
     deduct_break_hours: bool
     mark_wo_holiday_absent_if_prefix_absent: bool
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

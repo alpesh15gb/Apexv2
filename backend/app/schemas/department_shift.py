@@ -1,7 +1,7 @@
 """Department Shift schemas."""
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
@@ -21,5 +21,5 @@ class DepartmentShiftResponse(BaseModel):
     shift_id: uuid.UUID
     effective_from: date
     effective_to: Optional[date] = None
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

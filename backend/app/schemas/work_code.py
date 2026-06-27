@@ -1,6 +1,7 @@
 """Work Code schemas."""
 
 import uuid
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -27,5 +28,5 @@ class WorkCodeResponse(BaseModel):
     name: str
     description: Optional[str] = None
     is_active: bool
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

@@ -1,7 +1,7 @@
 """Holiday schemas."""
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -32,5 +32,5 @@ class HolidayResponse(BaseModel):
     type: str
     description: Optional[str] = None
     is_active: bool
-    created_at: date
-    updated_at: date
+    created_at: datetime
+    updated_at: datetime

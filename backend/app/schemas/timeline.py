@@ -23,5 +23,5 @@ class EmployeeEventResponse(BaseModel):
     description: Optional[str] = None
     event_date: date
     created_by: Optional[uuid.UUID] = None
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, DateTime, func, text
+from sqlalchemy import Column, DateTime, ForeignKey, func, text
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.session import Base
@@ -17,9 +17,9 @@ class TenantMixin:
     """Every business entity must have a tenant_id for isolation."""
     tenant_id = Column(
         UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        server_default=text("gen_random_uuid()"),
     )
 
 

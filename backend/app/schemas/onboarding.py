@@ -35,5 +35,5 @@ class OnboardingTaskResponse(BaseModel):
     status: str
     completed_at: Optional[datetime] = None
     order_index: int
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

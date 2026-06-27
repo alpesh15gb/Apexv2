@@ -1,6 +1,7 @@
 """Tenant Settings schemas."""
 
 import uuid
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -25,5 +26,5 @@ class TenantSettingsResponse(BaseModel):
     punch_begin_before_minutes: int
     auto_shift_if_no_schedule: bool
     fixed_shift_mode: bool
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

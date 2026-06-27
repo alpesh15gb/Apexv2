@@ -58,8 +58,8 @@ class SalaryStructureResponse(BaseModel):
     income_tax: float
     effective_from: date
     is_active: bool
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class PaySlipResponse(BaseModel):
@@ -92,8 +92,8 @@ class PaySlipResponse(BaseModel):
     lop_amount: float
     status: str
     generated_at: Optional[datetime] = None
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class LoanCreate(BaseModel):
@@ -117,5 +117,5 @@ class LoanResponse(BaseModel):
     total_installments: int
     paid_installments: int
     status: str
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

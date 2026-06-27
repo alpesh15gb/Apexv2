@@ -1,6 +1,7 @@
 """Shift Roster schemas."""
 
 import uuid
+from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -37,5 +38,5 @@ class ShiftRosterResponse(BaseModel):
     weekly_off_2: Optional[int] = None
     weekly_off_2_week: str
     is_active: bool
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

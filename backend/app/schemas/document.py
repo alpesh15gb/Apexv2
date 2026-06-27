@@ -40,5 +40,5 @@ class DocumentResponse(BaseModel):
     is_confidential: bool
     expiry_date: Optional[date] = None
     description: Optional[str] = None
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

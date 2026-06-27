@@ -2,6 +2,7 @@
 
 from sqlalchemy import Column, String, Integer, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from app.db.base import TenantModel
 
@@ -22,3 +23,5 @@ class TenantSettings(TenantModel):
     punch_begin_before_minutes = Column(Integer, default=60, nullable=False)
     auto_shift_if_no_schedule = Column(Boolean, default=True, nullable=False)
     fixed_shift_mode = Column(Boolean, default=False, nullable=False)
+
+    tenant = relationship("Tenant", back_populates="tenant_settings")

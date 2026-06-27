@@ -33,5 +33,5 @@ class ExitRequestResponse(BaseModel):
     approved_at: Optional[datetime] = None
     exit_interview_notes: Optional[str] = None
     clearance_status: str
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime

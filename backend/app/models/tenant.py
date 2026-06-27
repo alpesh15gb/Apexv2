@@ -71,6 +71,9 @@ class Tenant(BaseModel):
     notifications = relationship("Notification", back_populates="tenant", cascade="all, delete-orphan")
     essl_servers = relationship("EsslServer", back_populates="tenant", cascade="all, delete-orphan")
     attendance_raw_logs = relationship("AttendanceRawLog", back_populates="tenant", cascade="all, delete-orphan")
+    holidays = relationship("Holiday", back_populates="tenant", cascade="all, delete-orphan")
+    tenant_settings = relationship("TenantSettings", back_populates="tenant", cascade="all, delete-orphan")
+    work_codes = relationship("WorkCode", back_populates="tenant", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("ix_tenants_slug_unique", "slug", unique=True),
