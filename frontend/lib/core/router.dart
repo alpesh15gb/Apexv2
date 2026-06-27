@@ -10,6 +10,7 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/employees/employee_list_screen.dart';
 import '../screens/employees/employee_detail_screen.dart';
 import '../screens/employees/employee_create_screen.dart';
+import '../screens/employees/employee_edit_screen.dart';
 import '../screens/employees/department_screen.dart';
 import '../screens/employees/branch_screen.dart';
 import '../screens/employees/designation_screen.dart';
@@ -472,7 +473,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return EmployeeDetailScreen(employeeId: id);
+          return EmployeeEditScreen(employeeId: id);
         },
       ),
       GoRoute(

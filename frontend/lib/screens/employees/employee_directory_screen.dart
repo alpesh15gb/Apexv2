@@ -546,6 +546,8 @@ class _EmployeeTableRow extends StatelessWidget {
               ],
               onSelected: (v) {
                 if (v == 'view') onTap();
+                if (v == 'edit') context.push('/employees/${employee['id']}/edit');
+                if (v == 'attendance') context.push('/attendance/detail?employeeId=${employee['id']}');
               },
             ),
           ),

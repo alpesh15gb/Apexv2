@@ -64,24 +64,6 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
             _ProfileHeader(
               employee: emp,
               isMobile: isMobile,
-              onSave: (data) async {
-                try {
-                  final dio = ref.read(dioProvider);
-                  await dio.put('/employees/${emp.id}', data: data);
-                  ref.invalidate(employeeDetailProvider(widget.employeeId));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Employee updated'), backgroundColor: _success),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e'), backgroundColor: _danger),
-                    );
-                  }
-                }
-              },
             ),
             // Tabs
             Container(
@@ -152,9 +134,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 class _ProfileHeader extends StatelessWidget {
   final Employee employee;
   final bool isMobile;
-  final Future<void> Function(Map<String, dynamic> data)? onSave;
 
-  const _ProfileHeader({required this.employee, required this.isMobile, this.onSave});
+  const _ProfileHeader({required this.employee, required this.isMobile});
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +224,7 @@ class _ProfileHeader extends StatelessWidget {
   Widget _actions(BuildContext context) {
     return Row(
       children: [
-        IconButton(icon: const Icon(Icons.edit, size: 18), tooltip: 'Edit', onPressed: () => _showEditSheet(context)),
+        IconButton(icon: const Icon(Icons.edit, size: 18), tooltip: 'Edit', onPressed: () => context.push('/employees/${employee.id}/edit')),
         IconButton(icon: const Icon(Icons.calendar_today, size: 18), tooltip: 'Attendance', onPressed: () => context.push('/attendance/detail?employeeId=${employee.id}')),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, size: 18),
@@ -253,95 +234,6 @@ class _ProfileHeader extends StatelessWidget {
           onSelected: (v) {},
         ),
       ],
-    );
-  }
-
-  void _showEditSheet(BuildContext context) {
-    final firstNameCtrl = TextEditingController(text: employee.firstName);
-    final lastNameCtrl = TextEditingController(text: employee.lastName);
-    final emailCtrl = TextEditingController(text: employee.email ?? '');
-    final phoneCtrl = TextEditingController(text: employee.phone ?? '');
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text('Edit Employee', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
-                  const Spacer(),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: _editField('First Name', firstNameCtrl)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _editField('Last Name', lastNameCtrl)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _editField('Email', emailCtrl)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _editField('Phone', phoneCtrl)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (onSave != null) {
-                      await onSave!({
-                        'first_name': firstNameCtrl.text,
-                        'last_name': lastNameCtrl.text,
-                        'email': emailCtrl.text.isNotEmpty ? emailCtrl.text : null,
-                        'phone': phoneCtrl.text.isNotEmpty ? phoneCtrl.text : null,
-                      });
-                    }
-                    Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Save Changes'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _editField(String label, TextEditingController ctrl) {
-    return TextField(
-      controller: ctrl,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(fontSize: 12, color: _muted),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        isDense: true,
-      ),
     );
   }
 }
