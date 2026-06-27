@@ -40,6 +40,10 @@ from app.api.v1.endpoints import (
     notification_center,
     settings_api,
     system,
+    billing,
+    analytics,
+    import_export,
+    operations,
 )
 from app.api.v1.endpoints.admin import auth as admin_auth, dashboard as admin_dashboard, tenants as admin_tenants, plans as admin_plans, features as admin_features
 
@@ -90,3 +94,7 @@ api_router.include_router(assets.router, prefix="/assets", tags=["Assets"])
 api_router.include_router(notification_center.router, prefix="/notifications", tags=["Notification Center"])
 api_router.include_router(settings_api.router, prefix="/settings", tags=["System Settings"])
 api_router.include_router(system.router, prefix="/system", tags=["System Health"])
+api_router.include_router(billing.router, prefix="/admin/billing", tags=["Billing"])
+api_router.include_router(analytics.router, prefix="/admin/analytics", tags=["Analytics"])
+api_router.include_router(import_export.router, prefix="/data", tags=["Import/Export"])
+api_router.include_router(operations.router, prefix="/ops", tags=["Operations"])

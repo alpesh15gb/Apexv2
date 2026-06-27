@@ -54,6 +54,7 @@ import '../screens/admin/admin_tenant_list_screen.dart';
 import '../screens/admin/admin_tenant_detail_screen.dart';
 import '../screens/admin/admin_plan_screen.dart';
 import '../screens/admin/admin_feature_screen.dart';
+import '../screens/admin/admin_analytics_screen.dart';
 import '../screens/ess/ess_dashboard_screen.dart';
 import '../screens/ess/ess_attendance_screen.dart';
 import '../screens/ess/ess_leave_screen.dart';
@@ -163,6 +164,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/features',
         builder: (context, state) => const AdminFeatureScreen(),
+      ),
+      GoRoute(
+        path: '/admin/analytics',
+        builder: (context, state) => const AdminAnalyticsScreen(),
       ),
       // ESS routes
       GoRoute(
