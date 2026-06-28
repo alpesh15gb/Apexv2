@@ -84,10 +84,22 @@ async def debug():
             if isinstance(data, dict) and "items" in data:
                 items = data["items"]
                 print(f"Punches for {code}: {len(items)} items")
-                for p in items[:5]:
-                    print(f"  type={type(p).__name__} value={str(p)[:200]}")
             else:
                 print(f"Data type: {type(data).__name__}, value: {str(data)[:300]}")
+
+        # Step 5: Test GetDeviceLogs SOAP directly (not DeviceCommand)
+        print("\n=== STEP 5: Raw SOAP GetDeviceLogs ===")
+        raw = await soap.get_device_list()
+        raw_data = raw.get("data", "")
+        if isinstance(raw_data, str) and ";" in raw_data:
+            first_device = raw_data.split(";")[0].split(",")[1].strip()
+            print(f"Testing device: {first_device}")
+            logs = await soap.get_device_logs(first_device, "2026-06-01", "2026-06-28")
+            print(f"Success: {logs.get('success')}")
+            print(f"Error: {logs.get('error')}")
+            log_data = logs.get("data")
+            print(f"Data type: {type(log_data).__name__}")
+            print(f"Data: {str(log_data)[:500]}")
 
 
 if __name__ == "__main__":
