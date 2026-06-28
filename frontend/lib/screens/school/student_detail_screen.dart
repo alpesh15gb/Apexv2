@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../widgets/apex_badge.dart';
 
 class StudentDetailScreen extends ConsumerStatefulWidget {
   final String studentId;
@@ -176,7 +177,7 @@ class _GuardiansTab extends StatelessWidget {
               Text('${g['first_name'] ?? ''} ${g['last_name'] ?? ''}', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600)),
               Text('${g['relationship'] ?? ''} • ${g['phone'] ?? ''}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
             ])),
-            if (g['is_primary'] == true) const ApexBadge(label: 'PRIMARY', type: ApexBadgeType.success),
+            if (g['is_primary'] == true) ApexBadge(label: 'PRIMARY', type: ApexBadgeType.success),
           ]),
         );
       },

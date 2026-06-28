@@ -88,12 +88,12 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
               color: ApexColors.neutral0,
               child: Row(children: [
                 Checkbox(
-                  value: _selected.length == filtered.length && filtered.isNotEmpty,
+                  value: _selectedIds.length == filtered.length && filtered.isNotEmpty,
                   onChanged: (v) => setState(() {
                     if (v == true) {
-                      _selected.addAll(filtered.map((f) => f['code'] as String));
+                      _selectedIds.addAll(filtered.map((f) => f['id'] as String));
                     } else {
-                      _selected.clear();
+                      _selectedIds.clear();
                     }
                   }),
                 ),
