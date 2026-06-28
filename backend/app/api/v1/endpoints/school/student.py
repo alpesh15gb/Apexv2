@@ -2,17 +2,15 @@
 
 import uuid
 from typing import Optional
-from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import date
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.student import Student, Guardian, StudentGuardian
-from app.models.school.grade import Section
+from app.services.school.student_service import StudentService
 
 router = APIRouter(dependencies=[Depends(require_feature("student_management")), Depends(require_permissions("student.read"))])
 
@@ -78,43 +76,17 @@ async def list_students(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Student).where(Student.tenant_id == current_user.tenant_id, Student.is_active == True)
-    count_stmt = select(func.count(Student.id)).where(Student.tenant_id == current_user.tenant_id, Student.is_active == True)
-
-    if grade_id:
-        stmt = stmt.where(Student.current_grade_id == grade_id)
-        count_stmt = count_stmt.where(Student.current_grade_id == grade_id)
-    if section_id:
-        stmt = stmt.where(Student.current_section_id == section_id)
-        count_stmt = count_stmt.where(Student.current_section_id == section_id)
-    if status:
-        stmt = stmt.where(Student.status == status)
-        count_stmt = count_stmt.where(Student.status == status)
-    if search:
-        search_filter = Student.first_name.ilike(f"%{search}%") | Student.last_name.ilike(f"%{search}%") | Student.admission_number.ilike(f"%{search}%")
-        stmt = stmt.where(search_filter)
-        count_stmt = count_stmt.where(search_filter)
-
-    total = (await db.execute(count_stmt)).scalar() or 0
-    stmt = stmt.order_by(Student.admission_number).offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(stmt)
-    students = result.scalars().all()
-
-    return {
-        "items": [
-            {
-                "id": str(s.id), "admission_number": s.admission_number, "roll_number": s.roll_number,
-                "first_name": s.first_name, "last_name": s.last_name, "gender": s.gender,
-                "current_grade_id": str(s.current_grade_id) if s.current_grade_id else None,
-                "current_section_id": str(s.current_section_id) if s.current_section_id else None,
-                "status": s.status, "admission_date": str(s.admission_date),
-            }
-            for s in students
-        ],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+    svc = StudentService(db)
+    items, total = await svc.list_students(
+        tenant_id=current_user.tenant_id,
+        grade_id=grade_id,
+        section_id=section_id,
+        student_status=status,
+        search=search,
+        page=page,
+        page_size=page_size,
+    )
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/")
@@ -123,13 +95,8 @@ async def create_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    existing = await db.execute(select(Student).where(Student.tenant_id == current_user.tenant_id, Student.admission_number == data.admission_number))
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Admission number already exists")
-
-    student = Student(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(student)
-    await db.commit()
+    svc = StudentService(db)
+    student = await svc.create_student(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(student.id), "admission_number": student.admission_number}
 
 
@@ -139,20 +106,19 @@ async def get_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    student = await db.get(Student, student_id)
-    if not student or student.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Student not found")
+    svc = StudentService(db)
+    s = await svc.get_student(student_id, current_user.tenant_id)
     return {
-        "id": str(student.id), "admission_number": student.admission_number, "roll_number": student.roll_number,
-        "first_name": student.first_name, "last_name": student.last_name, "middle_name": student.middle_name,
-        "date_of_birth": str(student.date_of_birth), "gender": student.gender, "blood_group": student.blood_group,
-        "email": student.email, "phone": student.phone, "address": student.address,
-        "current_grade_id": str(student.current_grade_id) if student.current_grade_id else None,
-        "current_section_id": str(student.current_section_id) if student.current_section_id else None,
-        "status": student.status, "admission_date": str(student.admission_date),
-        "medical_conditions": student.medical_conditions, "allergies": student.allergies,
-        "emergency_contact_name": student.emergency_contact_name,
-        "emergency_contact_phone": student.emergency_contact_phone,
+        "id": str(s.id), "admission_number": s.admission_number, "roll_number": s.roll_number,
+        "first_name": s.first_name, "last_name": s.last_name, "middle_name": s.middle_name,
+        "date_of_birth": str(s.date_of_birth), "gender": s.gender, "blood_group": s.blood_group,
+        "email": s.email, "phone": s.phone, "address": s.address,
+        "current_grade_id": str(s.current_grade_id) if s.current_grade_id else None,
+        "current_section_id": str(s.current_section_id) if s.current_section_id else None,
+        "status": s.status, "admission_date": str(s.admission_date),
+        "medical_conditions": s.medical_conditions, "allergies": s.allergies,
+        "emergency_contact_name": s.emergency_contact_name,
+        "emergency_contact_phone": s.emergency_contact_phone,
     }
 
 
@@ -163,12 +129,8 @@ async def update_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    student = await db.get(Student, student_id)
-    if not student or student.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Student not found")
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(student, field, value)
-    await db.commit()
+    svc = StudentService(db)
+    student = await svc.update_student(student_id, current_user.tenant_id, data)
     return {"id": str(student.id)}
 
 
@@ -179,30 +141,8 @@ async def add_guardian(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    student = await db.get(Student, student_id)
-    if not student or student.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Student not found")
-
-    guardian = Guardian(
-        tenant_id=current_user.tenant_id,
-        first_name=data.first_name,
-        last_name=data.last_name,
-        email=data.email,
-        phone=data.phone,
-        occupation=data.occupation,
-    )
-    db.add(guardian)
-    await db.flush()
-
-    link = StudentGuardian(
-        tenant_id=current_user.tenant_id,
-        student_id=student_id,
-        guardian_id=guardian.id,
-        relationship=data.relationship,
-        is_primary=data.is_primary,
-    )
-    db.add(link)
-    await db.commit()
+    svc = StudentService(db)
+    guardian = await svc.add_guardian(student_id, current_user.tenant_id, data)
     return {"id": str(guardian.id)}
 
 
@@ -212,19 +152,8 @@ async def list_guardians(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(StudentGuardian, Guardian).join(Guardian, Guardian.id == StudentGuardian.guardian_id).where(
-        StudentGuardian.student_id == student_id, StudentGuardian.tenant_id == current_user.tenant_id
-    )
-    result = await db.execute(stmt)
-    rows = result.all()
-    return [
-        {
-            "id": str(g.id), "first_name": g.first_name, "last_name": g.last_name,
-            "phone": g.phone, "email": g.email, "relationship": sg.relationship,
-            "is_primary": sg.is_primary,
-        }
-        for sg, g in rows
-    ]
+    svc = StudentService(db)
+    return await svc.list_guardians(student_id, current_user.tenant_id)
 
 
 @router.post("/{student_id}/promote")
@@ -234,16 +163,12 @@ async def promote_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    new_grade_id = data.get("new_grade_id")
-    new_section_id = data.get("new_section_id")
-    new_academic_year_id = data.get("new_academic_year_id")
-
-    student = await db.get(Student, student_id)
-    if not student or student.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Student not found")
-
-    student.current_grade_id = new_grade_id
-    student.current_section_id = new_section_id
-    student.academic_year_id = new_academic_year_id
-    await db.commit()
+    svc = StudentService(db)
+    student = await svc.promote_student(
+        student_id,
+        current_user.tenant_id,
+        new_grade_id=data.get("new_grade_id"),
+        new_section_id=data.get("new_section_id"),
+        new_academic_year_id=data.get("new_academic_year_id"),
+    )
     return {"id": str(student.id), "status": "promoted"}

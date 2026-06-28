@@ -2,17 +2,15 @@
 
 import uuid
 from typing import Optional, List
-from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import date
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.examination import ExamType, Exam, ExamSchedule, ExamMark, GradingScale, GradingScaleDetail
-from app.models.school.student import Student
+from app.services.school.exam_service import ExamService
 
 router = APIRouter(dependencies=[Depends(require_feature("examinations")), Depends(require_permissions("exam.read"))])
 
@@ -60,15 +58,9 @@ async def list_exam_types(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    base = ExamType.tenant_id == current_user.tenant_id, ExamType.is_active == True
-    total = (await db.execute(select(func.count(ExamType.id)).where(*base))).scalar() or 0
-    stmt = select(ExamType).where(*base).offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(stmt)
-    types = result.scalars().all()
-    return {
-        "items": [{"id": str(t.id), "name": t.name, "code": t.code, "weightage": float(t.weightage), "exam_category": t.exam_category} for t in types],
-        "total": total, "page": page, "page_size": page_size,
-    }
+    svc = ExamService(db)
+    items, total = await svc.list_exam_types(current_user.tenant_id, page, page_size)
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/exam-types", dependencies=[Depends(require_permissions("exam.create"))])
@@ -77,9 +69,8 @@ async def create_exam_type(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    exam_type = ExamType(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(exam_type)
-    await db.commit()
+    svc = ExamService(db)
+    exam_type = await svc.create_exam_type(current_user.tenant_id, data)
     return {"id": str(exam_type.id)}
 
 
@@ -91,19 +82,11 @@ async def list_exams(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    count_stmt = select(func.count(Exam.id)).where(Exam.tenant_id == current_user.tenant_id)
-    stmt = select(Exam).where(Exam.tenant_id == current_user.tenant_id)
-    if academic_year_id:
-        count_stmt = count_stmt.where(Exam.academic_year_id == academic_year_id)
-        stmt = stmt.where(Exam.academic_year_id == academic_year_id)
-    total = (await db.execute(count_stmt)).scalar() or 0
-    stmt = stmt.order_by(Exam.start_date.desc()).offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(stmt)
-    exams = result.scalars().all()
-    return {
-        "items": [{"id": str(e.id), "name": e.name, "start_date": str(e.start_date), "end_date": str(e.end_date), "status": e.status} for e in exams],
-        "total": total, "page": page, "page_size": page_size,
-    }
+    svc = ExamService(db)
+    items, total = await svc.list_exams(
+        current_user.tenant_id, academic_year_id=academic_year_id, page=page, page_size=page_size
+    )
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/exams", dependencies=[Depends(require_permissions("exam.create"))])
@@ -112,9 +95,8 @@ async def create_exam(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    exam = Exam(tenant_id=current_user.tenant_id, status="draft", **data.model_dump())
-    db.add(exam)
-    await db.commit()
+    svc = ExamService(db)
+    exam = await svc.create_exam(current_user.tenant_id, data)
     return {"id": str(exam.id)}
 
 
@@ -126,22 +108,9 @@ async def list_exam_schedules(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    base = (ExamSchedule.exam_id == exam_id, ExamSchedule.tenant_id == current_user.tenant_id)
-    total = (await db.execute(select(func.count(ExamSchedule.id)).where(*base))).scalar() or 0
-    stmt = select(ExamSchedule).where(*base).offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(stmt)
-    schedules = result.scalars().all()
-    return {
-        "items": [
-            {
-                "id": str(s.id), "subject_id": str(s.subject_id), "grade_id": str(s.grade_id),
-                "exam_date": str(s.exam_date), "start_time": str(s.start_time), "end_time": str(s.end_time),
-                "max_marks": s.max_marks, "pass_marks": s.pass_marks,
-            }
-            for s in schedules
-        ],
-        "total": total, "page": page, "page_size": page_size,
-    }
+    svc = ExamService(db)
+    items, total = await svc.list_exam_schedules(exam_id, current_user.tenant_id, page, page_size)
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/exams/{exam_id}/schedules", dependencies=[Depends(require_permissions("exam.manage"))])
@@ -151,20 +120,8 @@ async def create_exam_schedule(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    from datetime import time as dt_time
-    schedule = ExamSchedule(
-        tenant_id=current_user.tenant_id,
-        exam_id=exam_id,
-        subject_id=data.subject_id,
-        grade_id=data.grade_id,
-        exam_date=data.exam_date,
-        start_time=dt_time.fromisoformat(data.start_time),
-        end_time=dt_time.fromisoformat(data.end_time),
-        max_marks=data.max_marks,
-        pass_marks=data.pass_marks,
-    )
-    db.add(schedule)
-    await db.commit()
+    svc = ExamService(db)
+    schedule = await svc.create_exam_schedule(exam_id, current_user.tenant_id, data)
     return {"id": str(schedule.id)}
 
 
@@ -174,30 +131,8 @@ async def enter_marks(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(ExamMark).where(
-        ExamMark.exam_schedule_id == data.exam_schedule_id,
-        ExamMark.student_id == data.student_id,
-        ExamMark.tenant_id == current_user.tenant_id,
-    )
-    result = await db.execute(stmt)
-    existing = result.scalar_one_or_none()
-
-    if existing:
-        existing.marks_obtained = data.marks_obtained
-        existing.practical_marks = data.practical_marks
-        existing.grade = data.grade
-        existing.is_absent = data.is_absent
-        existing.remarks = data.remarks
-        existing.entered_by = current_user.id
-    else:
-        mark = ExamMark(
-            tenant_id=current_user.tenant_id,
-            entered_by=current_user.id,
-            **data.model_dump(),
-        )
-        db.add(mark)
-
-    await db.commit()
+    svc = ExamService(db)
+    await svc.enter_marks(current_user.tenant_id, current_user.id, data)
     return {"status": "entered"}
 
 
@@ -207,37 +142,9 @@ async def bulk_enter_marks(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    if not data:
-        return {"entered": 0}
-
-    schedule_ids = list({e.exam_schedule_id for e in data})
-    student_ids = list({e.student_id for e in data})
-
-    existing_stmt = select(ExamMark).where(
-        ExamMark.exam_schedule_id.in_(schedule_ids),
-        ExamMark.student_id.in_(student_ids),
-        ExamMark.tenant_id == current_user.tenant_id,
-    )
-    existing_rows = (await db.execute(existing_stmt)).scalars().all()
-    existing_map = {(m.exam_schedule_id, m.student_id): m for m in existing_rows}
-
-    count = 0
-    for entry in data:
-        key = (entry.exam_schedule_id, entry.student_id)
-        existing = existing_map.get(key)
-
-        if existing:
-            existing.marks_obtained = entry.marks_obtained
-            existing.practical_marks = entry.practical_marks
-            existing.grade = entry.grade
-            existing.is_absent = entry.is_absent
-            existing.entered_by = current_user.id
-        else:
-            mark = ExamMark(tenant_id=current_user.tenant_id, entered_by=current_user.id, **entry.model_dump())
-            db.add(mark)
-        count += 1
-
-    await db.commit()
+    svc = ExamService(db)
+    entries = [e.model_dump() for e in data]
+    count = await svc.bulk_enter_marks(current_user.tenant_id, current_user.id, entries)
     return {"entered": count}
 
 
@@ -247,20 +154,8 @@ async def get_marks_for_schedule(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(ExamMark, Student).join(Student, Student.id == ExamMark.student_id).where(
-        ExamMark.exam_schedule_id == exam_schedule_id, ExamMark.tenant_id == current_user.tenant_id
-    )
-    result = await db.execute(stmt)
-    rows = result.all()
-    return [
-        {
-            "id": str(m.id), "student_id": str(m.student_id), "student_name": f"{s.first_name} {s.last_name}",
-            "marks_obtained": float(m.marks_obtained) if m.marks_obtained else None,
-            "practical_marks": float(m.practical_marks) if m.practical_marks else None,
-            "grade": m.grade, "is_absent": m.is_absent,
-        }
-        for m, s in rows
-    ]
+    svc = ExamService(db)
+    return await svc.get_marks_for_schedule(exam_schedule_id, current_user.tenant_id)
 
 
 @router.get("/grading-scales")
@@ -270,15 +165,9 @@ async def list_grading_scales(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    base = GradingScale.tenant_id == current_user.tenant_id
-    total = (await db.execute(select(func.count(GradingScale.id)).where(base))).scalar() or 0
-    stmt = select(GradingScale).where(base).offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(stmt)
-    scales = result.scalars().all()
-    return {
-        "items": [{"id": str(s.id), "name": s.name, "scale_type": s.scale_type, "is_default": s.is_default} for s in scales],
-        "total": total, "page": page, "page_size": page_size,
-    }
+    svc = ExamService(db)
+    items, total = await svc.list_grading_scales(current_user.tenant_id, page, page_size)
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/grading-scales", dependencies=[Depends(require_permissions("exam.manage"))])
@@ -287,11 +176,6 @@ async def create_grading_scale(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    scale = GradingScale(tenant_id=current_user.tenant_id, name=data["name"], scale_type=data.get("scale_type", "percentage"), is_default=data.get("is_default", False))
-    db.add(scale)
-    await db.flush()
-    for detail in data.get("details", []):
-        d = GradingScaleDetail(tenant_id=current_user.tenant_id, grading_scale_id=scale.id, **detail)
-        db.add(d)
-    await db.commit()
+    svc = ExamService(db)
+    scale = await svc.create_grading_scale(current_user.tenant_id, data)
     return {"id": str(scale.id)}
