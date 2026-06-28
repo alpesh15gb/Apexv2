@@ -3,16 +3,13 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.grade import Grade, Section, House
-from app.models.school.subject import Subject, GradeSubject, TeacherAllocation
-from app.models.school.student import Student
+from app.services.school.grade_section_service import GradeSectionService
 
 router = APIRouter(dependencies=[Depends(require_feature("class_management")), Depends(require_permissions("school.settings"))])
 
@@ -58,10 +55,8 @@ async def list_grades(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Grade).where(Grade.tenant_id == current_user.tenant_id, Grade.is_active == True).order_by(Grade.sort_order)
-    result = await db.execute(stmt)
-    grades = result.scalars().all()
-    return [{"id": str(g.id), "name": g.name, "code": g.code, "sort_order": g.sort_order} for g in grades]
+    svc = GradeSectionService(db)
+    return await svc.list_grades(tenant_id=current_user.tenant_id)
 
 
 @router.post("/grades")
@@ -70,9 +65,8 @@ async def create_grade(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    grade = Grade(tenant_id=current_user.tenant_id, name=data.name, code=data.code, sort_order=data.sort_order)
-    db.add(grade)
-    await db.commit()
+    svc = GradeSectionService(db)
+    grade = await svc.create_grade(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(grade.id)}
 
 
@@ -83,13 +77,8 @@ async def update_grade(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    grade = await db.get(Grade, grade_id)
-    if not grade or grade.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Grade not found")
-    grade.name = data.name
-    grade.code = data.code
-    grade.sort_order = data.sort_order
-    await db.commit()
+    svc = GradeSectionService(db)
+    grade = await svc.update_grade(grade_id=grade_id, tenant_id=current_user.tenant_id, data=data)
     return {"id": str(grade.id)}
 
 
@@ -102,12 +91,8 @@ async def list_sections(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Section).where(Section.grade_id == grade_id, Section.tenant_id == current_user.tenant_id, Section.is_active == True)
-    if academic_year_id:
-        stmt = stmt.where(Section.academic_year_id == academic_year_id)
-    result = await db.execute(stmt)
-    sections = result.scalars().all()
-    return [{"id": str(s.id), "name": s.name, "capacity": s.capacity, "class_teacher_id": str(s.class_teacher_id) if s.class_teacher_id else None} for s in sections]
+    svc = GradeSectionService(db)
+    return await svc.list_sections(grade_id=grade_id, tenant_id=current_user.tenant_id, academic_year_id=academic_year_id)
 
 
 @router.post("/grades/{grade_id}/sections")
@@ -117,17 +102,8 @@ async def create_section(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    section = Section(
-        tenant_id=current_user.tenant_id,
-        grade_id=grade_id,
-        name=data.name,
-        capacity=data.capacity,
-        room_id=data.room_id,
-        class_teacher_id=data.class_teacher_id,
-        academic_year_id=data.academic_year_id,
-    )
-    db.add(section)
-    await db.commit()
+    svc = GradeSectionService(db)
+    section = await svc.create_section(grade_id=grade_id, tenant_id=current_user.tenant_id, data=data)
     return {"id": str(section.id)}
 
 
@@ -137,20 +113,8 @@ async def list_section_students(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Student).where(
-        Student.current_section_id == section_id,
-        Student.tenant_id == current_user.tenant_id,
-        Student.is_active == True,
-    ).order_by(Student.roll_number, Student.first_name)
-    result = await db.execute(stmt)
-    students = result.scalars().all()
-    return [
-        {
-            "id": str(s.id), "admission_number": s.admission_number, "roll_number": s.roll_number,
-            "first_name": s.first_name, "last_name": s.last_name, "gender": s.gender, "status": s.status,
-        }
-        for s in students
-    ]
+    svc = GradeSectionService(db)
+    return await svc.list_section_students(section_id=section_id, tenant_id=current_user.tenant_id)
 
 
 # ── Subjects ────────────────────────────────────────
@@ -163,10 +127,8 @@ async def list_subjects(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Subject).where(Subject.tenant_id == current_user.tenant_id, Subject.is_active == True)
-    result = await db.execute(stmt)
-    subjects = result.scalars().all()
-    return [{"id": str(s.id), "name": s.name, "code": s.code, "subject_type": s.subject_type, "max_marks": s.max_marks} for s in subjects]
+    svc = GradeSectionService(db)
+    return await svc.list_subjects(tenant_id=current_user.tenant_id)
 
 
 @subjects_router.post("/subjects")
@@ -175,9 +137,8 @@ async def create_subject(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    subject = Subject(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(subject)
-    await db.commit()
+    svc = GradeSectionService(db)
+    subject = await svc.create_subject(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(subject.id)}
 
 
@@ -188,12 +149,8 @@ async def update_subject(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    subject = await db.get(Subject, subject_id)
-    if not subject or subject.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Subject not found")
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(subject, field, value)
-    await db.commit()
+    svc = GradeSectionService(db)
+    subject = await svc.update_subject(subject_id=subject_id, tenant_id=current_user.tenant_id, data=data)
     return {"id": str(subject.id)}
 
 
@@ -204,14 +161,8 @@ async def list_grade_subjects(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(GradeSubject, Subject).join(Subject, Subject.id == GradeSubject.subject_id).where(
-        GradeSubject.grade_id == grade_id, GradeSubject.tenant_id == current_user.tenant_id
-    )
-    if academic_year_id:
-        stmt = stmt.where(GradeSubject.academic_year_id == academic_year_id)
-    result = await db.execute(stmt)
-    rows = result.all()
-    return [{"id": str(gs.id), "subject_id": str(gs.subject_id), "subject_name": s.name, "subject_code": s.code, "is_compulsory": gs.is_compulsory} for gs, s in rows]
+    svc = GradeSectionService(db)
+    return await svc.list_grade_subjects(grade_id=grade_id, tenant_id=current_user.tenant_id, academic_year_id=academic_year_id)
 
 
 @subjects_router.post("/grades/{grade_id}/subjects")
@@ -221,18 +172,14 @@ async def assign_subjects_to_grade(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    subject_ids = data.get("subject_ids", [])
-    academic_year_id = data.get("academic_year_id")
-    for sid in subject_ids:
-        gs = GradeSubject(
-            tenant_id=current_user.tenant_id,
-            grade_id=grade_id,
-            subject_id=sid,
-            academic_year_id=academic_year_id,
-        )
-        db.add(gs)
-    await db.commit()
-    return {"assigned": len(subject_ids)}
+    svc = GradeSectionService(db)
+    count = await svc.assign_subjects_to_grade(
+        grade_id=grade_id,
+        tenant_id=current_user.tenant_id,
+        subject_ids=data.get("subject_ids", []),
+        academic_year_id=data.get("academic_year_id"),
+    )
+    return {"assigned": count}
 
 
 # ── Teacher Allocation ──────────────────────────────
@@ -248,23 +195,13 @@ async def list_teacher_allocations(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(TeacherAllocation).where(TeacherAllocation.tenant_id == current_user.tenant_id)
-    if section_id:
-        stmt = stmt.where(TeacherAllocation.section_id == section_id)
-    if employee_id:
-        stmt = stmt.where(TeacherAllocation.employee_id == employee_id)
-    if academic_year_id:
-        stmt = stmt.where(TeacherAllocation.academic_year_id == academic_year_id)
-    result = await db.execute(stmt)
-    allocs = result.scalars().all()
-    return [
-        {
-            "id": str(a.id), "employee_id": str(a.employee_id), "subject_id": str(a.subject_id),
-            "section_id": str(a.section_id), "academic_year_id": str(a.academic_year_id),
-            "periods_per_week": a.periods_per_week,
-        }
-        for a in allocs
-    ]
+    svc = GradeSectionService(db)
+    return await svc.list_teacher_allocations(
+        tenant_id=current_user.tenant_id,
+        section_id=section_id,
+        employee_id=employee_id,
+        academic_year_id=academic_year_id,
+    )
 
 
 @alloc_router.post("/teacher-allocations")
@@ -273,7 +210,6 @@ async def create_teacher_allocation(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    alloc = TeacherAllocation(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(alloc)
-    await db.commit()
+    svc = GradeSectionService(db)
+    alloc = await svc.create_teacher_allocation(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(alloc.id)}

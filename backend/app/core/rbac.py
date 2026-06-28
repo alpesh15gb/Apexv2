@@ -28,13 +28,13 @@ async def get_user_permissions(db: AsyncSession, user_id: uuid.UUID) -> set[str]
 async def user_has_permission(db: AsyncSession, user_id: uuid.UUID, codename: str) -> bool:
     """Check if user has a specific permission."""
     perms = await get_user_permissions(db, user_id)
-    return codename in perms or "super_admin" in perms
+    return codename in perms or "*" in perms
 
 
 async def user_has_all_permissions(db: AsyncSession, user_id: uuid.UUID, codenames: list[str]) -> bool:
     """Check if user has ALL listed permissions."""
     perms = await get_user_permissions(db, user_id)
-    if "super_admin" in perms:
+    if "*" in perms:
         return True
     return all(c in perms for c in codenames)
 
@@ -66,11 +66,15 @@ async def create_default_roles(db: AsyncSession, tenant_id: uuid.UUID) -> list:
             "codename": "hr_admin",
             "permissions": [
                 "employee.create", "employee.read", "employee.update", "employee.delete",
-                "attendance.read", "attendance.manage",
-                "leave.approve", "leave.read",
-                "shift.manage", "shift.read",
-                "report.read",
-                "visitor.manage", "visitor.read",
+                "attendance.create", "attendance.read", "attendance.update",
+                "attendance.delete", "attendance.approve", "attendance.manage",
+                "leave.create", "leave.read", "leave.update",
+                "leave.delete", "leave.approve",
+                "shift.create", "shift.read", "shift.update",
+                "shift.delete", "shift.manage",
+                "report.create", "report.read", "report.update", "report.delete",
+                "visitor.create", "visitor.read", "visitor.update",
+                "visitor.delete", "visitor.manage",
             ],
         },
         {
@@ -79,7 +83,7 @@ async def create_default_roles(db: AsyncSession, tenant_id: uuid.UUID) -> list:
             "permissions": [
                 "employee.read",
                 "attendance.read", "attendance.approve",
-                "leave.approve", "leave.read",
+                "leave.read", "leave.approve",
                 "report.read",
                 "visitor.read",
             ],
@@ -91,6 +95,7 @@ async def create_default_roles(db: AsyncSession, tenant_id: uuid.UUID) -> list:
                 "attendance.read_own",
                 "leave.apply", "leave.read_own",
                 "visitor.create",
+                "ess.read",
             ],
         },
     ]

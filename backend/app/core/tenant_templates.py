@@ -84,33 +84,173 @@ async def create_school_default_roles(db: AsyncSession, tenant_id):
     from app.core.rbac import create_default_roles
     await create_default_roles(db, tenant_id)
 
-    # Add school-specific roles
     from app.models.role import Role, Permission, RolePermission
 
-    school_roles = [
-        {"name": "Principal", "codename": "principal", "description": "School principal with full academic access"},
-        {"name": "Vice Principal", "codename": "vice_principal", "description": "Vice principal with academic management"},
-        {"name": "Academic Coordinator", "codename": "academic_coordinator", "description": "Manages academics across grades"},
-        {"name": "Class Teacher", "codename": "class_teacher", "description": "Teacher assigned to a specific class"},
-        {"name": "Subject Teacher", "codename": "subject_teacher", "description": "Teacher for specific subjects"},
-        {"name": "Accountant", "codename": "school_accountant", "description": "Manages fees and finances"},
-        {"name": "Librarian", "codename": "librarian", "description": "Manages library operations"},
-        {"name": "Transport Manager", "codename": "transport_manager", "description": "Manages school transport"},
-        {"name": "Hostel Warden", "codename": "hostel_warden", "description": "Manages hostel operations"},
-        {"name": "Receptionist", "codename": "receptionist", "description": "Front desk and visitor management"},
-        {"name": "Parent", "codename": "parent", "description": "Parent portal access"},
-        {"name": "Student", "codename": "student", "description": "Student portal access"},
+    ALL_SCHOOL_PERMS = [
+        "student.create", "student.read", "student.update", "student.delete",
+        "attendance.create", "attendance.read", "attendance.mark", "attendance.update",
+        "exam.create", "exam.read", "exam.update", "exam.manage",
+        "report.create", "report.read", "report.update",
+        "class.create", "class.read", "class.update", "class.manage",
+        "subject.create", "subject.read", "subject.update", "subject.manage",
+        "timetable.create", "timetable.read", "timetable.update", "timetable.manage",
+        "homework.create", "homework.read", "homework.update", "homework.delete",
+        "marks.create", "marks.read", "marks.update", "marks.enter",
+        "fee.create", "fee.read", "fee.update", "fee.manage", "fee.collect",
+        "payroll.read",
+        "library.create", "library.read", "library.update", "library.manage",
+        "transport.create", "transport.read", "transport.update", "transport.manage",
+        "hostel.create", "hostel.read", "hostel.update", "hostel.manage",
+        "visitor.create", "visitor.read",
+        "ess.read",
     ]
+
+    school_roles = [
+        {
+            "name": "Principal",
+            "codename": "principal",
+            "description": "School principal with full academic access",
+            "permissions": ALL_SCHOOL_PERMS,
+        },
+        {
+            "name": "Vice Principal",
+            "codename": "vice_principal",
+            "description": "Vice principal with academic management",
+            "permissions": [
+                "student.read", "attendance.read", "exam.read", "report.read",
+            ],
+        },
+        {
+            "name": "Academic Coordinator",
+            "codename": "academic_coordinator",
+            "description": "Manages academics across grades",
+            "permissions": [
+                "class.manage", "subject.manage", "timetable.manage",
+            ],
+        },
+        {
+            "name": "Class Teacher",
+            "codename": "class_teacher",
+            "description": "Teacher assigned to a specific class",
+            "permissions": [
+                "student.read", "attendance.mark", "attendance.read",
+                "homework.create", "homework.read",
+            ],
+        },
+        {
+            "name": "Subject Teacher",
+            "codename": "subject_teacher",
+            "description": "Teacher for specific subjects",
+            "permissions": [
+                "homework.create", "homework.read", "marks.enter", "marks.read",
+            ],
+        },
+        {
+            "name": "Accountant",
+            "codename": "school_accountant",
+            "description": "Manages fees and finances",
+            "permissions": [
+                "fee.manage", "fee.collect", "fee.read", "payroll.read",
+            ],
+        },
+        {
+            "name": "Librarian",
+            "codename": "librarian",
+            "description": "Manages library operations",
+            "permissions": [
+                "library.manage",
+            ],
+        },
+        {
+            "name": "Transport Manager",
+            "codename": "transport_manager",
+            "description": "Manages school transport",
+            "permissions": [
+                "transport.manage",
+            ],
+        },
+        {
+            "name": "Hostel Warden",
+            "codename": "hostel_warden",
+            "description": "Manages hostel operations",
+            "permissions": [
+                "hostel.manage",
+            ],
+        },
+        {
+            "name": "Receptionist",
+            "codename": "receptionist",
+            "description": "Front desk and visitor management",
+            "permissions": [
+                "visitor.create", "visitor.read",
+            ],
+        },
+        {
+            "name": "Parent",
+            "codename": "parent",
+            "description": "Parent portal access",
+            "permissions": [
+                "student.read_own", "attendance.read_own", "fee.read_own",
+            ],
+        },
+        {
+            "name": "Student",
+            "codename": "student",
+            "description": "Student portal access",
+            "permissions": [
+                "homework.read", "exam.read", "attendance.read_own",
+            ],
+        },
+    ]
+
+    all_perm_codenames = set()
+    for role_def in school_roles:
+        all_perm_codenames.update(role_def["permissions"])
+
+    existing_perms_stmt = select(Permission.codename).where(
+        Permission.tenant_id == tenant_id,
+        Permission.codename.in_(all_perm_codenames),
+    )
+    existing_codenames = set((await db.execute(existing_perms_stmt)).scalars().all())
+
+    perm_map = {}
+    for codename in all_perm_codenames:
+        if codename in existing_codenames:
+            existing_perm = (await db.execute(
+                select(Permission).where(Permission.tenant_id == tenant_id, Permission.codename == codename)
+            )).scalar_one()
+            perm_map[codename] = existing_perm
+        else:
+            module = codename.split(".")[0] if "." in codename else "system"
+            perm = Permission(
+                tenant_id=tenant_id,
+                name=codename.replace("_", " ").replace(".", " ").title(),
+                codename=codename,
+                module=module,
+            )
+            db.add(perm)
+            perm_map[codename] = perm
+
+    await db.flush()
 
     for role_def in school_roles:
         existing = await db.execute(select(Role).where(Role.tenant_id == tenant_id, Role.codename == role_def["codename"]))
-        if not existing.scalar_one_or_none():
-            db.add(Role(
-                tenant_id=tenant_id,
-                name=role_def["name"],
-                codename=role_def["codename"],
-                description=role_def["description"],
-                is_system=False,
-            ))
+        if existing.scalar_one_or_none():
+            continue
+
+        role = Role(
+            tenant_id=tenant_id,
+            name=role_def["name"],
+            codename=role_def["codename"],
+            description=role_def["description"],
+            is_system=False,
+        )
+        db.add(role)
+        await db.flush()
+
+        for perm_codename in role_def["permissions"]:
+            if perm_codename in perm_map:
+                rp = RolePermission(role_id=role.id, permission_id=perm_map[perm_codename].id, tenant_id=tenant_id)
+                db.add(rp)
 
     await db.flush()

@@ -4,15 +4,13 @@ import uuid
 from typing import Optional
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.medical import HealthRecord, DisciplineIncident
-from app.models.school.student import Student
+from app.services.school.medical_service import MedicalService
 
 router = APIRouter(dependencies=[Depends(require_permissions("medical.manage"))])
 
@@ -47,13 +45,8 @@ async def get_health_records(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(HealthRecord).where(HealthRecord.student_id == student_id, HealthRecord.tenant_id == current_user.tenant_id).order_by(HealthRecord.date.desc())
-    result = await db.execute(stmt)
-    records = result.scalars().all()
-    return [
-        {"id": str(r.id), "record_type": r.record_type, "date": str(r.date), "description": r.description, "doctor_name": r.doctor_name, "medication": r.medication}
-        for r in records
-    ]
+    svc = MedicalService(db)
+    return await svc.get_health_records(student_id=student_id, tenant_id=current_user.tenant_id)
 
 
 @medical_router.post("/")
@@ -62,9 +55,12 @@ async def create_health_record(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    record = HealthRecord(tenant_id=current_user.tenant_id, recorded_by=current_user.id, **data.model_dump())
-    db.add(record)
-    await db.commit()
+    svc = MedicalService(db)
+    record = await svc.create_health_record(
+        tenant_id=current_user.tenant_id,
+        recorded_by=current_user.id,
+        data=data,
+    )
     return {"id": str(record.id)}
 
 
@@ -80,24 +76,12 @@ async def list_incidents(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(DisciplineIncident, Student).join(Student, Student.id == DisciplineIncident.student_id).where(
-        DisciplineIncident.tenant_id == current_user.tenant_id
+    svc = MedicalService(db)
+    return await svc.list_incidents(
+        tenant_id=current_user.tenant_id,
+        student_id=student_id,
+        incident_status=status,
     )
-    if student_id:
-        stmt = stmt.where(DisciplineIncident.student_id == student_id)
-    if status:
-        stmt = stmt.where(DisciplineIncident.status == status)
-    stmt = stmt.order_by(DisciplineIncident.incident_date.desc())
-    result = await db.execute(stmt)
-    rows = result.all()
-    return [
-        {
-            "id": str(d.id), "student_name": f"{s.first_name} {s.last_name}", "incident_date": str(d.incident_date),
-            "incident_type": d.incident_type, "severity": d.severity, "description": d.description,
-            "action_taken": d.action_taken, "status": d.status,
-        }
-        for d, s in rows
-    ]
 
 
 @discipline_router.post("/")
@@ -106,9 +90,12 @@ async def create_incident(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    incident = DisciplineIncident(tenant_id=current_user.tenant_id, reported_by=current_user.id, status="open", **data.model_dump())
-    db.add(incident)
-    await db.commit()
+    svc = MedicalService(db)
+    incident = await svc.create_incident(
+        tenant_id=current_user.tenant_id,
+        reported_by=current_user.id,
+        data=data,
+    )
     return {"id": str(incident.id)}
 
 
@@ -119,11 +106,11 @@ async def resolve_incident(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    incident = await db.get(DisciplineIncident, incident_id)
-    if not incident or incident.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Incident not found")
-    incident.resolution = data.get("resolution")
-    incident.status = "resolved"
-    incident.resolved_by = current_user.id
-    await db.commit()
+    svc = MedicalService(db)
+    incident = await svc.resolve_incident(
+        incident_id=incident_id,
+        tenant_id=current_user.tenant_id,
+        resolved_by=current_user.id,
+        resolution=data.get("resolution"),
+    )
     return {"id": str(incident.id)}

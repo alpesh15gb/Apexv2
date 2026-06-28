@@ -4,15 +4,13 @@ import uuid
 from typing import Optional
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.hostel import Hostel, HostelRoom, HostelAllocation
-from app.models.school.student import Student
+from app.services.school.hostel_service import HostelService
 
 router = APIRouter(dependencies=[Depends(require_feature("school_hostel")), Depends(require_permissions("hostel.manage"))])
 
@@ -46,10 +44,8 @@ async def list_hostels(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Hostel).where(Hostel.tenant_id == current_user.tenant_id, Hostel.is_active == True)
-    result = await db.execute(stmt)
-    hostels = result.scalars().all()
-    return [{"id": str(h.id), "name": h.name, "hostel_type": h.hostel_type, "capacity": h.capacity} for h in hostels]
+    svc = HostelService(db)
+    return await svc.list_hostels(tenant_id=current_user.tenant_id)
 
 
 @router.post("/")
@@ -58,9 +54,8 @@ async def create_hostel(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    hostel = Hostel(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(hostel)
-    await db.commit()
+    svc = HostelService(db)
+    hostel = await svc.create_hostel(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(hostel.id)}
 
 
@@ -70,10 +65,8 @@ async def list_rooms(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(HostelRoom).where(HostelRoom.hostel_id == hostel_id, HostelRoom.tenant_id == current_user.tenant_id, HostelRoom.is_active == True)
-    result = await db.execute(stmt)
-    rooms = result.scalars().all()
-    return [{"id": str(r.id), "room_number": r.room_number, "floor": r.floor, "room_type": r.room_type, "capacity": r.capacity} for r in rooms]
+    svc = HostelService(db)
+    return await svc.list_rooms(hostel_id=hostel_id, tenant_id=current_user.tenant_id)
 
 
 @router.post("/{hostel_id}/rooms")
@@ -83,9 +76,8 @@ async def create_room(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    room = HostelRoom(tenant_id=current_user.tenant_id, hostel_id=hostel_id, **data.model_dump())
-    db.add(room)
-    await db.commit()
+    svc = HostelService(db)
+    room = await svc.create_room(hostel_id=hostel_id, tenant_id=current_user.tenant_id, data=data)
     return {"id": str(room.id)}
 
 
@@ -95,15 +87,8 @@ async def allocate_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    allocation = HostelAllocation(tenant_id=current_user.tenant_id, status="active", **data.model_dump())
-    db.add(allocation)
-    student = await db.execute(
-        select(Student).where(Student.id == data.student_id, Student.tenant_id == current_user.tenant_id)
-    )
-    student = student.scalar_one_or_none()
-    if student:
-        student.hostel_room_id = data.room_id
-    await db.commit()
+    svc = HostelService(db)
+    allocation = await svc.allocate_student(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(allocation.id)}
 
 
@@ -113,14 +98,5 @@ async def list_allocations(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(HostelAllocation, Student).join(Student, Student.id == HostelAllocation.student_id).where(
-        HostelAllocation.tenant_id == current_user.tenant_id, HostelAllocation.status == "active"
-    )
-    if hostel_id:
-        stmt = stmt.where(HostelAllocation.hostel_id == hostel_id)
-    result = await db.execute(stmt)
-    rows = result.all()
-    return [
-        {"id": str(a.id), "student_name": f"{s.first_name} {s.last_name}", "hostel_id": str(a.hostel_id), "room_id": str(a.room_id), "bed_number": a.bed_number}
-        for a, s in rows
-    ]
+    svc = HostelService(db)
+    return await svc.list_allocations(tenant_id=current_user.tenant_id, hostel_id=hostel_id)

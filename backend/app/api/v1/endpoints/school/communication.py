@@ -4,14 +4,13 @@ import uuid
 from typing import Optional, List
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.communication import SchoolEvent, Circular
+from app.services.school.communication_service import CommunicationService
 
 router = APIRouter(dependencies=[Depends(require_permissions("circular.publish"))])
 
@@ -44,13 +43,8 @@ async def list_circulars(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Circular).where(Circular.tenant_id == current_user.tenant_id, Circular.is_active == True).order_by(Circular.created_at.desc())
-    result = await db.execute(stmt)
-    circulars = result.scalars().all()
-    return [
-        {"id": str(c.id), "title": c.title, "content": c.content, "circular_type": c.circular_type, "published_at": c.published_at.isoformat() if c.published_at else None}
-        for c in circulars
-    ]
+    svc = CommunicationService(db)
+    return await svc.list_circulars(tenant_id=current_user.tenant_id)
 
 
 @circular_router.post("/")
@@ -59,15 +53,12 @@ async def create_circular(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    from datetime import timezone
-    circular = Circular(
+    svc = CommunicationService(db)
+    circular = await svc.create_circular(
         tenant_id=current_user.tenant_id,
         published_by=current_user.id,
-        published_at=datetime.now(timezone.utc),
-        **data.model_dump(),
+        data=data,
     )
-    db.add(circular)
-    await db.commit()
     return {"id": str(circular.id)}
 
 
@@ -81,13 +72,8 @@ async def list_events(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(SchoolEvent).where(SchoolEvent.tenant_id == current_user.tenant_id).order_by(SchoolEvent.start_date.desc())
-    result = await db.execute(stmt)
-    events = result.scalars().all()
-    return [
-        {"id": str(e.id), "title": e.title, "event_type": e.event_type, "start_date": e.start_date.isoformat(), "end_date": e.end_date.isoformat() if e.end_date else None, "venue": e.venue}
-        for e in events
-    ]
+    svc = CommunicationService(db)
+    return await svc.list_events(tenant_id=current_user.tenant_id)
 
 
 @event_router.post("/")
@@ -96,11 +82,10 @@ async def create_event(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    event = SchoolEvent(
+    svc = CommunicationService(db)
+    event = await svc.create_event(
         tenant_id=current_user.tenant_id,
         organizer_id=current_user.id,
-        **data.model_dump(),
+        data=data,
     )
-    db.add(event)
-    await db.commit()
     return {"id": str(event.id)}

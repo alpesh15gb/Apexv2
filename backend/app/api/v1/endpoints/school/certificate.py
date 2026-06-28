@@ -1,20 +1,16 @@
 """Certificate endpoints."""
 
 import uuid
-import random
-import string
 from typing import Optional
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.certificate import CertificateTemplate, IssuedCertificate
-from app.models.school.student import Student
+from app.services.school.certificate_service import CertificateService
 
 router = APIRouter(dependencies=[Depends(require_feature("school_certificates")), Depends(require_permissions("certificate.issue"))])
 
@@ -39,12 +35,8 @@ async def list_templates(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(CertificateTemplate).where(CertificateTemplate.tenant_id == current_user.tenant_id, CertificateTemplate.is_active == True)
-    if template_type:
-        stmt = stmt.where(CertificateTemplate.template_type == template_type)
-    result = await db.execute(stmt)
-    templates = result.scalars().all()
-    return [{"id": str(t.id), "name": t.name, "template_type": t.template_type, "is_default": t.is_default} for t in templates]
+    svc = CertificateService(db)
+    return await svc.list_templates(tenant_id=current_user.tenant_id, template_type=template_type)
 
 
 @router.post("/templates")
@@ -53,9 +45,8 @@ async def create_template(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    template = CertificateTemplate(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(template)
-    await db.commit()
+    svc = CertificateService(db)
+    template = await svc.create_template(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(template.id)}
 
 
@@ -65,21 +56,13 @@ async def issue_certificate(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    student = await db.get(Student, data.student_id)
-    if not student or student.tenant_id != current_user.tenant_id:
-        raise HTTPException(status_code=404, detail="Student not found")
-
-    cert_number = f"CERT-{date.today().strftime('%Y%m%d')}-{''.join(random.choices(string.digits, k=4))}"
-
-    certificate = IssuedCertificate(
+    svc = CertificateService(db)
+    certificate = await svc.issue_certificate(
         tenant_id=current_user.tenant_id,
-        certificate_number=cert_number,
         issued_by=current_user.id,
-        **data.model_dump(),
+        data=data,
     )
-    db.add(certificate)
-    await db.commit()
-    return {"id": str(certificate.id), "certificate_number": cert_number}
+    return {"id": str(certificate.id), "certificate_number": certificate.certificate_number}
 
 
 @router.get("/student/{student_id}")
@@ -88,14 +71,5 @@ async def list_student_certificates(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(IssuedCertificate, CertificateTemplate).join(
-        CertificateTemplate, CertificateTemplate.id == IssuedCertificate.template_id
-    ).where(
-        IssuedCertificate.student_id == student_id, IssuedCertificate.tenant_id == current_user.tenant_id
-    )
-    result = await db.execute(stmt)
-    rows = result.all()
-    return [
-        {"id": str(c.id), "certificate_number": c.certificate_number, "template_name": t.name, "template_type": t.template_type, "issue_date": str(c.issue_date), "purpose": c.purpose}
-        for c, t in rows
-    ]
+    svc = CertificateService(db)
+    return await svc.list_student_certificates(student_id=student_id, tenant_id=current_user.tenant_id)

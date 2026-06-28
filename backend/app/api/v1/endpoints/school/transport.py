@@ -4,15 +4,13 @@ import uuid
 from typing import Optional, List
 from datetime import time
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
-from app.models.school.transport import TransportRoute, TransportStop, StudentTransport
-from app.models.school.student import Student
+from app.services.school.transport_service import TransportService
 
 router = APIRouter(dependencies=[Depends(require_feature("school_transport")), Depends(require_permissions("transport.manage"))])
 
@@ -47,10 +45,8 @@ async def list_routes(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(TransportRoute).where(TransportRoute.tenant_id == current_user.tenant_id, TransportRoute.is_active == True)
-    result = await db.execute(stmt)
-    routes = result.scalars().all()
-    return [{"id": str(r.id), "name": r.name, "code": r.code, "vehicle_number": r.vehicle_number, "vehicle_type": r.vehicle_type, "capacity": r.capacity} for r in routes]
+    svc = TransportService(db)
+    return await svc.list_routes(tenant_id=current_user.tenant_id)
 
 
 @router.post("/routes")
@@ -59,9 +55,8 @@ async def create_route(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    route = TransportRoute(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(route)
-    await db.commit()
+    svc = TransportService(db)
+    route = await svc.create_route(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(route.id)}
 
 
@@ -71,10 +66,8 @@ async def list_stops(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(TransportStop).where(TransportStop.route_id == route_id, TransportStop.tenant_id == current_user.tenant_id).order_by(TransportStop.sequence)
-    result = await db.execute(stmt)
-    stops = result.scalars().all()
-    return [{"id": str(s.id), "name": s.name, "sequence": s.sequence, "pickup_time": str(s.pickup_time) if s.pickup_time else None, "drop_time": str(s.drop_time) if s.drop_time else None} for s in stops]
+    svc = TransportService(db)
+    return await svc.list_stops(route_id=route_id, tenant_id=current_user.tenant_id)
 
 
 @router.post("/routes/{route_id}/stops")
@@ -84,16 +77,8 @@ async def create_stop(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stop = TransportStop(
-        tenant_id=current_user.tenant_id,
-        route_id=route_id,
-        name=data.name,
-        sequence=data.sequence,
-        pickup_time=time.fromisoformat(data.pickup_time) if data.pickup_time else None,
-        drop_time=time.fromisoformat(data.drop_time) if data.drop_time else None,
-    )
-    db.add(stop)
-    await db.commit()
+    svc = TransportService(db)
+    stop = await svc.create_stop(route_id=route_id, tenant_id=current_user.tenant_id, data=data)
     return {"id": str(stop.id)}
 
 
@@ -103,15 +88,8 @@ async def assign_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    assignment = StudentTransport(tenant_id=current_user.tenant_id, **data.model_dump())
-    db.add(assignment)
-    student = await db.execute(
-        select(Student).where(Student.id == data.student_id, Student.tenant_id == current_user.tenant_id)
-    )
-    student = student.scalar_one_or_none()
-    if student:
-        student.transport_route_id = data.route_id
-    await db.commit()
+    svc = TransportService(db)
+    assignment = await svc.assign_student(tenant_id=current_user.tenant_id, data=data)
     return {"id": str(assignment.id)}
 
 
@@ -121,20 +99,5 @@ async def get_student_transport(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(StudentTransport, TransportRoute, TransportStop).join(
-        TransportRoute, TransportRoute.id == StudentTransport.route_id
-    ).outerjoin(
-        TransportStop, TransportStop.id == StudentTransport.stop_id
-    ).where(
-        StudentTransport.student_id == student_id, StudentTransport.tenant_id == current_user.tenant_id, StudentTransport.is_active == True
-    )
-    result = await db.execute(stmt)
-    row = result.first()
-    if not row:
-        return None
-    st, route, stop = row
-    return {
-        "id": str(st.id), "route_name": route.name, "vehicle_number": route.vehicle_number,
-        "stop_name": stop.name if stop else None, "pickup_time": str(stop.pickup_time) if stop and stop.pickup_time else None,
-        "fee_amount": float(st.fee_amount), "pickup_type": st.pickup_type,
-    }
+    svc = TransportService(db)
+    return await svc.get_student_transport(student_id=student_id, tenant_id=current_user.tenant_id)
