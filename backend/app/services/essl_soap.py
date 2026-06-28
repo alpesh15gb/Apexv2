@@ -198,22 +198,22 @@ class ESSLSoapService:
 
     async def get_device_logs(self, device_id: str, from_date: Any, to_date: Any) -> Dict[str, Any]:
         """
-        Retrieves device logs using date range.
+        Retrieves device logs using date range via GetDeviceLogs API.
         """
         try:
             from_str = from_date.strftime("%Y-%m-%d") if isinstance(from_date, (datetime, date)) else str(from_date)
             to_str = to_date.strftime("%Y-%m-%d") if isinstance(to_date, (datetime, date)) else str(to_date)
 
             raw = await self._execute_soap_call(
-                "DeviceCommand_GetDeviceLogs",
+                "GetDeviceLogs",
                 {
                     "DeviceSerialNumber": device_id,
-                    "varFromDate": from_str,
-                    "varToDate": to_str
+                    "FromDate": from_str,
+                    "ToDate": to_str
                 }
             )
             parsed = self._xml_to_dict_or_list(raw)
-            success, data, error = self._evaluate_success("DeviceCommand_GetDeviceLogs", parsed)
+            success, data, error = self._evaluate_success("GetDeviceLogs", parsed)
             return {"success": success, "data": data, "error": error}
         except CircuitBreakerError as e:
             logger.error("Circuit breaker open for get_device_logs", error=str(e))
