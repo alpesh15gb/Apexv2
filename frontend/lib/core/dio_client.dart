@@ -35,6 +35,26 @@ final dioProvider = Provider<Dio>((ref) {
         return handler.next(options);
       },
       onError: (DioException error, handler) async {
+        // Extract meaningful error message from response body
+        if (error.response?.statusCode != null && error.response?.data != null) {
+          final data = error.response!.data;
+          String message;
+          if (data is Map) {
+            message = data['detail'] ?? data['message'] ?? data['error'] ?? 'Request failed (${error.response!.statusCode})';
+          } else if (data is String) {
+            message = data;
+          } else {
+            message = 'Request failed (${error.response!.statusCode})';
+          }
+          return handler.reject(DioException(
+            requestOptions: error.requestOptions,
+            response: error.response,
+            type: error.type,
+            message: message,
+            error: message,
+          ));
+        }
+
         if (error.type == DioExceptionType.unknown && 
             error.error != null && 
             error.error.toString().contains('SystemLiteral')) {
