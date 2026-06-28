@@ -18,6 +18,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       final token = await secureStorage.read(StorageKeys.accessToken);
       if (token != null && token.isNotEmpty) {
         final user = await _authService.getMe();
+        if (user.isSuperuser) {
+          await secureStorage.write('is_admin', 'true');
+        } else {
+          await secureStorage.delete('is_admin');
+        }
         state = AsyncValue.data(user);
       } else {
         state = const AsyncValue.data(null);
@@ -39,9 +44,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
       await secureStorage.write(StorageKeys.accessToken, accessToken);
       await secureStorage.write(StorageKeys.refreshToken, refreshToken);
-      await secureStorage.delete('is_admin');
 
       final user = await _authService.getMe();
+      if (user.isSuperuser) {
+        await secureStorage.write('is_admin', 'true');
+      } else {
+        await secureStorage.delete('is_admin');
+      }
       state = AsyncValue.data(user);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

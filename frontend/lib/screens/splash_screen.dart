@@ -26,9 +26,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!mounted) return;
     try {
       final authState = ref.read(authProvider);
-      if (authState.value != null) {
-        final isAdmin = await secureStorage.read('is_admin') == 'true';
-        if (isAdmin) {
+      if (authState.isLoading) {
+        await Future.delayed(const Duration(milliseconds: 1000));
+      }
+      final user = ref.read(authProvider).value;
+      if (user != null) {
+        if (user.isSuperuser) {
           context.go('/admin/dashboard');
         } else {
           context.go('/dashboard');

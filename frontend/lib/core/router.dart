@@ -119,11 +119,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      if (loggedIn && isAdmin && (goingToLogin || goingToRegister || goingToSplash || goingToAdminLogin)) {
-        return '/admin/dashboard';
+      if (loggedIn && (goingToLogin || goingToRegister || goingToSplash || goingToAdminLogin)) {
+        if (isAdmin) {
+          return '/admin/dashboard';
+        } else {
+          return '/dashboard';
+        }
       }
 
-      if (loggedIn && !isAdmin && (goingToLogin || goingToRegister || goingToSplash)) {
+      if (loggedIn && !isAdmin && goingToAdmin && !goingToAdminLogin) {
         return '/dashboard';
       }
 
