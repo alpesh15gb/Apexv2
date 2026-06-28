@@ -29,7 +29,6 @@ class DashboardService:
     async def get_stats(self, tenant_id: uuid.UUID, target_date: Optional[date] = None) -> dict:
         """Get dashboard statistics for a tenant."""
         if target_date is None:
-            # Use the latest date with attendance data, falling back to today
             latest = await self.db.execute(
                 select(func.max(Attendance.date)).where(Attendance.tenant_id == tenant_id)
             )
@@ -42,48 +41,34 @@ class DashboardService:
             )
         )).scalar() or 0
 
-        present = (await self.db.execute(
-            select(func.count(Attendance.id)).where(
+        att_row = (await self.db.execute(
+            select(
+                func.count().filter(Attendance.status.in_(["present", "late", "early_out"])).label("present"),
+                func.count().filter(Attendance.status == "absent").label("absent"),
+                func.count().filter(Attendance.is_late == True).label("late"),
+                func.count().filter(
+                    Attendance.punch_in.isnot(None),
+                    Attendance.punch_out.is_(None),
+                ).label("missing_punches"),
+            ).where(
                 Attendance.tenant_id == tenant_id,
                 Attendance.date == target_date,
-                Attendance.status.in_(["present", "late", "early_out"]),
             )
-        )).scalar() or 0
+        )).one()
+        present, absent, late, missing_punches = att_row
 
-        absent = (await self.db.execute(
-            select(func.count(Attendance.id)).where(
-                Attendance.tenant_id == tenant_id,
-                Attendance.date == target_date,
-                Attendance.status == "absent",
-            )
-        )).scalar() or 0
-
-        late = (await self.db.execute(
-            select(func.count(Attendance.id)).where(
-                Attendance.tenant_id == tenant_id,
-                Attendance.date == target_date,
-                Attendance.is_late == True,
-            )
-        )).scalar() or 0
+        device_row = (await self.db.execute(
+            select(
+                func.count().filter(Device.status == "online").label("online"),
+                func.count().filter(Device.status == "offline").label("offline"),
+            ).where(Device.tenant_id == tenant_id)
+        )).one()
+        online_devices, offline_devices = device_row
 
         visitors_inside = (await self.db.execute(
             select(func.count(VisitorPass.id)).where(
                 VisitorPass.tenant_id == tenant_id,
                 VisitorPass.status == "checked_in",
-            )
-        )).scalar() or 0
-
-        online_devices = (await self.db.execute(
-            select(func.count(Device.id)).where(
-                Device.tenant_id == tenant_id,
-                Device.status == "online",
-            )
-        )).scalar() or 0
-
-        offline_devices = (await self.db.execute(
-            select(func.count(Device.id)).where(
-                Device.tenant_id == tenant_id,
-                Device.status == "offline",
             )
         )).scalar() or 0
 
@@ -94,18 +79,7 @@ class DashboardService:
             )
         )).scalar() or 0
 
-        # Attendance percentage
         attendance_pct = (present / total_emp * 100) if total_emp > 0 else 0.0
-
-        # Missing punches
-        missing_punches = (await self.db.execute(
-            select(func.count(Attendance.id)).where(
-                Attendance.tenant_id == tenant_id,
-                Attendance.date == target_date,
-                Attendance.punch_in.isnot(None),
-                Attendance.punch_out.is_(None),
-            )
-        )).scalar() or 0
 
         return {
             "employees_present": present,
@@ -165,7 +139,13 @@ class DashboardService:
             end_date = date(year, month + 1, 1) - timedelta(days=1)
 
         stmt = (
-            select(LeaveRequest)
+            select(
+                LeaveRequest.id,
+                LeaveRequest.employee_id,
+                LeaveRequest.start_date,
+                LeaveRequest.end_date,
+                LeaveRequest.status,
+            )
             .where(
                 LeaveRequest.tenant_id == tenant_id,
                 LeaveRequest.status == "approved",
@@ -175,24 +155,30 @@ class DashboardService:
             .order_by(LeaveRequest.start_date)
         )
         result = await self.db.execute(stmt)
-        leaves = result.scalars().all()
+        rows = result.all()
 
         return [
             {
-                "id": str(l.id),
-                "employee_id": str(l.employee_id),
-                "start_date": l.start_date.isoformat(),
-                "end_date": l.end_date.isoformat(),
-                "status": l.status,
+                "id": str(r.id),
+                "employee_id": str(r.employee_id),
+                "start_date": r.start_date.isoformat(),
+                "end_date": r.end_date.isoformat(),
+                "status": r.status,
             }
-            for l in leaves
+            for r in rows
         ]
 
     async def get_birthdays(self, tenant_id: uuid.UUID) -> List[dict]:
         """Get employees with birthdays this month."""
         today = date.today()
         stmt = (
-            select(Employee)
+            select(
+                Employee.id,
+                Employee.first_name,
+                Employee.last_name,
+                Employee.date_of_birth,
+                Employee.department_id,
+            )
             .where(
                 Employee.tenant_id == tenant_id,
                 Employee.status == "active",
@@ -204,23 +190,28 @@ class DashboardService:
             )
         )
         result = await self.db.execute(stmt)
-        employees = result.scalars().all()
+        rows = result.all()
 
         return [
             {
-                "id": str(e.id),
-                "name": f"{e.first_name} {e.last_name}",
-                "date_of_birth": e.date_of_birth.isoformat(),
-                "department": e.department_id,
+                "id": str(r.id),
+                "name": f"{r.first_name} {r.last_name}",
+                "date_of_birth": r.date_of_birth.isoformat(),
+                "department": r.department_id,
             }
-            for e in employees
+            for r in rows
         ]
 
     async def get_work_anniversaries(self, tenant_id: uuid.UUID) -> List[dict]:
         """Get employees with work anniversaries this month."""
         today = date.today()
         stmt = (
-            select(Employee)
+            select(
+                Employee.id,
+                Employee.first_name,
+                Employee.last_name,
+                Employee.joining_date,
+            )
             .where(
                 Employee.tenant_id == tenant_id,
                 Employee.status == "active",
@@ -232,16 +223,16 @@ class DashboardService:
             )
         )
         result = await self.db.execute(stmt)
-        employees = result.scalars().all()
+        rows = result.all()
 
         return [
             {
-                "id": str(e.id),
-                "name": f"{e.first_name} {e.last_name}",
-                "joining_date": e.joining_date.isoformat(),
-                "years": today.year - e.joining_date.year,
+                "id": str(r.id),
+                "name": f"{r.first_name} {r.last_name}",
+                "joining_date": r.joining_date.isoformat(),
+                "years": today.year - r.joining_date.year,
             }
-            for e in employees
+            for r in rows
         ]
 
     async def get_attendance_distribution(self, tenant_id: uuid.UUID, target_date: Optional[date] = None) -> dict:
@@ -321,27 +312,36 @@ class DashboardService:
 
     async def get_sync_health(self, tenant_id: uuid.UUID) -> dict:
         """Get eSSL sync health status."""
-        servers = (await self.db.execute(
-            select(EsslServer).where(
+        server_rows = (await self.db.execute(
+            select(EsslServer.id, EsslServer.status).where(
                 EsslServer.tenant_id == tenant_id,
                 EsslServer.is_active == True,
             )
-        )).scalars().all()
+        )).all()
 
-        total = len(servers)
-        connected = sum(1 for s in servers if s.status == "connected")
-        error = sum(1 for s in servers if s.status == "error")
+        total = len(server_rows)
+        connected = sum(1 for s in server_rows if s.status == "connected")
+        error = sum(1 for s in server_rows if s.status == "error")
+        server_ids = [s.id for s in server_rows]
 
-        # Recent sync status
-        recent_syncs = (await self.db.execute(
-            select(EsslSyncHistory)
-            .where(
-                EsslSyncHistory.essl_server_id.in_([s.id for s in servers]) if servers else False,
-                EsslSyncHistory.started_at >= datetime.now(timezone.utc) - timedelta(hours=24),
-            )
-            .order_by(EsslSyncHistory.started_at.desc())
-            .limit(5)
-        )).scalars().all()
+        recent_syncs = []
+        if server_ids:
+            recent_syncs = (await self.db.execute(
+                select(
+                    EsslSyncHistory.id,
+                    EsslSyncHistory.essl_server_id,
+                    EsslSyncHistory.sync_type,
+                    EsslSyncHistory.status,
+                    EsslSyncHistory.started_at,
+                    EsslSyncHistory.records_fetched,
+                )
+                .where(
+                    EsslSyncHistory.essl_server_id.in_(server_ids),
+                    EsslSyncHistory.started_at >= datetime.now(timezone.utc) - timedelta(hours=24),
+                )
+                .order_by(EsslSyncHistory.started_at.desc())
+                .limit(5)
+            )).all()
 
         return {
             "total_servers": total,

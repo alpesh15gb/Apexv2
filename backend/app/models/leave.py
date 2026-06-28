@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, String, Integer, Float, Boolean, Date, DateTime, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Integer, Float, Boolean, Date, DateTime, Text, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -121,3 +121,7 @@ class LeaveRequest(TenantModel):
     employee = relationship("Employee", foreign_keys=[employee_id], back_populates="leave_requests")
     approved_by_employee = relationship("Employee", foreign_keys=[approved_by], back_populates="approved_leave_requests")
     leave_type = relationship("LeaveType", back_populates="leave_requests")
+
+    __table_args__ = (
+        Index("ix_leave_requests_tenant_status_dates", "tenant_id", "status", "start_date", "end_date"),
+    )

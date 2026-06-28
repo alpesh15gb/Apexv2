@@ -151,7 +151,7 @@ class PayrollDashboardScreen extends ConsumerWidget {
             statsAsync.when(
               data: (stats) => _StatsGrid(stats: stats, isMobile: isMobile),
               loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
+              error: (e, _) => Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error)),
             ),
             const SizedBox(height: 16),
             _ActionRow(
@@ -255,7 +255,7 @@ class _StatCard extends StatelessWidget {
               child: Icon(icon, size: 16, color: color),
             ),
             const Spacer(),
-            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+            Text(value, style: ApexTypography.cardTitle.copyWith(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
           ]),
           const SizedBox(height: 8),
           Text(title, style: ApexTypography.captionMedium),
@@ -361,7 +361,7 @@ class _PayslipsTable extends StatelessWidget {
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: ApexColors.primary.withOpacity(0.1),
-                    child: Text((p['employee_name'] ?? '?')[0].toUpperCase(), style: TextStyle(fontSize: 12, color: ApexColors.primary, fontWeight: FontWeight.w700)),
+                    child: Text((p['employee_name'] ?? '?')[0].toUpperCase(), style: ApexTypography.captionMedium.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(width: 12),
                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -381,7 +381,7 @@ class _PayslipsTable extends StatelessWidget {
                   CircleAvatar(
                     radius: 14,
                     backgroundColor: ApexColors.primary.withOpacity(0.1),
-                    child: Text((p['employee_name'] ?? '?')[0].toUpperCase(), style: TextStyle(fontSize: 11, color: ApexColors.primary, fontWeight: FontWeight.w700)),
+                    child: Text((p['employee_name'] ?? '?')[0].toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(width: 8),
                     Expanded(child: Column(

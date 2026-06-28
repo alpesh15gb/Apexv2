@@ -215,7 +215,7 @@ class HolidayCalendarScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }
@@ -377,7 +377,7 @@ class _HolidayCard extends StatelessWidget {
               color: Colors.white,
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error))),
+                PopupMenuItem(value: 'delete', child: Text('Delete', style: ApexTypography.body.copyWith(color: ApexColors.error))),
               ],
               onSelected: (v) {
                 if (v == 'edit') onEdit();

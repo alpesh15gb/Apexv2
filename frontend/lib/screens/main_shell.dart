@@ -296,7 +296,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 gradient: LinearGradient(colors: [ApexColors.primary, ApexColors.primary500]),
                 borderRadius: ApexRadius.smAll,
               ),
-              child: const Center(child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12))),
+              child: Center(child: Text('A', style: ApexTypography.captionMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w800))),
             ),
             const SizedBox(width: 10),
           ],

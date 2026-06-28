@@ -157,14 +157,14 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
                           final picked = await showTimePicker(context: context, initialTime: _startTime);
                           if (picked != null) setState(() => _startTime = picked);
                         },
-                        child: InputDecorator(
+                          child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: 'Start Time',
-                            labelStyle: TextStyle(color: ApexColors.neutral500),
+                            labelStyle: ApexTypography.caption.copyWith(color: ApexColors.neutral500),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                           ),
-                          child: Text(_startTime.format(context), style: TextStyle(color: ApexColors.neutral900)),
+                          child: Text(_startTime.format(context), style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                         ),
                       ),
                     ),
@@ -175,14 +175,14 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
                           final picked = await showTimePicker(context: context, initialTime: _endTime);
                           if (picked != null) setState(() => _endTime = picked);
                         },
-                        child: InputDecorator(
+                          child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: 'End Time',
-                            labelStyle: TextStyle(color: ApexColors.neutral500),
+                            labelStyle: ApexTypography.caption.copyWith(color: ApexColors.neutral500),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                           ),
-                          child: Text(_endTime.format(context), style: TextStyle(color: ApexColors.neutral900)),
+                          child: Text(_endTime.format(context), style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                         ),
                       ),
                     ),
@@ -206,7 +206,7 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Night Shift', style: TextStyle(color: ApexColors.neutral900, fontWeight: FontWeight.w500)),
+                  title: Text('Night Shift', style: ApexTypography.body.copyWith(color: ApexColors.neutral900, fontWeight: FontWeight.w500)),
                   value: _isNightShift,
                   activeColor: ApexColors.primary,
                   onChanged: (v) => setState(() => _isNightShift = v),

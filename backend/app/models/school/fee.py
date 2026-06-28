@@ -1,6 +1,6 @@
 """Fee management models."""
 
-from sqlalchemy import Column, String, Boolean, Integer, Date, Numeric, ForeignKey, Text
+from sqlalchemy import Column, String, Boolean, Integer, Date, Numeric, ForeignKey, Text, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from app.db.base import TenantModel
@@ -39,6 +39,10 @@ class StudentFee(TenantModel):
     final_amount = Column(Numeric(12, 2), nullable=False)
     due_date = Column(Date)
     status = Column(String(20), default="pending")  # pending/partial/paid/overdue/waived
+
+    __table_args__ = (
+        Index("ix_student_fees_tenant_status", "tenant_id", "status"),
+    )
 
 
 class FeePayment(TenantModel):

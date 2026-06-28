@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, String, Boolean, Date, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Boolean, Date, DateTime, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
@@ -80,4 +80,5 @@ class VisitorPass(TenantModel):
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "pass_number", name="uq_visitor_passes_tenant_pass_number"),
+        Index("ix_visitor_passes_tenant_status", "tenant_id", "status"),
     )

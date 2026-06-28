@@ -1,6 +1,6 @@
 """Student, Guardian, and related models."""
 
-from sqlalchemy import Column, String, Boolean, Date, Integer, Text, ForeignKey
+from sqlalchemy import Column, String, Boolean, Date, Integer, Text, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.base import TenantModel
@@ -47,6 +47,11 @@ class Student(TenantModel):
     transport_route_id = Column(UUID(as_uuid=True), ForeignKey("transport_routes.id"))
     hostel_room_id = Column(UUID(as_uuid=True), ForeignKey("hostel_rooms.id"))
     is_active = Column(Boolean, default=True)
+
+    __table_args__ = (
+        Index("ix_students_tenant_active", "tenant_id", "is_active"),
+        Index("ix_students_tenant_grade_section", "tenant_id", "current_grade_id", "current_section_id"),
+    )
 
 
 class Guardian(TenantModel):

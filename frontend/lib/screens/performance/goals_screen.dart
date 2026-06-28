@@ -37,7 +37,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Goals & OKRs', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Goals & OKRs', style: ApexTypography.sectionTitle),
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showCreateGoalDialog(context),
@@ -59,7 +59,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: Text(s == 'all' ? 'All' : s[0].toUpperCase() + s.substring(1), style: TextStyle(fontSize: 12, color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
+                    label: Text(s == 'all' ? 'All' : s[0].toUpperCase() + s.substring(1), style: ApexTypography.captionMedium.copyWith(color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
                     selected: isActive,
                     onSelected: (_) => setState(() => _statusFilter = s),
                     selectedColor: ApexColors.primary600.withOpacity(0.1),
@@ -80,9 +80,9 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                       children: [
                         Icon(Icons.flag, size: 48, color: ApexColors.neutral500.withOpacity(0.3)),
                         const SizedBox(height: 12),
-                        const Text('No Goals', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                        Text('No Goals', style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
                         const SizedBox(height: 4),
-                        const Text('Create goals to track performance', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                        Text('Create goals to track performance', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                       ],
                     ),
                   );
@@ -139,7 +139,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Due Date', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                  title: Text('Due Date', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                   subtitle: Text(dueDate != null ? '${dueDate!.day}/${dueDate!.month}/${dueDate!.year}' : 'Select date', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
@@ -226,7 +226,7 @@ class _GoalDetailCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(color: _statusColor(status).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Text(status.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor(status))),
+              child: Text(status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: _statusColor(status))),
             ),
           ]),
           const SizedBox(height: 14),

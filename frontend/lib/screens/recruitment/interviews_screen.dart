@@ -32,7 +32,7 @@ class InterviewsScreen extends ConsumerWidget {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Interviews', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Interviews', style: ApexTypography.sectionTitle),
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showScheduleDialog(context, ref),
@@ -52,9 +52,9 @@ class InterviewsScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.event, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
                   const SizedBox(height: 16),
-                  const Text('No Interviews Scheduled', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                  Text('No Interviews Scheduled', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.neutral900)),
                   const SizedBox(height: 8),
-                  const Text('Schedule interviews for your candidates', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                  Text('Schedule interviews for your candidates', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                 ],
               ),
             );
@@ -98,7 +98,7 @@ class InterviewsScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Date & Time', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                  title: Text('Date & Time', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                   subtitle: Text(DateFormat('dd MMM yyyy, HH:mm').format(scheduledAt), style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
@@ -224,7 +224,7 @@ class _InterviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: _statusColor(status).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-      child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
+      child: Text(status.toUpperCase(), style: ApexTypography.badge.copyWith(fontSize: 10, color: _statusColor(status))),
     );
   }
 
@@ -242,7 +242,7 @@ class _InterviewCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Rating', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                Text('Rating', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (i) => IconButton(

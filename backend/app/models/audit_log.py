@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, ForeignKey
+from sqlalchemy import Column, String, Text, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
@@ -31,3 +31,7 @@ class AuditLog(TenantModel):
     # Relationships
     tenant = relationship("Tenant", back_populates="audit_logs")
     user = relationship("User", back_populates="audit_logs")
+
+    __table_args__ = (
+        Index("ix_audit_logs_tenant_created", "tenant_id", "created_at"),
+    )

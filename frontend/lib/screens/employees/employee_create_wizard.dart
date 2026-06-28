@@ -144,12 +144,12 @@ class _EmployeeCreateWizardState extends ConsumerState<EmployeeCreateWizard> {
                   child: Center(
                     child: isCompleted
                         ? const Icon(Icons.check, size: 14, color: Colors.white)
-                        : Text('${i + 1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isActive ? Colors.white : ApexColors.neutral500)),
+                        : Text('${i + 1}', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: isActive ? Colors.white : ApexColors.neutral500)),
                   ),
                 ),
                 const SizedBox(width: 6),
                 if (!Responsive.isMobile(context))
-                  Flexible(child: Text(entry.value, style: TextStyle(fontSize: 11, color: isActive ? ApexColors.primary : ApexColors.neutral500, fontWeight: isActive ? FontWeight.w600 : FontWeight.w400), overflow: TextOverflow.ellipsis)),
+                  Flexible(child: Text(entry.value, style: ApexTypography.captionSmall.copyWith(color: isActive ? ApexColors.primary : ApexColors.neutral500, fontWeight: isActive ? FontWeight.w600 : FontWeight.w400), overflow: TextOverflow.ellipsis)),
                 if (i < steps.length - 1) Expanded(child: Container(height: 1, color: isCompleted ? ApexColors.success : ApexColors.neutral200, margin: const EdgeInsets.symmetric(horizontal: 8))),
               ],
             ),
@@ -171,9 +171,9 @@ class _EmployeeCreateWizardState extends ConsumerState<EmployeeCreateWizard> {
           leading: CircleAvatar(
             radius: 12,
             backgroundColor: isCompleted ? ApexColors.success : isActive ? ApexColors.primary : ApexColors.neutral200,
-            child: isCompleted ? Icon(Icons.check, size: 14, color: Colors.white) : Text('${i + 1}', style: TextStyle(fontSize: 11, color: isActive ? Colors.white : ApexColors.neutral500)),
+            child: isCompleted ? Icon(Icons.check, size: 14, color: Colors.white) : Text('${i + 1}', style: ApexTypography.captionSmall.copyWith(color: isActive ? Colors.white : ApexColors.neutral500)),
           ),
-          title: Text(steps[i], style: TextStyle(fontSize: 13, fontWeight: isActive ? FontWeight.w600 : FontWeight.w400, color: isActive ? ApexColors.primary : ApexColors.neutral900)),
+          title: Text(steps[i], style: ApexTypography.caption.copyWith(fontWeight: isActive ? FontWeight.w600 : FontWeight.w400, color: isActive ? ApexColors.primary : ApexColors.neutral900)),
           dense: true,
           onTap: () => setState(() => _currentStep = i),
         );

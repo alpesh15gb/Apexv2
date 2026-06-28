@@ -69,7 +69,7 @@ class AttendanceDetailScreen extends ConsumerWidget {
                 ],
               ),
               loading: () => const LoadingWidget(count: 1),
-              error: (err, stack) => Center(child: Text('Summary Error: ${err.toString()}', style: TextStyle(color: ApexColors.error))),
+              error: (err, stack) => Center(child: Text('Summary Error: ${err.toString()}', style: ApexTypography.body.copyWith(color: ApexColors.error))),
             ),
             const SizedBox(height: 24),
 
@@ -109,7 +109,7 @@ class AttendanceDetailScreen extends ConsumerWidget {
                 );
               },
               loading: () => const LoadingWidget(count: 3),
-              error: (err, stack) => Center(child: Text('Logs Error: ${err.toString()}', style: TextStyle(color: ApexColors.error))),
+              error: (err, stack) => Center(child: Text('Logs Error: ${err.toString()}', style: ApexTypography.body.copyWith(color: ApexColors.error))),
             ),
           ],
         ),
@@ -128,11 +128,7 @@ class AttendanceDetailScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            style: ApexTypography.sectionTitle.copyWith(color: color),
           ),
         ],
       ),

@@ -56,7 +56,7 @@ class RecruitmentDashboardScreen extends ConsumerWidget {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Recruitment', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Recruitment', style: ApexTypography.sectionTitle),
         actions: [
           TextButton.icon(
             onPressed: () => context.push('/recruitment/candidates'),
@@ -233,7 +233,7 @@ class _StatCard extends StatelessWidget {
               child: Icon(icon, size: 16, color: color),
             ),
             const Spacer(),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
+            Text(value, style: ApexTypography.sectionTitle.copyWith(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
           ]),
           const SizedBox(height: 8),
           Text(title, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500, fontWeight: FontWeight.w500)),
@@ -287,7 +287,7 @@ class _PipelineView extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text('$count', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: count > 0 ? ApexColors.primary600 : ApexColors.neutral500)),
+                Text('$count', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: count > 0 ? ApexColors.primary600 : ApexColors.neutral500)),
                 const SizedBox(height: 4),
                 Text(_stageName(stage), style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
               ],
@@ -341,7 +341,7 @@ class _OpeningCard extends ConsumerWidget {
                       color: _statusColor(status).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
+                    child: Text(status.toUpperCase(), style: ApexTypography.badge.copyWith(fontSize: 10, color: _statusColor(status))),
                   ),
                 ]),
                 const SizedBox(height: 4),

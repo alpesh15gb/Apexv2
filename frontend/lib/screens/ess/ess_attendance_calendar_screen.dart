@@ -99,7 +99,7 @@ class _EssAttendanceCalendarScreenState extends ConsumerState<EssAttendanceCalen
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
+              error: (e, _) => Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error)),
             ),
           ],
         ),
@@ -314,7 +314,7 @@ class _CalendarGrid extends StatelessWidget {
         );
       },
       loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
+      error: (e, _) => Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error)),
     );
   }
 

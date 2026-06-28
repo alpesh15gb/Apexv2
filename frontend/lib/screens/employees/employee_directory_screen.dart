@@ -147,7 +147,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
             child: dirState.loading && dirState.employees.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : dirState.error != null
-                    ? Center(child: Text('Error: ${dirState.error}', style: TextStyle(color: ApexColors.error)))
+                    ? Center(child: Text('Error: ${dirState.error}', style: ApexTypography.body.copyWith(color: ApexColors.error)))
                     : dirState.employees.isEmpty
                         ? _buildEmptyState()
                         : dirState.viewMode == ViewMode.grid
@@ -216,7 +216,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
     return Padding(
       padding: const EdgeInsets.only(left: 8),
       child: FilterChip(
-        label: Text(value ?? label, style: TextStyle(fontSize: 12, color: value != null ? ApexColors.primary : ApexColors.neutral500)),
+        label: Text(value ?? label, style: ApexTypography.captionMedium.copyWith(color: value != null ? ApexColors.primary : ApexColors.neutral500)),
         onSelected: (_) => onTap(),
         selected: value != null,
         selectedColor: ApexColors.primary.withOpacity(0.1),
@@ -230,7 +230,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: ApexColors.primary.withOpacity(0.05),
       child: Row(children: [
-        Text('${_selected.length} selected', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ApexColors.primary)),
+        Text('${_selected.length} selected', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.primary)),
         const Spacer(),
         TextButton.icon(onPressed: () => setState(() => _selected.clear()), icon: const Icon(Icons.close, size: 16), label: const Text('Clear Selection')),
       ]),
@@ -244,9 +244,9 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
         children: [
           Icon(Icons.people_outline, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('No Employees Found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+          Text('No Employees Found', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add your first employee or adjust filters', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('Add your first employee or adjust filters', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -300,23 +300,23 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                     const SizedBox(width: 50),
                     SizedBox(
                       width: availableWidth * 0.18,
-                      child: const Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
+                      child: Text('EMPLOYEE', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     Expanded(
                       flex: 2,
-                      child: const Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
+                      child: Text('DEPARTMENT', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     Expanded(
                       flex: 2,
-                      child: const Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
+                      child: Text('DESIGNATION', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     Expanded(
                       flex: 2,
-                      child: const Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
+                      child: Text('BRANCH', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     SizedBox(
                       width: 80,
-                      child: const Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
+                      child: Text('STATUS', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     const SizedBox(width: 60),
                   ]),
@@ -350,13 +350,13 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('${dirState.total} employees', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('${dirState.total} employees', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(width: 24),
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: dirState.page > 1 ? () => ref.read(employeeDirectoryProvider.notifier).fetch(page: dirState.page - 1) : null,
           ),
-          Text('Page ${dirState.page} of ${dirState.totalPages}', style: TextStyle(fontSize: 13, color: ApexColors.neutral900)),
+          Text('Page ${dirState.page} of ${dirState.totalPages}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral900)),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: dirState.page < dirState.totalPages ? () => ref.read(employeeDirectoryProvider.notifier).fetch(page: dirState.page + 1) : null,
@@ -428,18 +428,18 @@ class _EmployeeGridCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: ApexColors.primary.withOpacity(0.1),
-                  child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: TextStyle(color: ApexColors.primary, fontWeight: FontWeight.w700, fontSize: 16)),
+                  child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: ApexTypography.body.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700)),
                 ),
                 const Spacer(),
                 Checkbox(value: isSelected, onChanged: (v) => onSelect(v ?? false), visualDensity: VisualDensity.compact),
               ],
             ),
             const SizedBox(height: 12),
-            Text(name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(code, style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
+            Text(name, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(code, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
             const SizedBox(height: 8),
-            Text(dept, style: TextStyle(fontSize: 12, color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(desig, style: TextStyle(fontSize: 12, color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(dept, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(desig, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
             const Spacer(),
             Row(
               children: [
@@ -449,7 +449,7 @@ class _EmployeeGridCard extends StatelessWidget {
                     color: (status == 'active' ? ApexColors.success : ApexColors.neutral500).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: status == 'active' ? ApexColors.success : ApexColors.neutral500)),
+                  child: Text(status.toUpperCase(), style: ApexTypography.badge.copyWith(fontSize: 10, color: status == 'active' ? ApexColors.success : ApexColors.neutral500)),
                 ),
               ],
             ),
@@ -487,7 +487,7 @@ class _EmployeeTableRow extends StatelessWidget {
           CircleAvatar(
             radius: 16,
             backgroundColor: ApexColors.primary.withOpacity(0.1),
-            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: TextStyle(color: ApexColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
+            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 18),
           SizedBox(
@@ -496,14 +496,14 @@ class _EmployeeTableRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text(code, style: TextStyle(fontSize: 11, color: ApexColors.neutral500)),
+                Text(name, style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(code, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
               ],
             ),
           ),
-          Expanded(flex: 2, child: Text(employee['department_name'] ?? '—', style: TextStyle(fontSize: 13, color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 2, child: Text(employee['designation_name'] ?? '—', style: TextStyle(fontSize: 13, color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 2, child: Text(employee['branch_name'] ?? '—', style: TextStyle(fontSize: 13, color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 2, child: Text(employee['department_name'] ?? '—', style: ApexTypography.caption.copyWith(color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 2, child: Text(employee['designation_name'] ?? '—', style: ApexTypography.caption.copyWith(color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 2, child: Text(employee['branch_name'] ?? '—', style: ApexTypography.caption.copyWith(color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
           SizedBox(
             width: 80,
             child: Container(
@@ -512,7 +512,7 @@ class _EmployeeTableRow extends StatelessWidget {
                 color: (status == 'active' ? ApexColors.success : ApexColors.neutral500).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: status == 'active' ? ApexColors.success : ApexColors.neutral500)),
+              child: Text(status.toUpperCase(), style: ApexTypography.badge.copyWith(fontSize: 10, color: status == 'active' ? ApexColors.success : ApexColors.neutral500)),
             ),
           ),
           SizedBox(

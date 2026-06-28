@@ -4,7 +4,7 @@ import uuid
 from typing import List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, extract
+from sqlalchemy import select, func, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
@@ -16,18 +16,25 @@ from app.schemas.holiday import HolidayCreate, HolidayUpdate, HolidayResponse
 router = APIRouter(dependencies=[Depends(require_permissions("holiday.read"))])
 
 
-@router.get("/", response_model=List[HolidayResponse])
+@router.get("/")
 async def list_holidays(
     year: Optional[int] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(Holiday).where(Holiday.tenant_id == current_user.tenant_id)
+    base = select(Holiday).where(Holiday.tenant_id == current_user.tenant_id)
+    count_base = select(func.count(Holiday.id)).where(Holiday.tenant_id == current_user.tenant_id)
     if year:
-        stmt = stmt.where(extract('year', Holiday.date) == year)
-    stmt = stmt.order_by(Holiday.date)
+        base = base.where(extract('year', Holiday.date) == year)
+        count_base = count_base.where(extract('year', Holiday.date) == year)
+
+    total = (await db.execute(count_base)).scalar() or 0
+    stmt = base.order_by(Holiday.date).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
-    return list(result.scalars().all())
+    items = list(result.scalars().all())
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/", response_model=HolidayResponse, status_code=201)

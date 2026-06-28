@@ -108,7 +108,7 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Failed to load: $e'), backgroundColor: ApexColors.error),
         );
       }
     }
@@ -148,14 +148,14 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Employee updated'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Employee updated'), backgroundColor: ApexColors.success),
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error),
         );
       }
     } finally {
@@ -184,7 +184,7 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: ApexColors.neutral50,
         appBar: const ApexAppBar(title: 'Edit Employee'),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -192,14 +192,14 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
 
     if (_employee == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: ApexColors.neutral50,
         appBar: const ApexAppBar(title: 'Edit Employee'),
         body: const Center(child: Text('Employee not found')),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ApexColors.neutral50,
       appBar: ApexAppBar(
         title: 'Edit ${_employee!.fullName}',
         actions: [

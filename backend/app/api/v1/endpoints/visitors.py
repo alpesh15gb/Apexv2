@@ -77,13 +77,17 @@ async def check_out_visitor(
     return await service.check_out_visitor(pass_id, current_user.tenant_id)
 
 
-@router.get("/active", response_model=list[VisitorPassResponse])
+@router.get("/active", response_model=PaginatedResponse[VisitorPassResponse])
 async def list_active_visitors(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     service = VisitorService(db)
-    return await service.list_active_visitors(current_user.tenant_id)
+    items, total = await service.list_active_visitors(current_user.tenant_id, page=page, page_size=page_size)
+    return PaginatedResponse(items=items, total=total, page=page, page_size=page_size,
+                             total_pages=(total + page_size - 1) // page_size)
 
 
 @router.get("/passes", response_model=PaginatedResponse[VisitorPassResponse])

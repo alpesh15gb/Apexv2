@@ -128,13 +128,19 @@ class VisitorService:
         visitors = list(res.scalars().all())
         return visitors, total
 
-    async def list_active_visitors(self, tenant_id: uuid.UUID) -> List[VisitorPass]:
+    async def list_active_visitors(self, tenant_id: uuid.UUID, page: int = 1, page_size: int = 50) -> Tuple[List[VisitorPass], int]:
+        count_stmt = select(func.count(VisitorPass.id)).where(
+            VisitorPass.tenant_id == tenant_id,
+            VisitorPass.status == VisitorPassStatus.CHECKED_IN.value,
+        )
         stmt = select(VisitorPass).where(
             VisitorPass.tenant_id == tenant_id,
-            VisitorPass.status == VisitorPassStatus.CHECKED_IN.value
+            VisitorPass.status == VisitorPassStatus.CHECKED_IN.value,
         ).options(selectinload(VisitorPass.visitor), selectinload(VisitorPass.host_employee))
+        total = (await self.db.execute(count_stmt)).scalar() or 0
+        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
         res = await self.db.execute(stmt)
-        return list(res.scalars().all())
+        return list(res.scalars().all()), total
 
     async def get_visitor_history(
         self,

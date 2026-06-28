@@ -113,7 +113,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Candidates', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Candidates', style: ApexTypography.sectionTitle),
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showAddCandidateDialog(context),
@@ -161,7 +161,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
             child: candState.loading && candState.candidates.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : candState.candidates.isEmpty
-                    ? const Center(child: Text('No candidates found', style: TextStyle(color: ApexColors.neutral500)))
+                    ? Center(child: Text('No candidates found', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)))
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: candState.candidates.length,
@@ -179,7 +179,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
   Widget _stageChip(String label, String? stage, CandidatesState state) {
     final isActive = state.stageFilter == stage;
     return FilterChip(
-      label: Text(label, style: TextStyle(fontSize: 11, color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
+      label: Text(label, style: ApexTypography.captionSmall.copyWith(color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
       selected: isActive,
       onSelected: (_) => ref.read(candidatesProvider.notifier).setFilter(stage: stage),
       selectedColor: ApexColors.primary600.withOpacity(0.1),
@@ -342,7 +342,7 @@ class _CandidateCard extends StatelessWidget {
         color: _stageColor(stage).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(_stageName(stage), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _stageColor(stage))),
+      child: Text(_stageName(stage), style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: _stageColor(stage))),
     );
   }
 
@@ -358,7 +358,7 @@ class _CandidateCard extends StatelessWidget {
       case 'technical_interview':
       case 'manager_interview':
       case 'final_round': return ApexColors.warning;
-      case 'offer': return const Color(0xFF6366F1);
+      case 'offer': return ApexColors.info;
       case 'accepted':
       case 'joined': return ApexColors.successDark;
       case 'rejected': return ApexColors.error;

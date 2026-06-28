@@ -81,7 +81,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
         children: [
           Icon(Icons.rocket_launch, color: ApexColors.primary600, size: 24),
           const SizedBox(width: 12),
-          const Text('Setup Wizard', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+          Text('Setup Wizard', style: ApexTypography.sectionTitle.copyWith(fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const Spacer(),
           Text('Step ${_currentStep + 1} of ${_steps.length}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
         ],
@@ -143,9 +143,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                   child: Center(
                     child: isCompleted
                         ? const Icon(Icons.check, size: 16, color: Colors.white)
-                        : Text('${i + 1}', style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                        : Text('${i + 1}', style: ApexTypography.captionMedium.copyWith(
                             color: isActive ? Colors.white : ApexColors.neutral500,
                           )),
                   ),
@@ -154,8 +152,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                 Expanded(
                   child: Text(
                     step['title'] as String,
-                    style: TextStyle(
-                      fontSize: 13,
+                    style: ApexTypography.caption.copyWith(
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                       color: isActive ? ApexColors.primary600 : ApexColors.neutral900,
                     ),
@@ -332,9 +329,9 @@ class _CompanyStepState extends State<_CompanyStep> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Company Information', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+            Text('Company Information', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            const Text('Set up your company profile. This information appears on payslips and official documents.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+            Text('Set up your company profile. This information appears on payslips and official documents.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
             const SizedBox(height: 32),
             _card(children: [
               _field(_nameCtrl, 'Company Name *', Icons.business),
@@ -449,9 +446,9 @@ class _BranchStepState extends State<_BranchStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Branches', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+          Text('Branches', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add your office locations. At least one branch is required.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('Add your office locations. At least one branch is required.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           ..._branches.asMap().entries.map((entry) => Container(
             margin: const EdgeInsets.only(bottom: 8),
@@ -465,7 +462,7 @@ class _BranchStepState extends State<_BranchStep> {
                 Text('Code: ${entry.value['code']}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
               ])),
               if (entry.value['isDefault'] == true)
-                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: ApexColors.primary600.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Text('DEFAULT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: ApexColors.primary600))),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: ApexColors.primary600.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: Text('DEFAULT', style: ApexTypography.badge.copyWith(fontSize: 10, color: ApexColors.primary600))),
             ]),
           )),
           const SizedBox(height: 12),
@@ -544,9 +541,9 @@ class _DepartmentStepState extends State<_DepartmentStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Departments', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+          Text('Departments', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add your organizational departments.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('Add your organizational departments.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           Wrap(
             spacing: 8,
@@ -636,9 +633,9 @@ class _DesignationStepState extends State<_DesignationStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Designations', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+          Text('Designations', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add job titles and designations for your organization.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('Add job titles and designations for your organization.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           Wrap(
             spacing: 8,
@@ -725,9 +722,9 @@ class _ShiftStepState extends State<_ShiftStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Shifts', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+          Text('Shifts', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Define work shifts for your organization.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('Define work shifts for your organization.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           ..._shifts.map((s) => Container(
             margin: const EdgeInsets.only(bottom: 8),
@@ -816,9 +813,9 @@ class _LeaveStepState extends State<_LeaveStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Leave Policy', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+          Text('Leave Policy', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Configure leave types and annual allocations.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('Configure leave types and annual allocations.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           ..._leaveTypes.map((l) => Container(
             margin: const EdgeInsets.only(bottom: 8),
@@ -910,9 +907,9 @@ class _AttendanceStepState extends State<_AttendanceStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Attendance Settings', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+          Text('Attendance Settings', style: ApexTypography.sectionTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Configure attendance rules and weekly offs.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+          Text('Configure attendance rules and weekly offs.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(20),
@@ -975,9 +972,9 @@ class _CompleteStep extends StatelessWidget {
               child: const Icon(Icons.check, size: 40, color: Colors.white),
             ),
             const SizedBox(height: 24),
-            const Text('Setup Complete!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+            Text('Setup Complete!', style: ApexTypography.pageTitle.copyWith(fontSize: 28, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            const Text('Your HRMS is configured and ready to use.', style: TextStyle(fontSize: 15, color: ApexColors.neutral500)),
+            Text('Your HRMS is configured and ready to use.', style: ApexTypography.bodyLarge.copyWith(color: ApexColors.neutral500)),
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () => context.go('/dashboard'),

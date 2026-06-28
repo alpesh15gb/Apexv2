@@ -115,7 +115,7 @@ class AssetDashboardScreen extends ConsumerWidget {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Asset Management', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Asset Management', style: ApexTypography.sectionTitle),
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showCreateAssetDialog(context, ref),
@@ -298,7 +298,7 @@ class _StatCard extends StatelessWidget {
               child: Icon(icon, size: 16, color: color),
             ),
             const Spacer(),
-            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+            Text(value, style: ApexTypography.cardTitle.copyWith(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
           ]),
           const SizedBox(height: 8),
           Text(title, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
@@ -339,7 +339,7 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label, style: TextStyle(fontSize: 12, color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
+        label: Text(label, style: ApexTypography.captionMedium.copyWith(color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
         selected: isActive,
         onSelected: (_) => ref.read(assetListProvider.notifier).setFilter(status: status),
         selectedColor: ApexColors.primary600.withOpacity(0.1),
@@ -364,7 +364,7 @@ class _AssetTable extends StatelessWidget {
       return Container(
         height: 200,
         decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
-        child: const Center(child: Text('No assets found', style: TextStyle(color: ApexColors.neutral500))),
+        child: Center(child: Text('No assets found', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
       );
     }
 
@@ -376,13 +376,13 @@ class _AssetTable extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               color: ApexColors.neutral50,
-              child: Row(children: const [
-                SizedBox(width: 180, child: Text('ASSET', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('CODE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('SERIAL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
-                SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
-                SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500))),
+              child: Row(children: [
+                SizedBox(width: 180, child: Text('ASSET', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 100, child: Text('CODE', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 100, child: Text('CATEGORY', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 100, child: Text('SERIAL', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 80, child: Text('STATUS', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 60, child: Text('', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500))),
               ]),
             ),
           ...state.assets.asMap().entries.map((entry) {
@@ -419,7 +419,7 @@ class _AssetTable extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(color: _statusColor(status).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                    child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
+                    child: Text(status.toUpperCase(), style: ApexTypography.badge.copyWith(fontSize: 10, color: _statusColor(status))),
                   ),
                 ),
                 SizedBox(
@@ -453,7 +453,7 @@ class _AssetTable extends StatelessWidget {
   Color _categoryColor(String? category) {
     switch (category) {
       case 'laptop': return ApexColors.primary600;
-      case 'desktop': return const Color(0xFF6366F1);
+      case 'desktop': return ApexColors.info;
       case 'mobile': return ApexColors.successDark;
       case 'printer': return ApexColors.warning;
       default: return ApexColors.neutral500;

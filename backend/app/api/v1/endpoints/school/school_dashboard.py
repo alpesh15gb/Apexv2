@@ -30,37 +30,37 @@ async def school_dashboard_stats(
         select(func.count(Student.id)).where(Student.tenant_id == tid, Student.is_active == True)
     )).scalar() or 0
 
-    total_grades = (await db.execute(
-        select(func.count(Grade.id)).where(Grade.tenant_id == tid, Grade.is_active == True)
-    )).scalar() or 0
+    grade_section_row = (await db.execute(
+        select(
+            func.count().filter(Grade.is_active == True).label("grades"),
+            func.count().filter(Section.is_active == True).label("sections"),
+        ).select_from(Grade.outerjoin(Section, Section.grade_id == Grade.id))
+        .where(Grade.tenant_id == tid)
+    )).one()
+    total_grades, total_sections = grade_section_row
 
-    total_sections = (await db.execute(
-        select(func.count(Section.id)).where(Section.tenant_id == tid, Section.is_active == True)
-    )).scalar() or 0
-
-    # Today's attendance
-    present_today = (await db.execute(
-        select(func.count(StudentAttendance.id)).where(
-            StudentAttendance.tenant_id == tid, StudentAttendance.date == today, StudentAttendance.status == "present"
+    att_row = (await db.execute(
+        select(
+            func.count().filter(StudentAttendance.status == "present").label("present"),
+            func.count().filter(StudentAttendance.status == "absent").label("absent"),
+        ).where(
+            StudentAttendance.tenant_id == tid,
+            StudentAttendance.date == today,
         )
-    )).scalar() or 0
-
-    absent_today = (await db.execute(
-        select(func.count(StudentAttendance.id)).where(
-            StudentAttendance.tenant_id == tid, StudentAttendance.date == today, StudentAttendance.status == "absent"
-        )
-    )).scalar() or 0
+    )).one()
+    present_today, absent_today = att_row
 
     attendance_pct = round(present_today / (present_today + absent_today) * 100, 1) if (present_today + absent_today) > 0 else 0
 
-    # Fee collection
-    total_fee_collected = (await db.execute(
-        select(func.coalesce(func.sum(FeePayment.amount), 0)).where(FeePayment.tenant_id == tid)
-    )).scalar() or 0
-
-    pending_fees = (await db.execute(
-        select(func.count(StudentFee.id)).where(StudentFee.tenant_id == tid, StudentFee.status.in_(["pending", "partial", "overdue"]))
-    )).scalar() or 0
+    fee_row = (await db.execute(
+        select(
+            func.coalesce(func.sum(FeePayment.amount), 0).label("collected"),
+            func.count().filter(StudentFee.status.in_(["pending", "partial", "overdue"])).label("pending"),
+        ).select_from(
+            StudentFee.outerjoin(FeePayment, FeePayment.student_fee_id == StudentFee.id)
+        ).where(StudentFee.tenant_id == tid)
+    )).one()
+    total_fee_collected, pending_fees = fee_row
 
     return {
         "total_students": total_students,

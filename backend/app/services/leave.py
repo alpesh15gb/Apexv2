@@ -82,25 +82,22 @@ class LeaveService:
         return lts, total
 
     async def initialize_leave_balances(self, tenant_id: uuid.UUID, employee_id: uuid.UUID, year: int) -> None:
-        # Check if employee exists
         stmt_emp = select(Employee).where(Employee.id == employee_id, Employee.tenant_id == tenant_id)
         if not (await self.db.execute(stmt_emp)).scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        # Get active leave types
         stmt_types = select(LeaveType).where(LeaveType.tenant_id == tenant_id, LeaveType.is_active == True)
-        res_types = await self.db.execute(stmt_types)
-        leave_types = res_types.scalars().all()
+        leave_types = (await self.db.execute(stmt_types)).scalars().all()
+
+        existing_stmt = select(LeaveBalance.leave_type_id).where(
+            LeaveBalance.tenant_id == tenant_id,
+            LeaveBalance.employee_id == employee_id,
+            LeaveBalance.year == year,
+        )
+        existing_ids = set((await self.db.execute(existing_stmt)).scalars().all())
 
         for lt in leave_types:
-            stmt_bal = select(LeaveBalance).where(
-                LeaveBalance.tenant_id == tenant_id,
-                LeaveBalance.employee_id == employee_id,
-                LeaveBalance.leave_type_id == lt.id,
-                LeaveBalance.year == year
-            )
-            res_bal = await self.db.execute(stmt_bal)
-            if not res_bal.scalar_one_or_none():
+            if lt.id not in existing_ids:
                 bal = LeaveBalance(
                     tenant_id=tenant_id,
                     employee_id=employee_id,

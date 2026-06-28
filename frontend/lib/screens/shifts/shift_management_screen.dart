@@ -63,7 +63,7 @@ class ShiftManagementScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }
@@ -113,10 +113,10 @@ class _ShiftCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: (isNight ? const Color(0xFF6366F1) : ApexColors.primary).withOpacity(0.1),
+              color: (isNight ? ApexColors.info : ApexColors.primary).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(isNight ? Icons.nights_stay : Icons.wb_sunny, color: isNight ? const Color(0xFF6366F1) : ApexColors.primary, size: 24),
+            child: Icon(isNight ? Icons.nights_stay : Icons.wb_sunny, color: isNight ? ApexColors.info : ApexColors.primary, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(

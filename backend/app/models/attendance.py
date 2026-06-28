@@ -81,6 +81,8 @@ class Attendance(TenantModel):
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "employee_id", "date", name="uq_attendances_tenant_employee_date"),
+        Index("ix_attendances_tenant_date_status", "tenant_id", "date", "status"),
+        Index("ix_attendances_tenant_date_late", "tenant_id", "date", "is_late"),
     )
 
     @property

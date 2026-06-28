@@ -1,6 +1,6 @@
 """Student attendance models."""
 
-from sqlalchemy import Column, String, Date, Time, Integer, ForeignKey
+from sqlalchemy import Column, String, Date, Time, Integer, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.base import TenantModel
@@ -19,6 +19,10 @@ class StudentAttendance(TenantModel):
     attendance_type = Column(String(20), default="daily")  # daily/period/bus
     period_definition_id = Column(UUID(as_uuid=True), ForeignKey("period_definitions.id"))
     academic_year_id = Column(UUID(as_uuid=True), ForeignKey("academic_years.id"), nullable=False, index=True)
+
+    __table_args__ = (
+        Index("ix_student_attendance_tenant_date_status", "tenant_id", "date", "status"),
+    )
 
 
 class StudentAttendanceSummary(TenantModel):

@@ -44,13 +44,20 @@ class FeePaymentCreate(BaseModel):
 
 @router.get("/categories")
 async def list_fee_categories(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(FeeCategory).where(FeeCategory.tenant_id == current_user.tenant_id, FeeCategory.is_active == True).order_by(FeeCategory.sort_order)
+    base = (FeeCategory.tenant_id == current_user.tenant_id, FeeCategory.is_active == True)
+    total = (await db.execute(select(func.count(FeeCategory.id)).where(*base))).scalar() or 0
+    stmt = select(FeeCategory).where(*base).order_by(FeeCategory.sort_order).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     cats = result.scalars().all()
-    return [{"id": str(c.id), "name": c.name, "code": c.code} for c in cats]
+    return {
+        "items": [{"id": str(c.id), "name": c.name, "code": c.code} for c in cats],
+        "total": total, "page": page, "page_size": page_size,
+    }
 
 
 @router.post("/categories")
@@ -69,23 +76,33 @@ async def create_fee_category(
 async def list_fee_structures(
     academic_year_id: Optional[uuid.UUID] = None,
     grade_id: Optional[uuid.UUID] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    count_stmt = select(func.count(FeeStructure.id)).where(FeeStructure.tenant_id == current_user.tenant_id)
     stmt = select(FeeStructure).where(FeeStructure.tenant_id == current_user.tenant_id)
     if academic_year_id:
+        count_stmt = count_stmt.where(FeeStructure.academic_year_id == academic_year_id)
         stmt = stmt.where(FeeStructure.academic_year_id == academic_year_id)
     if grade_id:
+        count_stmt = count_stmt.where(FeeStructure.grade_id == grade_id)
         stmt = stmt.where(FeeStructure.grade_id == grade_id)
+    total = (await db.execute(count_stmt)).scalar() or 0
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     structs = result.scalars().all()
-    return [
-        {
-            "id": str(f.id), "academic_year_id": str(f.academic_year_id), "grade_id": str(f.grade_id),
-            "fee_category_id": str(f.fee_category_id), "amount": float(f.amount), "frequency": f.frequency,
-        }
-        for f in structs
-    ]
+    return {
+        "items": [
+            {
+                "id": str(f.id), "academic_year_id": str(f.academic_year_id), "grade_id": str(f.grade_id),
+                "fee_category_id": str(f.fee_category_id), "amount": float(f.amount), "frequency": f.frequency,
+            }
+            for f in structs
+        ],
+        "total": total, "page": page, "page_size": page_size,
+    }
 
 
 @router.post("/structures")
@@ -134,23 +151,31 @@ async def record_payment(
 @router.get("/payments")
 async def list_payments(
     student_id: Optional[uuid.UUID] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    count_stmt = select(func.count(FeePayment.id)).where(FeePayment.tenant_id == current_user.tenant_id)
     stmt = select(FeePayment).where(FeePayment.tenant_id == current_user.tenant_id)
     if student_id:
+        count_stmt = count_stmt.where(FeePayment.student_id == student_id)
         stmt = stmt.where(FeePayment.student_id == student_id)
-    stmt = stmt.order_by(FeePayment.payment_date.desc())
+    total = (await db.execute(count_stmt)).scalar() or 0
+    stmt = stmt.order_by(FeePayment.payment_date.desc()).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     payments = result.scalars().all()
-    return [
-        {
-            "id": str(p.id), "student_id": str(p.student_id), "amount": float(p.amount),
-            "payment_date": str(p.payment_date), "payment_method": p.payment_method,
-            "receipt_number": p.receipt_number, "status": p.status,
-        }
-        for p in payments
-    ]
+    return {
+        "items": [
+            {
+                "id": str(p.id), "student_id": str(p.student_id), "amount": float(p.amount),
+                "payment_date": str(p.payment_date), "payment_method": p.payment_method,
+                "receipt_number": p.receipt_number, "status": p.status,
+            }
+            for p in payments
+        ],
+        "total": total, "page": page, "page_size": page_size,
+    }
 
 
 @router.get("/students/{student_id}")
@@ -175,21 +200,33 @@ async def student_fee_summary(
 @router.get("/reports/dues")
 async def fee_dues_report(
     academic_year_id: Optional[uuid.UUID] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    count_stmt = select(func.count(StudentFee.id)).where(
+        StudentFee.tenant_id == current_user.tenant_id,
+        StudentFee.status.in_(["pending", "partial", "overdue"]),
+    )
     stmt = select(StudentFee, Student).join(Student, Student.id == StudentFee.student_id).where(
         StudentFee.tenant_id == current_user.tenant_id,
         StudentFee.status.in_(["pending", "partial", "overdue"]),
     )
     if academic_year_id:
+        count_stmt = count_stmt.where(StudentFee.academic_year_id == academic_year_id)
         stmt = stmt.where(StudentFee.academic_year_id == academic_year_id)
+    total = (await db.execute(count_stmt)).scalar() or 0
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     rows = result.all()
-    return [
-        {
-            "student_id": str(f.student_id), "student_name": f"{s.first_name} {s.last_name}",
-            "admission_number": s.admission_number, "final_amount": float(f.final_amount), "status": f.status,
-        }
-        for f, s in rows
-    ]
+    return {
+        "items": [
+            {
+                "student_id": str(f.student_id), "student_name": f"{s.first_name} {s.last_name}",
+                "admission_number": s.admission_number, "final_amount": float(f.final_amount), "status": f.status,
+            }
+            for f, s in rows
+        ],
+        "total": total, "page": page, "page_size": page_size,
+    }

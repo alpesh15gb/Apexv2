@@ -35,7 +35,7 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
         backgroundColor: Colors.white,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Attendance Regularization', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Attendance Regularization', style: ApexTypography.sectionTitle),
         actions: [
           ApexButton(
             label: 'Apply',
@@ -105,8 +105,8 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
                 if (requestType == 'missed_check_in' || requestType == 'wrong_punch') ...[
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Check-In Time', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
-                    subtitle: Text(checkInTime != null ? checkInTime!.format(ctx) : 'Select time', style: TextStyle(fontSize: 14, color: ApexColors.neutral900)),
+                    title: Text('Check-In Time', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+                    subtitle: Text(checkInTime != null ? checkInTime!.format(ctx) : 'Select time', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                     trailing: const Icon(Icons.access_time, size: 18),
                     onTap: () async {
                       final picked = await showTimePicker(context: ctx, initialTime: checkInTime ?? const TimeOfDay(hour: 9, minute: 0));
@@ -117,8 +117,8 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
                 if (requestType == 'missed_check_out' || requestType == 'wrong_punch') ...[
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Check-Out Time', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
-                    subtitle: Text(checkOutTime != null ? checkOutTime!.format(ctx) : 'Select time', style: TextStyle(fontSize: 14, color: ApexColors.neutral900)),
+                    title: Text('Check-Out Time', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+                    subtitle: Text(checkOutTime != null ? checkOutTime!.format(ctx) : 'Select time', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                     trailing: const Icon(Icons.access_time, size: 18),
                     onTap: () async {
                       final picked = await showTimePicker(context: ctx, initialTime: checkOutTime ?? const TimeOfDay(hour: 18, minute: 0));
@@ -176,9 +176,9 @@ class _MyRequestsTab extends ConsumerWidget {
         children: [
           Icon(Icons.edit_note, size: 48, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 12),
-          const Text('No regularization requests', style: TextStyle(fontSize: 15, color: ApexColors.neutral500)),
+          Text('No regularization requests', style: ApexTypography.bodyLarge.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 8),
-          const Text('Apply for missed punches or work from home', style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
+          Text('Apply for missed punches or work from home', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -194,9 +194,9 @@ class _PendingApprovalsTab extends ConsumerWidget {
         children: [
           Icon(Icons.approval, size: 48, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 12),
-          const Text('No pending approvals', style: TextStyle(fontSize: 15, color: ApexColors.neutral500)),
+          Text('No pending approvals', style: ApexTypography.bodyLarge.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 8),
-          const Text('Regularization requests from your team will appear here', style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
+          Text('Regularization requests from your team will appear here', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );

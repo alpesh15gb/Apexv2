@@ -33,12 +33,12 @@ class EssAttendanceScreen extends ConsumerWidget {
           TextButton.icon(
             onPressed: () => _clockIn(context, ref),
             icon: Icon(Icons.login, size: 16, color: ApexColors.success),
-            label: Text('Clock In', style: TextStyle(color: ApexColors.success)),
+            label: Text('Clock In', style: ApexTypography.body.copyWith(color: ApexColors.success)),
           ),
           TextButton.icon(
             onPressed: () => _clockOut(context, ref),
             icon: Icon(Icons.logout, size: 16, color: ApexColors.error),
-            label: Text('Clock Out', style: TextStyle(color: ApexColors.error)),
+            label: Text('Clock Out', style: ApexTypography.body.copyWith(color: ApexColors.error)),
           ),
           const SizedBox(width: 8),
         ],
@@ -80,7 +80,7 @@ class EssAttendanceScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }

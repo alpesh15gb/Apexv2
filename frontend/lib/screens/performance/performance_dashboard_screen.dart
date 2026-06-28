@@ -56,7 +56,7 @@ class PerformanceDashboardScreen extends ConsumerWidget {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Performance', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Performance', style: ApexTypography.sectionTitle),
         actions: [
           TextButton.icon(
             onPressed: () => context.push('/performance/goals'),
@@ -156,7 +156,7 @@ class PerformanceDashboardScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Start Date', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                  title: Text('Start Date', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                   subtitle: Text('${startDate.day}/${startDate.month}/${startDate.year}', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
@@ -166,7 +166,7 @@ class PerformanceDashboardScreen extends ConsumerWidget {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('End Date', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                  title: Text('End Date', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                   subtitle: Text('${endDate.day}/${endDate.month}/${endDate.year}', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
@@ -260,7 +260,7 @@ class _StatCard extends StatelessWidget {
               child: Icon(icon, size: 16, color: color),
             ),
             const Spacer(),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
+            Text(value, style: ApexTypography.sectionTitle.copyWith(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
           ]),
           const SizedBox(height: 8),
           Text(title, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500, fontWeight: FontWeight.w500)),
@@ -324,7 +324,7 @@ class _CycleCard extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(color: _statusColor(status).withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                    child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
+                    child: Text(status.toUpperCase(), style: ApexTypography.badge.copyWith(fontSize: 10, color: _statusColor(status))),
                   ),
                 ]),
                 const SizedBox(height: 4),
@@ -339,7 +339,7 @@ class _CycleCard extends ConsumerWidget {
                 await dio.post('/performance/cycles/${cycle['id']}/publish');
               },
               style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
-              child: const Text('Publish', style: TextStyle(fontSize: 12)),
+              child: Text('Publish', style: ApexTypography.captionMedium),
             ),
         ],
       ),
@@ -380,7 +380,7 @@ class _GoalCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(color: _statusColor(status).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
+              child: Text(status.toUpperCase(), style: ApexTypography.badge.copyWith(fontSize: 10, color: _statusColor(status))),
             ),
           ]),
           const SizedBox(height: 8),

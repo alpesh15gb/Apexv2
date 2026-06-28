@@ -6,7 +6,7 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
@@ -55,13 +55,20 @@ class MarkEntry(BaseModel):
 
 @router.get("/exam-types")
 async def list_exam_types(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(ExamType).where(ExamType.tenant_id == current_user.tenant_id, ExamType.is_active == True)
+    base = ExamType.tenant_id == current_user.tenant_id, ExamType.is_active == True
+    total = (await db.execute(select(func.count(ExamType.id)).where(*base))).scalar() or 0
+    stmt = select(ExamType).where(*base).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     types = result.scalars().all()
-    return [{"id": str(t.id), "name": t.name, "code": t.code, "weightage": float(t.weightage), "exam_category": t.exam_category} for t in types]
+    return {
+        "items": [{"id": str(t.id), "name": t.name, "code": t.code, "weightage": float(t.weightage), "exam_category": t.exam_category} for t in types],
+        "total": total, "page": page, "page_size": page_size,
+    }
 
 
 @router.post("/exam-types")
@@ -79,16 +86,24 @@ async def create_exam_type(
 @router.get("/exams")
 async def list_exams(
     academic_year_id: Optional[uuid.UUID] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    count_stmt = select(func.count(Exam.id)).where(Exam.tenant_id == current_user.tenant_id)
     stmt = select(Exam).where(Exam.tenant_id == current_user.tenant_id)
     if academic_year_id:
+        count_stmt = count_stmt.where(Exam.academic_year_id == academic_year_id)
         stmt = stmt.where(Exam.academic_year_id == academic_year_id)
-    stmt = stmt.order_by(Exam.start_date.desc())
+    total = (await db.execute(count_stmt)).scalar() or 0
+    stmt = stmt.order_by(Exam.start_date.desc()).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     exams = result.scalars().all()
-    return [{"id": str(e.id), "name": e.name, "start_date": str(e.start_date), "end_date": str(e.end_date), "status": e.status} for e in exams]
+    return {
+        "items": [{"id": str(e.id), "name": e.name, "start_date": str(e.start_date), "end_date": str(e.end_date), "status": e.status} for e in exams],
+        "total": total, "page": page, "page_size": page_size,
+    }
 
 
 @router.post("/exams")
@@ -106,20 +121,27 @@ async def create_exam(
 @router.get("/exams/{exam_id}/schedules")
 async def list_exam_schedules(
     exam_id: uuid.UUID,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(ExamSchedule).where(ExamSchedule.exam_id == exam_id, ExamSchedule.tenant_id == current_user.tenant_id)
+    base = (ExamSchedule.exam_id == exam_id, ExamSchedule.tenant_id == current_user.tenant_id)
+    total = (await db.execute(select(func.count(ExamSchedule.id)).where(*base))).scalar() or 0
+    stmt = select(ExamSchedule).where(*base).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     schedules = result.scalars().all()
-    return [
-        {
-            "id": str(s.id), "subject_id": str(s.subject_id), "grade_id": str(s.grade_id),
-            "exam_date": str(s.exam_date), "start_time": str(s.start_time), "end_time": str(s.end_time),
-            "max_marks": s.max_marks, "pass_marks": s.pass_marks,
-        }
-        for s in schedules
-    ]
+    return {
+        "items": [
+            {
+                "id": str(s.id), "subject_id": str(s.subject_id), "grade_id": str(s.grade_id),
+                "exam_date": str(s.exam_date), "start_time": str(s.start_time), "end_time": str(s.end_time),
+                "max_marks": s.max_marks, "pass_marks": s.pass_marks,
+            }
+            for s in schedules
+        ],
+        "total": total, "page": page, "page_size": page_size,
+    }
 
 
 @router.post("/exams/{exam_id}/schedules")
@@ -181,11 +203,24 @@ async def bulk_enter_marks(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    if not data:
+        return {"entered": 0}
+
+    schedule_ids = list({e.exam_schedule_id for e in data})
+    student_ids = list({e.student_id for e in data})
+
+    existing_stmt = select(ExamMark).where(
+        ExamMark.exam_schedule_id.in_(schedule_ids),
+        ExamMark.student_id.in_(student_ids),
+        ExamMark.tenant_id == current_user.tenant_id,
+    )
+    existing_rows = (await db.execute(existing_stmt)).scalars().all()
+    existing_map = {(m.exam_schedule_id, m.student_id): m for m in existing_rows}
+
     count = 0
     for entry in data:
-        stmt = select(ExamMark).where(ExamMark.exam_schedule_id == entry.exam_schedule_id, ExamMark.student_id == entry.student_id)
-        result = await db.execute(stmt)
-        existing = result.scalar_one_or_none()
+        key = (entry.exam_schedule_id, entry.student_id)
+        existing = existing_map.get(key)
 
         if existing:
             existing.marks_obtained = entry.marks_obtained
@@ -226,13 +261,20 @@ async def get_marks_for_schedule(
 
 @router.get("/grading-scales")
 async def list_grading_scales(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(GradingScale).where(GradingScale.tenant_id == current_user.tenant_id)
+    base = GradingScale.tenant_id == current_user.tenant_id
+    total = (await db.execute(select(func.count(GradingScale.id)).where(base))).scalar() or 0
+    stmt = select(GradingScale).where(base).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     scales = result.scalars().all()
-    return [{"id": str(s.id), "name": s.name, "scale_type": s.scale_type, "is_default": s.is_default} for s in scales]
+    return {
+        "items": [{"id": str(s.id), "name": s.name, "scale_type": s.scale_type, "is_default": s.is_default} for s in scales],
+        "total": total, "page": page, "page_size": page_size,
+    }
 
 
 @router.post("/grading-scales")
