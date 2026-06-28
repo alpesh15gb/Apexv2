@@ -19,11 +19,16 @@ router = APIRouter()
 
 @router.get("/daily-summary", response_model=DailyAttendanceSummary)
 async def daily_summary(
-    date: date = Query(...),
+    date: date = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     service = AttendanceService(db)
+    if date is None:
+        from sqlalchemy import func, select
+        from app.models.attendance import Attendance
+        latest = await db.execute(select(func.max(Attendance.date)).where(Attendance.tenant_id == current_user.tenant_id))
+        date = latest.scalar() or date.today()
     return await service.get_daily_summary(current_user.tenant_id, date)
 
 

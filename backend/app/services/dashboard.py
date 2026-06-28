@@ -29,7 +29,11 @@ class DashboardService:
     async def get_stats(self, tenant_id: uuid.UUID, target_date: Optional[date] = None) -> dict:
         """Get dashboard statistics for a tenant."""
         if target_date is None:
-            target_date = date.today()
+            # Use the latest date with attendance data, falling back to today
+            latest = await self.db.execute(
+                select(func.max(Attendance.date)).where(Attendance.tenant_id == tenant_id)
+            )
+            target_date = latest.scalar() or date.today()
 
         total_emp = (await self.db.execute(
             select(func.count(Employee.id)).where(
