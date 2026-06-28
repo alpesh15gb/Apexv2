@@ -13,10 +13,12 @@ import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/apex_date_picker.dart';
 
+final attendanceDateProvider = StateProvider<String>((ref) => DateFormat('yyyy-MM-dd').format(DateTime.now()));
+
 final attendanceStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
-  final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-  final res = await dio.get('/attendance/daily-summary', queryParameters: {'date': today});
+  final date = ref.watch(attendanceDateProvider);
+  final res = await dio.get('/attendance/daily-summary', queryParameters: {'date': date});
   return Map<String, dynamic>.from(res.data);
 });
 
@@ -155,7 +157,16 @@ class AttendanceDashboardScreen extends ConsumerWidget {
             statsAsync.when(
               data: (stats) => _StatsRow(stats: stats),
               loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
+              error: (e, _) => Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+                child: Row(children: [
+                  Icon(Icons.error_outline, color: ApexColors.error, size: 18),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Failed to load attendance stats', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+                  ApexButton(label: 'Retry', type: ApexButtonType.outline, onPressed: () => ref.invalidate(attendanceStatsProvider)),
+                ]),
+              ),
             ),
             const SizedBox(height: 16),
             _FiltersBar(),
@@ -238,6 +249,13 @@ class _FiltersBar extends ConsumerStatefulWidget {
 class _FiltersBarState extends ConsumerState<_FiltersBar> {
   DateTime _selectedDate = DateTime.now();
 
+  void _changeDate(DateTime newDate) {
+    setState(() => _selectedDate = newDate);
+    final dateStr = DateFormat('yyyy-MM-dd').format(newDate);
+    ref.read(attendanceDateProvider.notifier).state = dateStr;
+    ref.read(attendanceListProvider.notifier).setDate(dateStr);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -247,18 +265,12 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left, size: 20),
-            onPressed: () {
-              setState(() => _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
-              ref.read(attendanceListProvider.notifier).setDate(DateFormat('yyyy-MM-dd').format(_selectedDate));
-            },
+            onPressed: () => _changeDate(_selectedDate.subtract(const Duration(days: 1))),
           ),
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(context: context, initialDate: _selectedDate, firstDate: DateTime(2024), lastDate: DateTime(2030));
-              if (picked != null) {
-                setState(() => _selectedDate = picked);
-                ref.read(attendanceListProvider.notifier).setDate(DateFormat('yyyy-MM-dd').format(picked));
-              }
+              if (picked != null) _changeDate(picked);
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -272,22 +284,14 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right, size: 20),
-            onPressed: () {
-              setState(() => _selectedDate = _selectedDate.add(const Duration(days: 1)));
-              ref.read(attendanceListProvider.notifier).setDate(DateFormat('yyyy-MM-dd').format(_selectedDate));
-            },
+            onPressed: () => _changeDate(_selectedDate.add(const Duration(days: 1))),
           ),
           const SizedBox(width: 8),
           ApexButton(
             label: 'Today',
             type: ApexButtonType.ghost,
-            onPressed: () {
-              setState(() => _selectedDate = DateTime.now());
-              ref.read(attendanceListProvider.notifier).setDate(DateFormat('yyyy-MM-dd').format(DateTime.now()));
-            },
+            onPressed: () => _changeDate(DateTime.now()),
           ),
-          const Spacer(),
-          IconButton(icon: Icon(Icons.download, size: 18, color: ApexColors.neutral500), onPressed: () {}),
         ],
       ),
     );

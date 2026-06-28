@@ -17,6 +17,10 @@ from app.models.subscription import SubscriptionPlan, TenantSubscription
 router = APIRouter()
 
 
+class SubscriptionCancel(BaseModel):
+    reason: Optional[str] = ""
+
+
 class SubscriptionCreate(BaseModel):
     tenant_id: uuid.UUID
     plan_id: uuid.UUID
@@ -196,7 +200,7 @@ async def suspend_subscription(
 @router.post("/subscriptions/{sub_id}/cancel")
 async def cancel_subscription(
     sub_id: uuid.UUID,
-    data: dict,
+    data: SubscriptionCancel,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_superuser),
 ):
@@ -207,7 +211,7 @@ async def cancel_subscription(
 
     sub.status = "cancelled"
     sub.cancelled_at = datetime.now(timezone.utc)
-    sub.cancel_reason = data.get("reason", "")
+    sub.cancel_reason = data.reason
 
     tenant = await db.get(Tenant, sub.tenant_id)
     if tenant:

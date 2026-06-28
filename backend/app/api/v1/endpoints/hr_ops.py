@@ -138,10 +138,11 @@ async def create_notification_template(data: NotificationTemplateCreate, db: Asy
     return tmpl
 
 @router.put("/notification-templates/{tmpl_id}", response_model=NotificationTemplateResponse)
-async def update_notification_template(tmpl_id: uuid.UUID, data: dict, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def update_notification_template(tmpl_id: uuid.UUID, data: NotificationTemplateCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     stmt = select(NotificationTemplate).where(NotificationTemplate.id == tmpl_id, NotificationTemplate.tenant_id == current_user.tenant_id)
     tmpl = (await db.execute(stmt)).scalar_one_or_none()
     if not tmpl: raise HTTPException(status_code=404, detail="Template not found")
-    for field, val in data.items(): setattr(tmpl, field, val)
+    for field, val in data.model_dump(exclude_unset=True).items():
+        if hasattr(tmpl, field): setattr(tmpl, field, val)
     await db.commit(); await db.refresh(tmpl)
     return tmpl

@@ -1,7 +1,7 @@
 """Attendance API endpoints."""
 
 import uuid
-from datetime import date
+from datetime import date as date_type
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +19,7 @@ router = APIRouter()
 
 @router.get("/daily-summary", response_model=DailyAttendanceSummary)
 async def daily_summary(
-    date: date = Query(default=None),
+    date: date_type = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -28,7 +28,7 @@ async def daily_summary(
         from sqlalchemy import func, select
         from app.models.attendance import Attendance
         latest = await db.execute(select(func.max(Attendance.date)).where(Attendance.tenant_id == current_user.tenant_id))
-        date = latest.scalar() or date.today()
+        date = latest.scalar() or date_type.today()
     return await service.get_daily_summary(current_user.tenant_id, date)
 
 

@@ -1,7 +1,7 @@
 """WebSocket endpoint for real-time dashboard updates."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from app.core.security import decode_token
 from app.services.websocket_manager import ws_manager
@@ -38,7 +38,7 @@ async def dashboard_websocket(
             data = await websocket.receive_text()
             # Client can request specific data
             if data == "ping":
-                await websocket.send_json({"type": "pong", "timestamp": datetime.utcnow().isoformat()})
+                await websocket.send_json({"type": "pong", "timestamp": datetime.now(timezone.utc).isoformat()})
     except WebSocketDisconnect:
         await ws_manager.disconnect(websocket, tenant_id)
         logger.info("ws_client_disconnected", tenant_id=tenant_id, user_id=user_id)

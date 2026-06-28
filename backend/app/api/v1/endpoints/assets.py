@@ -34,6 +34,22 @@ class AssetAssign(BaseModel):
     remarks: Optional[str] = None
 
 
+class AssetUpdate(BaseModel):
+    name: Optional[str] = None
+    asset_code: Optional[str] = None
+    category: Optional[str] = None
+    serial_number: Optional[str] = None
+    purchase_date: Optional[date] = None
+    warranty_expiry: Optional[date] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+
+
+class AssetReturn(BaseModel):
+    condition: str = "available"
+    remarks: Optional[str] = None
+
+
 @router.get("/")
 async def list_assets(
     category: Optional[str] = None,
@@ -138,14 +154,14 @@ async def get_asset(
 @router.put("/{asset_id}")
 async def update_asset(
     asset_id: uuid.UUID,
-    data: dict,
+    data: AssetUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     asset = await db.get(CompanyAsset, asset_id)
     if not asset or asset.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Asset not found")
-    for k, v in data.items():
+    for k, v in data.model_dump(exclude_unset=True).items():
         if hasattr(asset, k) and k not in ("id", "tenant_id"):
             setattr(asset, k, v)
     await db.commit()
@@ -174,7 +190,7 @@ async def assign_asset(
 @router.post("/{asset_id}/return")
 async def return_asset(
     asset_id: uuid.UUID,
-    data: dict,
+    data: AssetReturn,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -183,7 +199,7 @@ async def return_asset(
         raise HTTPException(status_code=404, detail="Asset not found")
 
     asset.assigned_to = None
-    asset.status = data.get("condition", "available")
+    asset.status = data.condition
     await db.commit()
     return {"id": str(asset.id), "status": asset.status}
 
@@ -191,7 +207,6 @@ async def return_asset(
 @router.post("/{asset_id}/maintenance")
 async def send_to_maintenance(
     asset_id: uuid.UUID,
-    data: dict,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):

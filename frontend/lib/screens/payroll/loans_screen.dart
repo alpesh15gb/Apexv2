@@ -68,7 +68,7 @@ class LoansScreen extends ConsumerWidget {
         children: [
           Icon(Icons.money, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('No Loans or Advances', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+          Text('No Loans or Advances', style: ApexTypography.sectionTitle),
           const SizedBox(height: 8),
           Text('Employee loans and salary advances will appear here', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
         ],

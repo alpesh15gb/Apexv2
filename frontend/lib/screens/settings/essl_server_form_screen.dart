@@ -76,17 +76,19 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
 
   void _save() async {
     if (_formKey.currentState!.validate()) {
-      final data = {
+      final data = <String, dynamic>{
         'name': _nameController.text.trim(),
         'server_url': _urlController.text.trim(),
         'username': _usernameController.text.trim(),
-        'password': _passwordController.text,
         'timezone': _timezone,
         'auto_sync_enabled': _autoSync,
         'attendance_sync_interval_minutes': _attendanceInterval,
         'device_sync_interval_minutes': _deviceInterval,
         'employee_sync_hour': _employeeHour,
       };
+      if (_passwordController.text.isNotEmpty) {
+        data['password'] = _passwordController.text;
+      }
 
       try {
         final service = ref.read(esslServiceProvider);
@@ -140,7 +142,7 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
                   const SizedBox(height: 14),
                   ApexTextField(label: 'Username', controller: _usernameController, required: true),
                   const SizedBox(height: 14),
-                  ApexTextField(label: 'Password', controller: _passwordController, required: true, obscure: true),
+                  ApexTextField(label: 'Password', controller: _passwordController, required: widget.serverId == null, obscure: true, hint: widget.serverId != null ? 'Leave empty to keep current' : null),
                   if (widget.serverId != null) ...[
                     const SizedBox(height: 4),
                     SizedBox(

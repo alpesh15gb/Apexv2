@@ -259,11 +259,6 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
           _statusChip('Approved', 'approved'),
           _statusChip('Rejected', 'rejected'),
           _statusChip('Cancelled', 'cancelled'),
-          const Spacer(),
-          IconButton(
-            icon: Icon(Icons.download, size: 18, color: ApexColors.neutral500),
-            onPressed: () {},
-          ),
         ],
       ),
     );

@@ -16,6 +16,20 @@ from app.models.performance import ReviewCycle, Goal, PerformanceReview, Compete
 router = APIRouter()
 
 
+class ReviewSubmit(BaseModel):
+    rating: Optional[float] = None
+    strengths: Optional[str] = None
+    improvements: Optional[str] = None
+    comments: Optional[str] = None
+    goals_achievement: Optional[str] = None
+    competency_scores: Optional[dict] = None
+
+
+class GoalProgressUpdate(BaseModel):
+    progress: Optional[float] = None
+    current_value: Optional[float] = None
+
+
 # ---- Review Cycles ----
 
 class CycleCreate(BaseModel):
@@ -179,16 +193,18 @@ async def update_goal(
 @router.put("/goals/{goal_id}/progress")
 async def update_goal_progress(
     goal_id: uuid.UUID,
-    data: dict,
+    data: GoalProgressUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     goal = await db.get(Goal, goal_id)
     if not goal or goal.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Goal not found")
-    goal.progress = data.get("progress", goal.progress)
-    goal.current_value = data.get("current_value", goal.current_value)
-    if goal.progress >= 100:
+    if data.progress is not None:
+        goal.progress = data.progress
+    if data.current_value is not None:
+        goal.current_value = data.current_value
+    if goal.progress is not None and goal.progress >= 100:
         goal.status = "completed"
     await db.commit()
     return {"id": str(goal.id), "progress": goal.progress, "status": goal.status}
@@ -269,19 +285,25 @@ async def create_review(
 @router.put("/reviews/{review_id}/submit")
 async def submit_review(
     review_id: uuid.UUID,
-    data: dict,
+    data: ReviewSubmit,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     review = await db.get(PerformanceReview, review_id)
     if not review or review.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Review not found")
-    review.rating = data.get("rating", review.rating)
-    review.strengths = data.get("strengths", review.strengths)
-    review.improvements = data.get("improvements", review.improvements)
-    review.comments = data.get("comments", review.comments)
-    review.goals_achievement = data.get("goals_achievement", review.goals_achievement)
-    review.competency_scores = data.get("competency_scores", review.competency_scores)
+    if data.rating is not None:
+        review.rating = data.rating
+    if data.strengths is not None:
+        review.strengths = data.strengths
+    if data.improvements is not None:
+        review.improvements = data.improvements
+    if data.comments is not None:
+        review.comments = data.comments
+    if data.goals_achievement is not None:
+        review.goals_achievement = data.goals_achievement
+    if data.competency_scores is not None:
+        review.competency_scores = data.competency_scores
     review.status = "submitted"
     review.submitted_at = datetime.now(timezone.utc)
     await db.commit()

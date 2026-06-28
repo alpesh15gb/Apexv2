@@ -1,6 +1,6 @@
 """Super Admin Dashboard endpoints."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +9,6 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.employee import Employee
 from app.models.subscription import TenantSubscription
-from app.models.approval import LoginHistory
 
 router = APIRouter()
 
@@ -54,7 +53,7 @@ async def get_admin_stats(
 
 @router.get("/recent-activity")
 async def get_recent_activity(
-    limit: int = 20,
+    limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_superuser),
 ):

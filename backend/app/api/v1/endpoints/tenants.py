@@ -36,6 +36,7 @@ async def list_tenants(
 async def create_tenant(
     tenant_data: TenantCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_superuser),
 ) -> TenantResponse:
     """Create a new tenant."""
     service = TenantService(db)

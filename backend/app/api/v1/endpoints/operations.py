@@ -126,7 +126,7 @@ async def create_backup(
     """Trigger a manual backup."""
     import subprocess
     try:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"apex_backup_{timestamp}.sql"
         result = subprocess.run(
             ["pg_dump", "-h", "postgres", "-U", "apex", "-d", "apex_db", "-f", f"/backups/{filename}"],

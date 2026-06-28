@@ -88,6 +88,7 @@ class AttendanceSummary(BaseModel):
     early_out: int = 0
     holiday: int = 0
     week_off: int = 0
+    total_hours: float = 0.0
     total_overtime_hours: float = 0.0
 
 

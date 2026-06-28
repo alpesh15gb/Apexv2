@@ -147,12 +147,21 @@ class LeaveService:
         if isinstance(end_date, str):
             end_date = date.fromisoformat(end_date)
 
+        lt_stmt = select(LeaveType).where(LeaveType.id == leave_type_id, LeaveType.tenant_id == tenant_id, LeaveType.is_active == True)
+        if not (await self.db.execute(lt_stmt)).scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Leave type not found or inactive")
+
         if start_date > end_date:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="start_date cannot be after end_date")
 
         total_days = data.get("total_days")
         if total_days is None:
-            total_days = float((end_date - start_date).days + 1)
+            total_days = 0.0
+            current = start_date
+            while current <= end_date:
+                if current.weekday() < 5:
+                    total_days += 1.0
+                current = date.fromordinal(current.toordinal() + 1)
         else:
             total_days = float(total_days)
 
@@ -183,6 +192,20 @@ class LeaveService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Insufficient leave balance. Available: {available_days}, Requested: {total_days}"
+            )
+
+        # Check for overlapping leave requests
+        overlap_stmt = select(LeaveRequest).where(
+            LeaveRequest.employee_id == employee_id,
+            LeaveRequest.tenant_id == tenant_id,
+            LeaveRequest.status.in_(["pending", "approved"]),
+            LeaveRequest.start_date <= end_date,
+            LeaveRequest.end_date >= start_date,
+        )
+        if (await self.db.execute(overlap_stmt)).scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Overlapping leave request exists for this period"
             )
 
         # Create leave request
@@ -243,7 +266,7 @@ class LeaveService:
         await self.db.refresh(request)
         return request
 
-    async def reject_leave(self, request_id: uuid.UUID, tenant_id: uuid.UUID, approver_id: uuid.UUID, reason: str) -> LeaveRequest:
+    async def reject_leave(self, request_id: uuid.UUID, tenant_id: uuid.UUID, approver_id: uuid.UUID, reason: Optional[str] = None) -> LeaveRequest:
         stmt = select(LeaveRequest).where(LeaveRequest.id == request_id, LeaveRequest.tenant_id == tenant_id)
         res = await self.db.execute(stmt)
         request = res.scalar_one_or_none()

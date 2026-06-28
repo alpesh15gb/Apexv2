@@ -61,3 +61,20 @@ class ShiftScheduleResponse(BaseModel):
     day_of_week: Optional[int] = None
     shift_name: Optional[str] = None
     created_at: datetime
+
+    @classmethod
+    def model_validate(cls, obj, **kwargs):
+        if hasattr(obj, 'shift') and obj.shift:
+            data = {
+                'id': obj.id,
+                'tenant_id': obj.tenant_id,
+                'employee_id': obj.employee_id,
+                'shift_id': obj.shift_id,
+                'effective_from': obj.effective_from,
+                'effective_to': obj.effective_to,
+                'day_of_week': obj.day_of_week,
+                'shift_name': obj.shift.name if obj.shift else None,
+                'created_at': obj.created_at,
+            }
+            return cls(**data)
+        return super().model_validate(obj, **kwargs)

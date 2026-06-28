@@ -152,11 +152,12 @@ class EmployeeService:
             count_stmt = count_stmt.where(Employee.status == status)
             stmt = stmt.where(Employee.status == status)
         if search:
+            escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             search_filter = or_(
-                Employee.first_name.ilike(f"%{search}%"),
-                Employee.last_name.ilike(f"%{search}%"),
-                Employee.employee_code.ilike(f"%{search}%"),
-                Employee.email.ilike(f"%{search}%")
+                Employee.first_name.ilike(f"%{escaped}%"),
+                Employee.last_name.ilike(f"%{escaped}%"),
+                Employee.employee_code.ilike(f"%{escaped}%"),
+                Employee.email.ilike(f"%{escaped}%")
             )
             count_stmt = count_stmt.where(search_filter)
             stmt = stmt.where(search_filter)

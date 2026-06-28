@@ -16,6 +16,22 @@ from app.models.recruitment import JobRequisition, JobOpening, Candidate, Interv
 router = APIRouter()
 
 
+class InterviewFeedbackUpdate(BaseModel):
+    feedback: Optional[str] = None
+    rating: Optional[int] = None
+    recommendation: Optional[str] = None
+
+
+class CandidateStageUpdate(BaseModel):
+    stage: str
+    rating: Optional[int] = None
+    notes: Optional[str] = None
+
+
+class OfferReject(BaseModel):
+    reason: Optional[str] = None
+
+
 # ---- Job Requisitions ----
 
 class RequisitionCreate(BaseModel):
@@ -323,10 +339,11 @@ async def list_candidates(
         count_stmt = count_stmt.where(Candidate.stage == stage)
     if search:
         from sqlalchemy import or_
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         search_filter = or_(
-            Candidate.first_name.ilike(f"%{search}%"),
-            Candidate.last_name.ilike(f"%{search}%"),
-            Candidate.email.ilike(f"%{search}%"),
+            Candidate.first_name.ilike(f"%{escaped}%"),
+            Candidate.last_name.ilike(f"%{escaped}%"),
+            Candidate.email.ilike(f"%{escaped}%"),
         )
         stmt = stmt.where(search_filter)
         count_stmt = count_stmt.where(search_filter)
@@ -398,18 +415,18 @@ async def update_candidate(
 @router.put("/candidates/{candidate_id}/stage")
 async def move_candidate_stage(
     candidate_id: uuid.UUID,
-    data: dict,
+    data: CandidateStageUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     candidate = await db.get(Candidate, candidate_id)
     if not candidate or candidate.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Candidate not found")
-    candidate.stage = data.get("stage", candidate.stage)
-    if "rating" in data:
-        candidate.rating = data["rating"]
-    if "notes" in data:
-        candidate.notes = data["notes"]
+    candidate.stage = data.stage
+    if data.rating is not None:
+        candidate.rating = data.rating
+    if data.notes is not None:
+        candidate.notes = data.notes
     await db.commit()
     return {"id": str(candidate.id), "stage": candidate.stage}
 
@@ -495,16 +512,16 @@ async def create_interview(
 @router.put("/interviews/{interview_id}/feedback")
 async def submit_feedback(
     interview_id: uuid.UUID,
-    data: dict,
+    data: InterviewFeedbackUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     interview = await db.get(Interview, interview_id)
     if not interview or interview.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Interview not found")
-    interview.feedback = data.get("feedback")
-    interview.rating = data.get("rating")
-    interview.recommendation = data.get("recommendation")
+    interview.feedback = data.feedback
+    interview.rating = data.rating
+    interview.recommendation = data.recommendation
     interview.status = "completed"
     interview.conducted_at = datetime.now(timezone.utc)
     await db.commit()
@@ -603,7 +620,7 @@ async def accept_offer(
 @router.put("/offers/{offer_id}/reject")
 async def reject_offer(
     offer_id: uuid.UUID,
-    data: dict,
+    data: OfferReject,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -612,7 +629,7 @@ async def reject_offer(
         raise HTTPException(status_code=404, detail="Offer not found")
     offer.status = "rejected"
     offer.rejected_at = datetime.now(timezone.utc)
-    offer.rejection_reason = data.get("reason")
+    offer.rejection_reason = data.reason
 
     candidate = await db.get(Candidate, offer.candidate_id)
     if candidate:

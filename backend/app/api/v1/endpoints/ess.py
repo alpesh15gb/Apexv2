@@ -23,6 +23,22 @@ from app.models.expense import ExpenseClaim
 router = APIRouter()
 
 
+class ProfileUpdate(BaseModel):
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    blood_group: Optional[str] = None
+
+
+class EssPasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
+
 async def get_current_employee(db: AsyncSession, user: User) -> Employee:
     """Get the employee record for the current user."""
     stmt = select(Employee).where(
@@ -356,16 +372,15 @@ async def my_profile(
 
 @router.put("/profile")
 async def update_my_profile(
-    data: dict,
+    data: ProfileUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Update my profile (limited fields)."""
     employee = await get_current_employee(db, current_user)
-    allowed_fields = ["phone", "address", "city", "state", "pincode", "emergency_contact_name", "emergency_contact_phone", "blood_group"]
-    for field in allowed_fields:
-        if field in data:
-            setattr(employee, field, data[field])
+    for field, val in data.model_dump(exclude_unset=True).items():
+        if val is not None:
+            setattr(employee, field, val)
     await db.commit()
     return {"message": "Profile updated"}
 
@@ -430,23 +445,17 @@ async def my_notifications(
 
 @router.post("/change-password")
 async def change_my_password(
-    data: dict,
+    data: EssPasswordChange,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Change my password."""
     from app.core.security import verify_password, hash_password
 
-    old_password = data.get("old_password", "")
-    new_password = data.get("new_password", "")
-
-    if not old_password or not new_password:
-        raise HTTPException(status_code=400, detail="Both old and new passwords required")
-
-    if not verify_password(old_password, current_user.hashed_password):
+    if not verify_password(data.old_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
-    current_user.hashed_password = hash_password(new_password)
+    current_user.hashed_password = hash_password(data.new_password)
     current_user.must_change_password = False
     current_user.last_password_change = datetime.now(timezone.utc)
     await db.commit()

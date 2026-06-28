@@ -79,8 +79,6 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   _SettingsGroup(items: [
                     _SettingsItem(icon: Icons.receipt_long, label: 'Expense Claims', subtitle: 'Employee expense management', onTap: () => context.push('/expenses')),
-                    _SettingsItem(icon: Icons.account_balance, label: 'Tax Declarations', subtitle: 'Employee tax management', onTap: () {}),
-                    _SettingsItem(icon: Icons.card_giftcard, label: 'Benefits', subtitle: 'Perks and benefits', onTap: () {}),
                   ]),
                   const SizedBox(height: 20),
                   Text('SECURITY', style: ApexTypography.sectionHeader),

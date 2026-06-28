@@ -52,7 +52,11 @@ class LeaveRequestCreate(BaseModel):
 
 
 class LeaveRequestUpdate(BaseModel):
-    status: str = Field(..., pattern="^(approved|rejected|cancelled)$")
+    status: Optional[str] = Field(None, pattern="^(approved|rejected|cancelled)$")
+    rejection_reason: Optional[str] = None
+
+
+class LeaveRejectRequest(BaseModel):
     rejection_reason: Optional[str] = None
 
 

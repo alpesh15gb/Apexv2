@@ -1,7 +1,7 @@
 """Super Admin Tenant Management endpoints."""
 
 import uuid
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, HTTPException
@@ -53,6 +53,11 @@ class ResourceLimitUpdate(BaseModel):
     is_unlimited: bool = False
 
 
+class TenantFeatureUpdate(BaseModel):
+    feature_codes: list[str] = []
+    enabled: bool = True
+
+
 @router.get("/")
 async def list_tenants(
     page: int = Query(1, ge=1),
@@ -70,10 +75,11 @@ async def list_tenants(
         count_stmt = count_stmt.where(Tenant.subscription_status == status)
         stmt = stmt.where(Tenant.subscription_status == status)
     if search:
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         search_filter = or_(
-            Tenant.name.ilike(f"%{search}%"),
-            Tenant.slug.ilike(f"%{search}%"),
-            Tenant.email.ilike(f"%{search}%"),
+            Tenant.name.ilike(f"%{escaped}%"),
+            Tenant.slug.ilike(f"%{escaped}%"),
+            Tenant.email.ilike(f"%{escaped}%"),
         )
         count_stmt = count_stmt.where(search_filter)
         stmt = stmt.where(search_filter)
@@ -196,6 +202,7 @@ async def create_tenant(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Slug already exists")
 
+    trial_end = datetime.now(timezone.utc) + timedelta(days=14)
     tenant = Tenant(
         name=data.name,
         slug=data.slug,
@@ -208,7 +215,7 @@ async def create_tenant(
         currency=data.currency,
         timezone=data.timezone,
         subscription_status="trial",
-        trial_ends_at=datetime.now(timezone.utc).replace(hour=23, minute=59, second=59),
+        trial_ends_at=trial_end.replace(hour=23, minute=59, second=59),
         is_active=True,
     )
     db.add(tenant)
@@ -332,14 +339,12 @@ async def get_tenant_features(
 @router.put("/{tenant_id}/features")
 async def update_tenant_features(
     tenant_id: uuid.UUID,
-    features: dict,
+    features: TenantFeatureUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_superuser),
 ):
-    """Enable/disable features for a tenant. Body: {"feature_codes": [...], "enabled": true/false}"""
+    """Enable/disable features for a tenant."""
     from app.core.feature_gate import FeatureGate
-    feature_codes = features.get("feature_codes", [])
-    enabled = features.get("enabled", True)
-    count = await FeatureGate.bulk_set_features(db, tenant_id, feature_codes, enabled, current_user.id)
+    count = await FeatureGate.bulk_set_features(db, tenant_id, features.feature_codes, features.enabled, current_user.id)
     await db.commit()
     return {"updated": count}

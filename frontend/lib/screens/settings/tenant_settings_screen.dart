@@ -163,12 +163,18 @@ class TenantSettingsScreen extends ConsumerWidget {
         ApexButton(
           label: 'Save',
           onPressed: () async {
-            await ref.read(tenantSettingsProvider.notifier).update({
-              'attendance_year_start_month': startMonth, 'attendance_year_start_day': startDay,
-              'min_punch_difference_minutes': minPunch, 'punch_begin_before_minutes': punchBegin,
-              'auto_shift_if_no_schedule': autoShift, 'fixed_shift_mode': fixedShift,
-            });
-            if (ctx.mounted) Navigator.pop(ctx);
+            try {
+              await ref.read(tenantSettingsProvider.notifier).update({
+                'attendance_year_start_month': startMonth, 'attendance_year_start_day': startDay,
+                'min_punch_difference_minutes': minPunch, 'punch_begin_before_minutes': punchBegin,
+                'auto_shift_if_no_schedule': autoShift, 'fixed_shift_mode': fixedShift,
+              });
+              if (ctx.mounted) Navigator.pop(ctx);
+            } catch (e) {
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $e'), backgroundColor: ApexColors.error));
+              }
+            }
           },
           type: ApexButtonType.primary,
         ),

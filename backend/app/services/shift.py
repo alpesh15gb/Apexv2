@@ -78,12 +78,25 @@ class ShiftService:
     async def assign_shift(
         self,
         tenant_id: uuid.UUID,
-        employee_id: uuid.UUID,
-        shift_id: uuid.UUID,
-        effective_from: date,
-        effective_to: Optional[date] = None,
-        day_of_week: Optional[int] = None
+        data: Any,
     ) -> ShiftSchedule:
+        if not isinstance(data, dict):
+            data = data.model_dump(exclude_unset=True)
+
+        employee_id = data.get("employee_id")
+        shift_id = data.get("shift_id")
+        effective_from = data.get("effective_from")
+        effective_to = data.get("effective_to")
+        day_of_week = data.get("day_of_week")
+
+        if not employee_id or not shift_id or not effective_from:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="employee_id, shift_id, and effective_from are required")
+
+        if isinstance(employee_id, str):
+            employee_id = uuid.UUID(employee_id)
+        if isinstance(shift_id, str):
+            shift_id = uuid.UUID(shift_id)
+
         # Check if shift exists
         stmt_shift = select(Shift).where(Shift.id == shift_id, Shift.tenant_id == tenant_id)
         if not (await self.db.execute(stmt_shift)).scalar_one_or_none():
@@ -158,18 +171,20 @@ class ShiftService:
     async def list_shift_schedules(
         self,
         tenant_id: uuid.UUID,
-        employee_id: uuid.UUID,
+        employee_id: Optional[uuid.UUID] = None,
         page: int = 1,
         page_size: int = 20
     ) -> Tuple[List[ShiftSchedule], int]:
         count_stmt = select(func.count(ShiftSchedule.id)).where(
-            ShiftSchedule.employee_id == employee_id,
             ShiftSchedule.tenant_id == tenant_id
         )
         stmt = select(ShiftSchedule).where(
-            ShiftSchedule.employee_id == employee_id,
             ShiftSchedule.tenant_id == tenant_id
-        ).options(selectinload(ShiftSchedule.shift)).offset((page - 1) * page_size).limit(page_size)
+        ).options(selectinload(ShiftSchedule.shift))
+        if employee_id:
+            count_stmt = count_stmt.where(ShiftSchedule.employee_id == employee_id)
+            stmt = stmt.where(ShiftSchedule.employee_id == employee_id)
+        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
 
         total_res = await self.db.execute(count_stmt)
         total = total_res.scalar() or 0

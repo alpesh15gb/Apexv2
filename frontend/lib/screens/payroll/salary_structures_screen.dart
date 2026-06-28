@@ -67,7 +67,7 @@ class SalaryStructuresScreen extends ConsumerWidget {
         children: [
           Icon(Icons.account_balance, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('No Salary Structures', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+          Text('No Salary Structures', style: ApexTypography.sectionTitle),
           const SizedBox(height: 8),
           Text('Create salary templates for your organization', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
@@ -100,7 +100,7 @@ class SalaryStructuresScreen extends ConsumerWidget {
             children: [
               TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Structure Name *', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              const Text('Earnings', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+              Text('Earnings', style: ApexTypography.cardTitle.copyWith(fontSize: 14)),
               const SizedBox(height: 8),
               Row(children: [
                 Expanded(child: TextField(controller: basicCtrl, decoration: const InputDecoration(labelText: 'Basic', border: OutlineInputBorder()), keyboardType: TextInputType.number)),

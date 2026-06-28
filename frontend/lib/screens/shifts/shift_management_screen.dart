@@ -75,7 +75,7 @@ class ShiftManagementScreen extends ConsumerWidget {
         children: [
           Icon(Icons.schedule, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('No Shifts Configured', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+          Text('No Shifts Configured', style: ApexTypography.sectionTitle),
           const SizedBox(height: 8),
           Text('Create shifts to manage employee work schedules', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),

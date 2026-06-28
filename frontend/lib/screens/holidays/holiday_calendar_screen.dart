@@ -44,7 +44,16 @@ class HolidayService {
     final params = <String, dynamic>{};
     if (year != null) params['year'] = year;
     final response = await _dio.get('/holidays/', queryParameters: params);
-    return (response.data as List).map((e) => Holiday.fromJson(e)).toList();
+    final data = response.data;
+    final List items;
+    if (data is List) {
+      items = data;
+    } else if (data is Map && data.containsKey('items')) {
+      items = data['items'];
+    } else {
+      items = [];
+    }
+    return items.map((e) => Holiday.fromJson(e)).toList();
   }
 
   Future<Holiday> createHoliday(Map<String, dynamic> data) async {
@@ -268,12 +277,18 @@ class HolidayCalendarScreen extends ConsumerWidget {
                   'description': descController.text.trim(),
                 };
                 final notifier = ref.read(holidayListProvider.notifier);
-                if (holiday != null) {
-                  await notifier.updateHoliday(holiday.id, data);
-                } else {
-                  await notifier.addHoliday(data);
+                try {
+                  if (holiday != null) {
+                    await notifier.updateHoliday(holiday.id, data);
+                  } else {
+                    await notifier.addHoliday(data);
+                  }
+                  if (ctx.mounted) Navigator.pop(ctx);
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: ApexColors.error));
+                  }
                 }
-                if (ctx.mounted) Navigator.pop(ctx);
               },
             ),
           ],
@@ -295,8 +310,15 @@ class HolidayCalendarScreen extends ConsumerWidget {
             label: 'Delete',
             type: ApexButtonType.danger,
             onPressed: () async {
-              await ref.read(holidayListProvider.notifier).deleteHoliday(holiday.id);
-              if (ctx.mounted) Navigator.pop(ctx);
+              try {
+                await ref.read(holidayListProvider.notifier).deleteHoliday(holiday.id);
+                if (ctx.mounted) Navigator.pop(ctx);
+              } catch (e) {
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e'), backgroundColor: ApexColors.error));
+                }
+              }
             },
           ),
         ],

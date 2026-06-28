@@ -307,6 +307,7 @@ class AttendanceService:
             late=late_days,
             early_out=early_out_days,
             half_day=half_days,
+            total_hours=total_hours,
             total_overtime_hours=total_overtime_hours
         )
 
@@ -369,6 +370,11 @@ class AttendanceService:
         # Parse date if passed as string
         if isinstance(attendance_date, str):
             attendance_date = datetime.strptime(attendance_date, "%Y-%m-%d").date()
+
+        # Validate employee exists
+        emp_stmt = select(Employee).where(Employee.id == employee_id, Employee.tenant_id == tenant_id)
+        if not (await self.db.execute(emp_stmt)).scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         # Check if exists
         stmt = select(Attendance).where(

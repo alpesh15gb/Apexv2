@@ -41,6 +41,14 @@ async def admin_login(
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account disabled")
 
+    from app.core.password_policy import check_account_lockout
+    is_locked, lock_msg = check_account_lockout(
+        user.failed_login_attempts or 0,
+        user.locked_until,
+    )
+    if is_locked:
+        raise HTTPException(status_code=423, detail=lock_msg)
+
     access_token = create_access_token(subject=str(user.id), tenant_id=str(user.tenant_id))
     refresh_token = create_refresh_token(subject=str(user.id), tenant_id=str(user.tenant_id))
 

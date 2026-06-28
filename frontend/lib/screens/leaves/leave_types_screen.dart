@@ -10,11 +10,14 @@ import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/apex_text_field.dart';
 
-final leaveTypesProvider = FutureProvider<List<dynamic>>((ref) async {
+final leaveTypesListProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
   try {
-    final res = await dio.get('/leaves/types');
-    return res.data is List ? res.data : [];
+    final res = await dio.get('/leaves/types', queryParameters: {'page': 1, 'page_size': 100});
+    final data = res.data;
+    if (data is List) return data;
+    if (data is Map && data.containsKey('items')) return List<dynamic>.from(data['items']);
+    return [];
   } catch (e) {
     return [];
   }
@@ -25,7 +28,7 @@ class LeaveTypesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final typesAsync = ref.watch(leaveTypesProvider);
+    final typesAsync = ref.watch(leaveTypesListProvider);
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
@@ -68,7 +71,7 @@ class LeaveTypesScreen extends ConsumerWidget {
               ApexButton(
                 label: 'Retry',
                 type: ApexButtonType.outline,
-                onPressed: () => ref.invalidate(leaveTypesProvider),
+                onPressed: () => ref.invalidate(leaveTypesListProvider),
               ),
             ],
           ),
@@ -156,7 +159,7 @@ class LeaveTypesScreen extends ConsumerWidget {
                     'is_active': isActive,
                   });
                   Navigator.pop(ctx);
-                  ref.invalidate(leaveTypesProvider);
+                  ref.invalidate(leaveTypesListProvider);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Leave type created'), backgroundColor: ApexColors.success),
                   );
@@ -237,7 +240,7 @@ class _LeaveTypeCard extends StatelessWidget {
               if (v == 'toggle') {
                 final dio = ref.read(dioProvider);
                 await dio.put('/leaves/types/${type['id']}', data: {'is_active': !isActive});
-                ref.invalidate(leaveTypesProvider);
+                ref.invalidate(leaveTypesListProvider);
               }
             },
           ),

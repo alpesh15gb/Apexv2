@@ -207,7 +207,6 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
             icon: Icon(Icons.view_list, color: dirState.viewMode == ViewMode.table ? ApexColors.primary : ApexColors.neutral500),
             onPressed: () => ref.read(employeeDirectoryProvider.notifier).setViewMode(ViewMode.table),
           ),
-          IconButton(icon: Icon(Icons.download, color: ApexColors.neutral500), onPressed: _exportEmployees),
         ],
       ),
     );
@@ -233,9 +232,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
       child: Row(children: [
         Text('${_selected.length} selected', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ApexColors.primary)),
         const Spacer(),
-        TextButton.icon(onPressed: () {}, icon: const Icon(Icons.download, size: 16), label: const Text('Export Selected')),
-        TextButton.icon(onPressed: () {}, icon: const Icon(Icons.email, size: 16), label: const Text('Send Email')),
-        TextButton.icon(onPressed: () => setState(() => _selected.clear()), icon: const Icon(Icons.close, size: 16), label: const Text('Clear')),
+        TextButton.icon(onPressed: () => setState(() => _selected.clear()), icon: const Icon(Icons.close, size: 16), label: const Text('Clear Selection')),
       ]),
     );
   }
@@ -395,16 +392,6 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
     ));
   }
 
-  void _exportEmployees() {
-    showDialog(context: context, builder: (ctx) => SimpleDialog(
-      title: const Text('Export Employees'),
-      children: [
-        SimpleDialogOption(child: const Text('Export as Excel'), onPressed: () => Navigator.pop(ctx)),
-        SimpleDialogOption(child: const Text('Export as PDF'), onPressed: () => Navigator.pop(ctx)),
-        SimpleDialogOption(child: const Text('Export as CSV'), onPressed: () => Navigator.pop(ctx)),
-      ],
-    ));
-  }
 }
 
 class _EmployeeGridCard extends StatelessWidget {

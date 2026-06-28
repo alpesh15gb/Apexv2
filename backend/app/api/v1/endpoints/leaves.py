@@ -10,7 +10,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseBase
 from app.schemas.leave import (
     LeaveTypeCreate, LeaveTypeResponse,
-    LeaveBalanceResponse, LeaveRequestCreate, LeaveRequestUpdate, LeaveRequestResponse,
+    LeaveBalanceResponse, LeaveRequestCreate, LeaveRequestUpdate, LeaveRejectRequest, LeaveRequestResponse,
 )
 from app.services.leave import LeaveService
 
@@ -112,7 +112,7 @@ async def approve_leave(
 @router.put("/requests/{request_id}/reject", response_model=LeaveRequestResponse)
 async def reject_leave(
     request_id: uuid.UUID,
-    data: LeaveRequestUpdate,
+    data: LeaveRejectRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):

@@ -221,9 +221,19 @@ class _ProfileHeader extends StatelessWidget {
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, size: 18),
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'deactivate', child: Text('Deactivate')),
+            PopupMenuItem(
+              value: employee.status == 'active' ? 'deactivate' : 'activate',
+              child: Text(employee.status == 'active' ? 'Deactivate' : 'Activate'),
+            ),
           ],
-          onSelected: (v) {},
+          onSelected: (v) {
+            if (v == 'deactivate' || v == 'activate') {
+              final newStatus = v == 'deactivate' ? 'inactive' : 'active';
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Employee status changed to $newStatus'), backgroundColor: ApexColors.success),
+              );
+            }
+          },
         ),
       ],
     );

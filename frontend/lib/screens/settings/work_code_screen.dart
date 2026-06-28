@@ -24,8 +24,17 @@ class WorkCodeListNotifier extends StateNotifier<AsyncValue<List<WorkCodeItem>>>
   Future<void> fetch({bool isRefresh = false}) async {
     if (isRefresh) state = const AsyncValue.loading();
     try {
-      final r = await _dio.get('/work-codes/');
-      state = AsyncValue.data((r.data as List).map((e) => WorkCodeItem.fromJson(e)).toList());
+      final r = await _dio.get('/work-codes/', queryParameters: {'page': 1, 'page_size': 100});
+      final data = r.data;
+      final List items;
+      if (data is List) {
+        items = data;
+      } else if (data is Map && data.containsKey('items')) {
+        items = data['items'];
+      } else {
+        items = [];
+      }
+      state = AsyncValue.data(items.map((e) => WorkCodeItem.fromJson(e)).toList());
     } catch (e, s) { state = AsyncValue.error(e, s); }
   }
 
@@ -108,10 +117,17 @@ class WorkCodeScreen extends ConsumerWidget {
         ApexButton(
           label: wc != null ? 'Update' : 'Add',
           onPressed: () async {
+            if (codeCtrl.text.trim().isEmpty || nameCtrl.text.trim().isEmpty) return;
             final data = {'code': codeCtrl.text.trim().toUpperCase(), 'name': nameCtrl.text.trim(), 'description': descCtrl.text.trim()};
             final notifier = ref.read(workCodeListProvider.notifier);
-            if (wc != null) { await notifier.update(wc.id, data); } else { await notifier.add(data); }
-            if (ctx.mounted) Navigator.pop(ctx);
+            try {
+              if (wc != null) { await notifier.update(wc.id, data); } else { await notifier.add(data); }
+              if (ctx.mounted) Navigator.pop(ctx);
+            } catch (e) {
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: ApexColors.error));
+              }
+            }
           },
           type: ApexButtonType.primary,
         ),
@@ -127,7 +143,17 @@ class WorkCodeScreen extends ConsumerWidget {
         ApexButton(label: 'Cancel', onPressed: () => Navigator.pop(ctx), type: ApexButtonType.outline),
         ApexButton(
           label: 'Delete',
-          onPressed: () { ref.read(workCodeListProvider.notifier).delete(id); Navigator.pop(ctx); },
+          onPressed: () async {
+            try {
+              await ref.read(workCodeListProvider.notifier).delete(id);
+              if (ctx.mounted) Navigator.pop(ctx);
+            } catch (e) {
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e'), backgroundColor: ApexColors.error));
+              }
+            }
+          },
           type: ApexButtonType.danger,
         ),
       ],

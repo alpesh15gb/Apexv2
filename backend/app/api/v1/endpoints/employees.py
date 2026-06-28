@@ -246,4 +246,4 @@ async def deactivate_employee(
     current_user: User = Depends(get_current_active_user),
 ):
     service = EmployeeService(db)
-    return await service.update_employee(employee_id, current_user.tenant_id, {"status": "inactive"})
+    return await service.update_employee(employee_id, current_user.tenant_id, EmployeeUpdate(status="inactive"))

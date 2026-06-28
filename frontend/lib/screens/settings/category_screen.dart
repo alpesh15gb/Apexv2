@@ -45,18 +45,30 @@ class CategoryListNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   }
 
   Future<void> add(Map<String, dynamic> data) async {
-    final r = await _dio.post('/categories/', data: data);
-    if (state.value != null) state = AsyncValue.data([Category.fromJson(r.data), ...state.value!]);
+    try {
+      final r = await _dio.post('/categories/', data: data);
+      if (state.value != null) state = AsyncValue.data([Category.fromJson(r.data), ...state.value!]);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> update(String id, Map<String, dynamic> data) async {
-    final r = await _dio.put('/categories/$id', data: data);
-    if (state.value != null) state = AsyncValue.data(state.value!.map((c) => c.id == id ? Category.fromJson(r.data) : c).toList());
+    try {
+      final r = await _dio.put('/categories/$id', data: data);
+      if (state.value != null) state = AsyncValue.data(state.value!.map((c) => c.id == id ? Category.fromJson(r.data) : c).toList());
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> delete(String id) async {
-    await _dio.delete('/categories/$id');
-    if (state.value != null) state = AsyncValue.data(state.value!.where((c) => c.id != id).toList());
+    try {
+      await _dio.delete('/categories/$id');
+      if (state.value != null) state = AsyncValue.data(state.value!.where((c) => c.id != id).toList());
+    } catch (e) {
+      rethrow;
+    }
   }
 }
 
@@ -192,10 +204,17 @@ class CategoryScreen extends ConsumerWidget {
         ApexButton(
           label: category != null ? 'Update' : 'Add',
           onPressed: () async {
+            if (nameCtrl.text.trim().isEmpty || codeCtrl.text.trim().isEmpty) return;
             final data = {'name': nameCtrl.text.trim(), 'code': codeCtrl.text.trim().toUpperCase(), 'ot_formula': otFormula, 'grace_minutes': grace, 'half_day_threshold_minutes': halfDay, 'weekly_off_1': wo1, 'weekly_off_2': wo2, 'weekly_off_2_week': wo2Week};
             final notifier = ref.read(categoryListProvider.notifier);
-            if (category != null) { await notifier.update(category.id, data); } else { await notifier.add(data); }
-            if (ctx.mounted) Navigator.pop(ctx);
+            try {
+              if (category != null) { await notifier.update(category.id, data); } else { await notifier.add(data); }
+              if (ctx.mounted) Navigator.pop(ctx);
+            } catch (e) {
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: ApexColors.error));
+              }
+            }
           },
           type: ApexButtonType.primary,
         ),
@@ -211,7 +230,17 @@ class CategoryScreen extends ConsumerWidget {
         ApexButton(label: 'Cancel', onPressed: () => Navigator.pop(ctx), type: ApexButtonType.outline),
         ApexButton(
           label: 'Delete',
-          onPressed: () { ref.read(categoryListProvider.notifier).delete(id); Navigator.pop(ctx); },
+          onPressed: () async {
+            try {
+              await ref.read(categoryListProvider.notifier).delete(id);
+              if (ctx.mounted) Navigator.pop(ctx);
+            } catch (e) {
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e'), backgroundColor: ApexColors.error));
+              }
+            }
+          },
           type: ApexButtonType.danger,
         ),
       ],
