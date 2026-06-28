@@ -35,7 +35,7 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Feature Management', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Feature Management', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
         actions: [
           if (_selected.isNotEmpty) ...[
@@ -98,9 +98,9 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                   }),
                 ),
                 const SizedBox(width: 40),
-                const Expanded(flex: 2, child: Text('FEATURE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
-                const Expanded(child: Text('CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
-                const SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                Expanded(flex: 2, child: Text('FEATURE', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                Expanded(child: Text('CATEGORY', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 80, child: Text('STATUS', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
                 const SizedBox(width: 60),
               ]),
             ),
@@ -135,7 +135,7 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                             color: (f['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(f['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: f['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500)),
+                          child: Text(f['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: f['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500)),
                         ),
                       ),
                       SizedBox(
@@ -154,7 +154,7 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
           ]);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }

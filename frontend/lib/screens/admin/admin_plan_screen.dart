@@ -27,7 +27,7 @@ class AdminPlanScreen extends ConsumerWidget {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Subscription Plans', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Subscription Plans', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
         actions: [
           ElevatedButton.icon(
@@ -58,7 +58,7 @@ class AdminPlanScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(color: (p['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                    child: Text(p['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: p['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500)),
+                    child: Text(p['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: p['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500)),
                   ),
                 ]),
                 const SizedBox(height: 16),
@@ -90,7 +90,7 @@ class AdminPlanScreen extends ConsumerWidget {
           },
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }

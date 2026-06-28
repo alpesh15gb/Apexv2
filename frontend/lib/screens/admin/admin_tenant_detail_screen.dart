@@ -59,13 +59,13 @@ class _AdminTenantDetailScreenState extends ConsumerState<AdminTenantDetailScree
             TextButton.icon(
               onPressed: () => _activateTenant(),
               icon: Icon(Icons.check_circle, size: 16, color: ApexColors.successDark),
-              label: const Text('Activate', style: TextStyle(color: ApexColors.successDark)),
+              label: Text('Activate', style: ApexTypography.body.copyWith(color: ApexColors.successDark)),
             )
           else
             TextButton.icon(
               onPressed: () => _suspendTenant(),
               icon: Icon(Icons.block, size: 16, color: ApexColors.errorDark),
-              label: const Text('Suspend', style: TextStyle(color: ApexColors.errorDark)),
+              label: Text('Suspend', style: ApexTypography.body.copyWith(color: ApexColors.errorDark)),
             ),
           const SizedBox(width: 8),
         ],
@@ -330,7 +330,7 @@ class _LimitsTabState extends ConsumerState<_LimitsTab> {
                 Expanded(child: Text(lim['label'] as String, style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900))),
                 if (isWarning) Icon(Icons.warning, size: 16, color: ApexColors.warning),
                 const SizedBox(width: 8),
-                Text('$currentVal / $maxVal', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isWarning ? ApexColors.warning : ApexColors.neutral900)),
+                Text('$currentVal / $maxVal', style: ApexTypography.captionMedium.copyWith(fontWeight: FontWeight.w600, color: isWarning ? ApexColors.warning : ApexColors.neutral900)),
                 IconButton(
                   icon: Icon(Icons.edit, size: 16, color: ApexColors.neutral500),
                   onPressed: () => _editLimit(lim['key'] as String, maxVal as int),
@@ -511,7 +511,7 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(color: (u['status'] == 'active' ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: Text((u['status'] ?? 'unknown').toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: u['status'] == 'active' ? ApexColors.successDark : ApexColors.neutral500)),
+              child: Text((u['status'] ?? 'unknown').toUpperCase(), style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: u['status'] == 'active' ? ApexColors.successDark : ApexColors.neutral500)),
             ),
           ]),
         );

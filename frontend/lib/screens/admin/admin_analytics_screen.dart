@@ -53,7 +53,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
         backgroundColor: ApexColors.neutral0,
         foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Platform Analytics', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Platform Analytics', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
       ),
       body: SingleChildScrollView(
@@ -61,7 +61,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Customer Success', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+            Text('Customer Success', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
             csAsync.when(
               data: (cs) => _StatsRow(
@@ -79,7 +79,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
               error: (e, _) => Text('Error: $e'),
             ),
             const SizedBox(height: 24),
-            const Text('Platform Growth', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+            Text('Platform Growth', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
             analyticsAsync.when(
               data: (analytics) {
@@ -101,11 +101,11 @@ class AdminAnalyticsScreen extends ConsumerWidget {
               error: (e, _) => Text('Error: $e'),
             ),
             const SizedBox(height: 24),
-            const Text('Active Subscriptions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+            Text('Active Subscriptions', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
             subsAsync.when(
               data: (subs) {
-                if (subs.isEmpty) return const Text('No active subscriptions', style: TextStyle(color: ApexColors.neutral500));
+                if (subs.isEmpty) return Text('No active subscriptions', style: ApexTypography.body.copyWith(color: ApexColors.neutral500));
                 return Column(
                   children: subs.map((s) => Container(
                     margin: const EdgeInsets.only(bottom: 6),
@@ -122,7 +122,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                           color: _statusColor(s['status']).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text((s['status'] ?? '').toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor(s['status']))),
+                        child: Text((s['status'] ?? '').toUpperCase(), style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: _statusColor(s['status']))),
                       ),
                     ]),
                   )).toList(),
@@ -174,7 +174,7 @@ class _StatsRow extends StatelessWidget {
                   child: Icon(s.icon, size: 14, color: s.color),
                 ),
                 const Spacer(),
-                Text(s.value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: s.color)),
+                Text(s.value, style: ApexTypography.kpiValue.copyWith(color: s.color)),
               ]),
               const SizedBox(height: 6),
               Text(s.label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
