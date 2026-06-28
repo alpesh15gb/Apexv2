@@ -726,7 +726,10 @@ class EsslConnectorService:
 
                         bulk_success = True
                         raw_logs = logs_result.get("data", [])
-                        if isinstance(raw_logs, dict):
+                        # Handle paginated response format: {"items": [...], "total": N}
+                        if isinstance(raw_logs, dict) and "items" in raw_logs:
+                            raw_logs = raw_logs["items"]
+                        elif isinstance(raw_logs, dict):
                             raw_logs = [raw_logs]
 
                         for log in raw_logs:
@@ -793,10 +796,16 @@ class EsslConnectorService:
                             continue
 
                         punches = punch_result.get("data", [])
-                        if isinstance(punches, dict):
+                        # Handle paginated response format: {"items": [...], "total": N}
+                        if isinstance(punches, dict) and "items" in punches:
+                            punches = punches["items"]
+                        elif isinstance(punches, dict):
                             punches = [punches]
 
                         for punch in punches:
+                            # Convert Pydantic model to dict if needed
+                            if hasattr(punch, 'model_dump'):
+                                punch = punch.model_dump()
                             if not isinstance(punch, dict):
                                 continue
 
@@ -905,13 +914,19 @@ class EsslConnectorService:
                 if not devices_result.get("success"):
                     raise Exception(f"GetDeviceList failed for location '{loc}': {devices_result.get('error')}")
                 batch = devices_result.get("data", [])
-                if isinstance(batch, dict):
+                # Handle paginated response format: {"items": [...], "total": N}
+                if isinstance(batch, dict) and "items" in batch:
+                    batch = batch["items"]
+                elif isinstance(batch, dict):
                     batch = [batch]
-                all_essl_devices.extend(batch)
+                # Convert Pydantic models to dicts
+                for d in batch:
+                    if hasattr(d, 'model_dump'):
+                        all_essl_devices.append(d.model_dump())
+                    elif isinstance(d, dict):
+                        all_essl_devices.append(d)
 
             essl_devices = all_essl_devices
-            if isinstance(essl_devices, dict):
-                essl_devices = [essl_devices]
 
             history.records_fetched = len(essl_devices)
 
