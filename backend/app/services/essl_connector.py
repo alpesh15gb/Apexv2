@@ -785,6 +785,7 @@ class EsslConnectorService:
 
                 for emp_code, emp_mapping in employee_mappings.items():
                     try:
+                        print(f"[SYNC] Processing {emp_code}...")
                         from_str = (from_time or (datetime.now(timezone.utc) - timedelta(days=1))).strftime("%Y-%m-%d")
                         to_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -853,6 +854,7 @@ class EsslConnectorService:
                                 skipped += 1
 
                     except Exception as e:
+                        print(f"[SYNC] {emp_code}: EXCEPTION: {e}")
                         self._log_error(history, "punch_log", emp_code, str(e))
                         failed += 1
 
