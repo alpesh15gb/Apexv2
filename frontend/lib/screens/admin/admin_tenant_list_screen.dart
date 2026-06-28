@@ -216,6 +216,7 @@ class _AdminTenantListScreenState extends ConsumerState<AdminTenantListScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 

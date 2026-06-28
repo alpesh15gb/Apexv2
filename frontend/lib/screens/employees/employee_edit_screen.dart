@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
 import '../../models/employee.dart';
 import '../../providers/employee_provider.dart';
 import '../../screens/employees/employee_detail_screen.dart';
