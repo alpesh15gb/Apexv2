@@ -81,52 +81,64 @@ class _MainShellState extends ConsumerState<MainShell> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                children: [
-                  _navSection('WORKSPACE', [
-                    _nav(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', '/dashboard'),
-                    _nav(Icons.people_outline, Icons.people, 'Employees', '/employees'),
-                    _nav(Icons.calendar_today_outlined, Icons.calendar_today, 'Attendance', '/attendance'),
-                  ], isDark),
-                  _navSection('MANAGEMENT', [
-                    _nav(Icons.event_busy_outlined, Icons.event_busy, 'Leave', '/leaves'),
-                    _nav(Icons.calendar_month_outlined, Icons.calendar_month, 'Holidays', '/holidays'),
-                    _nav(Icons.card_membership_outlined, Icons.card_membership, 'Visitors', '/visitors'),
-                    _nav(Icons.campaign_outlined, Icons.campaign, 'Announcements', '/announcements'),
-                    _nav(Icons.exit_to_app_outlined, Icons.exit_to_app, 'Exit Requests', '/exit-requests'),
-                  ], isDark),
-                  _navSection('OPERATIONS', [
-                    _nav(Icons.schedule_outlined, Icons.schedule, 'Shifts', '/shifts'),
-                    _nav(Icons.biotech_outlined, Icons.biotech, 'Devices', '/devices'),
-                    _nav(Icons.directions_walk_outlined, Icons.directions_walk, 'Outdoor Duty', '/attendance/outdoor-duty'),
-                    _nav(Icons.access_time_filled_outlined, Icons.access_time_filled, 'OT Register', '/attendance/ot'),
-                    _nav(Icons.flight_outlined, Icons.flight, 'Travel', '/travel'),
-                    _nav(Icons.inventory_2_outlined, Icons.inventory_2, 'Assets', '/assets'),
-                    _nav(Icons.assessment_outlined, Icons.assessment, 'Reports', '/reports'),
-                  ], isDark),
-                  _navSection('FINANCE', [
-                    _nav(Icons.payments_outlined, Icons.payments, 'Payroll', '/payroll'),
-                    _nav(Icons.receipt_long_outlined, Icons.receipt_long, 'Expenses', '/expenses'),
-                    _nav(Icons.folder_outlined, Icons.folder, 'Documents', '/documents'),
-                  ], isDark),
-                  _navSection('SCHOOL', [
-                    _nav(Icons.school_outlined, Icons.school, 'School Dashboard', '/school/dashboard'),
-                    _nav(Icons.person_search_outlined, Icons.person_search, 'Students', '/school/students'),
-                    _nav(Icons.app_registration_outlined, Icons.app_registration, 'Admissions', '/school/admissions'),
-                    _nav(Icons.fact_check_outlined, Icons.fact_check, 'Attendance', '/school/attendance/mark'),
-                    _nav(Icons.schedule_outlined, Icons.schedule, 'Timetable', '/school/timetable'),
-                    _nav(Icons.assignment_outlined, Icons.assignment, 'Homework', '/school/homework'),
-                    _nav(Icons.quiz_outlined, Icons.quiz, 'Examinations', '/school/exams'),
-                    _nav(Icons.payment_outlined, Icons.payment, 'Fee Collection', '/school/fees'),
-                    _nav(Icons.directions_bus_outlined, Icons.directions_bus, 'Transport', '/school/transport'),
-                    _nav(Icons.home_work_outlined, Icons.home_work, 'Hostel', '/school/hostel'),
-                    _nav(Icons.library_books_outlined, Icons.library_books, 'Library', '/school/library'),
-                    _nav(Icons.class_outlined, Icons.class_, 'Classes', '/school/classes'),
-                    _nav(Icons.calendar_month_outlined, Icons.calendar_month, 'Academic Year', '/school/academic-years'),
-                  ], isDark),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  _nav(Icons.settings_outlined, Icons.settings, 'Administration', '/settings', isDark),
-                ],
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final authState = ref.watch(authProvider);
+                  final user = authState.value;
+                  final isSchool = user?.isSchool ?? false;
+
+                  return Column(
+                    children: [
+                      _navSection('WORKSPACE', [
+                        _nav(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', '/dashboard'),
+                        _nav(Icons.people_outline, Icons.people, 'Employees', '/employees'),
+                        _nav(Icons.calendar_today_outlined, Icons.calendar_today, 'Attendance', '/attendance'),
+                      ], isDark),
+                      _navSection('MANAGEMENT', [
+                        _nav(Icons.event_busy_outlined, Icons.event_busy, 'Leave', '/leaves'),
+                        _nav(Icons.calendar_month_outlined, Icons.calendar_month, 'Holidays', '/holidays'),
+                        _nav(Icons.card_membership_outlined, Icons.card_membership, 'Visitors', '/visitors'),
+                        _nav(Icons.campaign_outlined, Icons.campaign, 'Announcements', '/announcements'),
+                        _nav(Icons.exit_to_app_outlined, Icons.exit_to_app, 'Exit Requests', '/exit-requests'),
+                      ], isDark),
+                      if (!isSchool) ...[
+                        _navSection('OPERATIONS', [
+                          _nav(Icons.schedule_outlined, Icons.schedule, 'Shifts', '/shifts'),
+                          _nav(Icons.biotech_outlined, Icons.biotech, 'Devices', '/devices'),
+                          _nav(Icons.directions_walk_outlined, Icons.directions_walk, 'Outdoor Duty', '/attendance/outdoor-duty'),
+                          _nav(Icons.access_time_filled_outlined, Icons.access_time_filled, 'OT Register', '/attendance/ot'),
+                          _nav(Icons.flight_outlined, Icons.flight, 'Travel', '/travel'),
+                          _nav(Icons.inventory_2_outlined, Icons.inventory_2, 'Assets', '/assets'),
+                          _nav(Icons.assessment_outlined, Icons.assessment, 'Reports', '/reports'),
+                        ], isDark),
+                        _navSection('FINANCE', [
+                          _nav(Icons.payments_outlined, Icons.payments, 'Payroll', '/payroll'),
+                          _nav(Icons.receipt_long_outlined, Icons.receipt_long, 'Expenses', '/expenses'),
+                          _nav(Icons.folder_outlined, Icons.folder, 'Documents', '/documents'),
+                        ], isDark),
+                      ],
+                      if (isSchool) ...[
+                        _navSection('SCHOOL', [
+                          _nav(Icons.school_outlined, Icons.school, 'School Dashboard', '/school/dashboard'),
+                          _nav(Icons.person_search_outlined, Icons.person_search, 'Students', '/school/students'),
+                          _nav(Icons.app_registration_outlined, Icons.app_registration, 'Admissions', '/school/admissions'),
+                          _nav(Icons.fact_check_outlined, Icons.fact_check, 'Attendance', '/school/attendance/mark'),
+                          _nav(Icons.schedule_outlined, Icons.schedule, 'Timetable', '/school/timetable'),
+                          _nav(Icons.assignment_outlined, Icons.assignment, 'Homework', '/school/homework'),
+                          _nav(Icons.quiz_outlined, Icons.quiz, 'Examinations', '/school/exams'),
+                          _nav(Icons.payment_outlined, Icons.payment, 'Fee Collection', '/school/fees'),
+                          _nav(Icons.directions_bus_outlined, Icons.directions_bus, 'Transport', '/school/transport'),
+                          _nav(Icons.home_work_outlined, Icons.home_work, 'Hostel', '/school/hostel'),
+                          _nav(Icons.library_books_outlined, Icons.library_books, 'Library', '/school/library'),
+                          _nav(Icons.class_outlined, Icons.class_, 'Classes', '/school/classes'),
+                          _nav(Icons.calendar_month_outlined, Icons.calendar_month, 'Academic Year', '/school/academic-years'),
+                        ], isDark),
+                      ],
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      _nav(Icons.settings_outlined, Icons.settings, 'Administration', '/settings', isDark),
+                    ],
+                  );
+                },
               ),
             ),
           ),

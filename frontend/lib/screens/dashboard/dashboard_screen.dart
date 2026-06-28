@@ -8,6 +8,8 @@ import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../design_system/border_radius.dart';
+import '../../providers/auth_provider.dart';
+import '../../screens/school/school_dashboard_screen.dart';
 import '../../models/dashboard.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../widgets/apex_button.dart';
@@ -18,6 +20,13 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Check tenant type and show appropriate dashboard
+    final authState = ref.watch(authProvider);
+    final user = authState.value;
+    if (user != null && user.isSchool) {
+      return const SchoolDashboardScreen();
+    }
+
     final statsAsync = ref.watch(dashboardStatsProvider);
     final chartAsync = ref.watch(dashboardChartProvider(7));
     final deptAsync = ref.watch(departmentDistributionProvider);

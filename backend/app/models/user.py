@@ -62,6 +62,12 @@ class User(TenantModel):
     audit_logs = relationship("AuditLog", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
     device_commands = relationship("DeviceCommand", back_populates="requested_by_user")
+
+    @property
+    def tenant_type(self) -> str:
+        """Get tenant type from the tenant relationship."""
+        return self.tenant.tenant_type if self.tenant else "corporate"
+
     __table_args__ = (
         UniqueConstraint("tenant_id", "email", name="uq_users_tenant_email"),
     )

@@ -7,6 +7,7 @@ class User {
   final String? avatarUrl;
   final bool isActive;
   final bool isSuperuser;
+  final String tenantType;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -19,6 +20,7 @@ class User {
     this.avatarUrl,
     required this.isActive,
     required this.isSuperuser,
+    required this.tenantType,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -33,10 +35,14 @@ class User {
       avatarUrl: json['avatar_url'] as String?,
       isActive: json['is_active'] as bool,
       isSuperuser: json['is_superuser'] as bool,
+      tenantType: json['tenant_type'] as String? ?? 'corporate',
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
+
+  bool get isSchool => tenantType == 'school';
+  bool get isCorporate => tenantType == 'corporate';
 
   Map<String, dynamic> toJson() {
     return {
@@ -48,6 +54,7 @@ class User {
       'avatar_url': avatarUrl,
       'is_active': isActive,
       'is_superuser': isSuperuser,
+      'tenant_type': tenantType,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

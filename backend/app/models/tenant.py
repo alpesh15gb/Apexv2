@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Index
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Index, CheckConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -11,6 +11,11 @@ class SubscriptionPlanType(str, enum.Enum):
     BASIC = "basic"
     PRO = "pro"
     ENTERPRISE = "enterprise"
+
+
+class TenantType(str, enum.Enum):
+    CORPORATE = "corporate"
+    SCHOOL = "school"
 
 
 class Tenant(BaseModel):
@@ -78,4 +83,6 @@ class Tenant(BaseModel):
 
     __table_args__ = (
         Index("ix_tenants_slug_unique", "slug", unique=True),
+        Index("ix_tenants_tenant_type", "tenant_type"),
+        CheckConstraint("tenant_type IN ('corporate', 'school')", name="ck_tenant_type_valid"),
     )

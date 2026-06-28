@@ -33,6 +33,7 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = None
     is_active: bool
     is_superuser: bool
+    tenant_type: str = "corporate"
     created_at: datetime
     updated_at: datetime
 

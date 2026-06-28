@@ -223,11 +223,16 @@ async def create_tenant(
     db.add(tenant)
     await db.flush()
 
-    from app.core.rbac import create_default_roles
-    await create_default_roles(db, tenant.id)
+    from app.core.tenant_templates import apply_tenant_template, create_school_default_roles
+    await apply_tenant_template(db, tenant)
+    if data.tenant_type == "school":
+        await create_school_default_roles(db, tenant.id)
+    else:
+        from app.core.rbac import create_default_roles
+        await create_default_roles(db, tenant.id)
 
     await db.commit()
-    return {"id": str(tenant.id), "name": tenant.name, "slug": tenant.slug}
+    return {"id": str(tenant.id), "name": tenant.name, "slug": tenant.slug, "tenant_type": tenant.tenant_type}
 
 
 @router.put("/{tenant_id}")
