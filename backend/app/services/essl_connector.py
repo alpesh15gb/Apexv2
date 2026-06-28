@@ -1246,34 +1246,26 @@ class EsslConnectorService:
     @staticmethod
     def _parse_datetime(val: str, server_timezone: str = "UTC") -> Optional[datetime]:
         """Parse a datetime string from the eSSL device.
-
-        If the string has no timezone info, it is assumed to be in the server's
-        local timezone (from essl_servers.timezone) and converted to UTC for storage.
-        If the string already has timezone info (e.g. ISO 8601 with offset), it is
-        parsed directly and converted to UTC.
+        
+        Stores times as-is (naive) without timezone conversion.
+        The eBioserver and VPS are in the same timezone (IST),
+        so no conversion is needed.
         """
         if not val:
             return None
 
-        # Try parsing as ISO 8601 with timezone info first
+        # Try parsing as ISO 8601
         try:
             dt = datetime.fromisoformat(val.replace("Z", "+00:00"))
-            if dt.tzinfo is None:
-                # ISO format but no tz — treat as server local
-                from zoneinfo import ZoneInfo
-                dt = dt.replace(tzinfo=ZoneInfo(server_timezone))
-            return dt.astimezone(timezone.utc)
+            # Strip timezone info to store as naive
+            return dt.replace(tzinfo=None)
         except Exception:
             pass
 
-        # Try common formats — these are naive, assumed to be in server local time
+        # Try common formats
         for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f", "%m/%d/%Y %H:%M:%S"):
             try:
-                naive = datetime.strptime(val, fmt)
-                from zoneinfo import ZoneInfo
-                local_tz = ZoneInfo(server_timezone)
-                local_dt = naive.replace(tzinfo=local_tz)
-                return local_dt.astimezone(timezone.utc)
+                return datetime.strptime(val, fmt)
             except ValueError:
                 continue
         return None
