@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
+import '../../core/secure_storage.dart';
+import '../../core/constants.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/apex_badge.dart';
@@ -43,6 +45,17 @@ class _AdminTenantListScreenState extends ConsumerState<AdminTenantListScreen> {
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Add Tenant'),
             style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () async {
+              await secureStorage.delete(StorageKeys.accessToken);
+              await secureStorage.delete(StorageKeys.refreshToken);
+              await secureStorage.delete('is_admin');
+              if (context.mounted) context.go('/admin/login');
+            },
+            icon: Icon(Icons.logout, size: 18, color: ApexColors.error),
+            tooltip: 'Sign Out',
           ),
           const SizedBox(width: 16),
         ],
@@ -113,36 +126,59 @@ class _AdminTenantListScreenState extends ConsumerState<AdminTenantListScreen> {
     final contactCtrl = TextEditingController();
     final companyCodeCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    String tenantType = 'corporate';
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ApexColors.darkSurface,
-        title: Text('Add New Tenant', style: ApexTypography.titleLarge.copyWith(color: ApexColors.darkOnSurface)),
-        content: SizedBox(
-          width: 480,
-          child: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _dialogField(nameCtrl, 'Company Name', Icons.business, required: true),
-                  const SizedBox(height: 12),
-                  _dialogField(slugCtrl, 'Slug (URL-friendly)', Icons.link, required: true, hint: 'e.g. acme-corp'),
-                  const SizedBox(height: 12),
-                  _dialogField(emailCtrl, 'Email', Icons.email, keyboardType: TextInputType.emailAddress),
-                  const SizedBox(height: 12),
-                  _dialogField(mobileCtrl, 'Mobile', Icons.phone, keyboardType: TextInputType.phone),
-                  const SizedBox(height: 12),
-                  _dialogField(contactCtrl, 'Contact Person', Icons.person),
-                  const SizedBox(height: 12),
-                  _dialogField(companyCodeCtrl, 'Company Code', Icons.code),
-                ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: ApexColors.darkSurface,
+          title: Text('Add New Tenant', style: ApexTypography.titleLarge.copyWith(color: ApexColors.darkOnSurface)),
+          content: SizedBox(
+            width: 480,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _dialogField(nameCtrl, 'Company Name', Icons.business, required: true),
+                    const SizedBox(height: 12),
+                    _dialogField(slugCtrl, 'Slug (URL-friendly)', Icons.link, required: true, hint: 'e.g. acme-corp'),
+                    const SizedBox(height: 12),
+                    _dialogField(emailCtrl, 'Email', Icons.email, keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 12),
+                    _dialogField(mobileCtrl, 'Mobile', Icons.phone, keyboardType: TextInputType.phone),
+                    const SizedBox(height: 12),
+                    _dialogField(contactCtrl, 'Contact Person', Icons.person),
+                    const SizedBox(height: 12),
+                    _dialogField(companyCodeCtrl, 'Company Code', Icons.code),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: tenantType,
+                      dropdownColor: ApexColors.darkSurface,
+                      style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurface),
+                      decoration: InputDecoration(
+                        labelText: 'Tenant Type',
+                        labelStyle: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant),
+                        prefixIcon: Icon(Icons.category, color: ApexColors.darkOnSurfaceVariant, size: 18),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.primary500)),
+                        filled: true,
+                        fillColor: ApexColors.darkBackground,
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'corporate', child: Text('Corporate (HRMS)')),
+                        DropdownMenuItem(value: 'school', child: Text('School (ERP)')),
+                      ],
+                      onChanged: (v) => setDialogState(() => tenantType = v ?? 'corporate'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant))),
           ElevatedButton(
@@ -157,6 +193,7 @@ class _AdminTenantListScreenState extends ConsumerState<AdminTenantListScreen> {
                   if (mobileCtrl.text.isNotEmpty) 'mobile': mobileCtrl.text.trim(),
                   if (contactCtrl.text.isNotEmpty) 'contact_person': contactCtrl.text.trim(),
                   if (companyCodeCtrl.text.isNotEmpty) 'company_code': companyCodeCtrl.text.trim(),
+                  'tenant_type': tenantType,
                 });
                 Navigator.pop(ctx);
                 ref.invalidate(adminTenantListProvider);

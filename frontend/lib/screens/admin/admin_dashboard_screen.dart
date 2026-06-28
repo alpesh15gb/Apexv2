@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
+import '../../core/secure_storage.dart';
+import '../../core/constants.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/apex_button.dart';
@@ -52,6 +54,23 @@ class AdminDashboardScreen extends ConsumerWidget {
             icon: const Icon(Icons.analytics, size: 16),
             label: const Text('Analytics'),
             style: TextButton.styleFrom(foregroundColor: ApexColors.darkOnSurface),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              border: Border(left: BorderSide(color: ApexColors.darkSurfaceVariant)),
+            ),
+            padding: const EdgeInsets.only(left: 8),
+            child: TextButton.icon(
+              onPressed: () async {
+                await secureStorage.delete(StorageKeys.accessToken);
+                await secureStorage.delete(StorageKeys.refreshToken);
+                await secureStorage.delete('is_admin');
+                if (context.mounted) context.go('/admin/login');
+              },
+              icon: Icon(Icons.logout, size: 16, color: ApexColors.error),
+              label: Text('Sign Out', style: ApexTypography.body.copyWith(color: ApexColors.error)),
+            ),
           ),
           const SizedBox(width: 16),
         ],

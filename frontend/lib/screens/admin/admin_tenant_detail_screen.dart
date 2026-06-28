@@ -91,7 +91,7 @@ class _AdminTenantDetailScreenState extends ConsumerState<AdminTenantDetailScree
           _OverviewTab(tenant: _tenant!, onRefresh: _loadTenant),
           _SubscriptionTab(tenantId: widget.tenantId),
           _LimitsTab(tenantId: widget.tenantId),
-          _FeaturesTab(tenantId: widget.tenantId),
+          _FeaturesTab(tenantId: widget.tenantId, tenantType: _tenant!['tenant_type'] ?? 'corporate'),
           _UsersTab(tenantId: widget.tenantId),
           _AuditTab(tenantId: widget.tenantId),
         ],
@@ -140,6 +140,7 @@ class _OverviewTab extends ConsumerWidget {
         children: [
           _infoCard('Company Information', [
             _infoRow('Name', tenant['name']),
+            _infoRow('Type', (tenant['tenant_type'] ?? 'corporate').toString().toUpperCase()),
             _infoRow('Slug', tenant['slug']),
             _infoRow('Email', tenant['email'] ?? '—'),
             _infoRow('Mobile', tenant['mobile'] ?? '—'),
@@ -396,7 +397,8 @@ class _LimitsTabState extends ConsumerState<_LimitsTab> {
 
 class _FeaturesTab extends ConsumerStatefulWidget {
   final String tenantId;
-  const _FeaturesTab({required this.tenantId});
+  final String tenantType;
+  const _FeaturesTab({required this.tenantId, required this.tenantType});
   @override
   ConsumerState<_FeaturesTab> createState() => _FeaturesTabState();
 }
@@ -418,11 +420,23 @@ class _FeaturesTabState extends ConsumerState<_FeaturesTab> {
     } catch (e) { setState(() => _loading = false); }
   }
 
+  List<dynamic> _filterByTenantType(List<dynamic> features) {
+    final type = widget.tenantType;
+    return features.where((f) {
+      final module = f['module'] as String? ?? '';
+      // Core features always shown
+      if (module != 'school') return true;
+      // School features only for school tenants
+      return type == 'school';
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    final categories = ['All', ...{..._features.map((f) => f['category'] as String)}..toList()];
-    final filtered = _features.where((f) {
+    final tenantFeatures = _filterByTenantType(_features);
+    final categories = ['All', ...{...tenantFeatures.map((f) => f['category'] as String)}..toList()];
+    final filtered = tenantFeatures.where((f) {
       if (_categoryFilter != 'All' && f['category'] != _categoryFilter) return false;
       if (_search.isNotEmpty && !(f['name'] as String).toLowerCase().contains(_search.toLowerCase())) return false;
       return true;

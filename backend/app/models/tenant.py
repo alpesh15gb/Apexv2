@@ -42,6 +42,7 @@ class Tenant(BaseModel):
     timezone = Column(String(100), nullable=True)
     currency = Column(String(10), default="INR", nullable=False)
     financial_year_start = Column(String(10), default="04-01", nullable=False)
+    tenant_type = Column(String(20), default="corporate", nullable=False)  # corporate/school
 
     # Relationships
     users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")

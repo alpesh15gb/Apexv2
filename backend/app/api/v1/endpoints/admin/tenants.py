@@ -31,6 +31,7 @@ class TenantCreateRequest(BaseModel):
     currency: str = "INR"
     timezone: str = "Asia/Kolkata"
     subscription_plan_code: Optional[str] = None
+    tenant_type: str = "corporate"  # corporate/school
 
 
 class TenantUpdateRequest(BaseModel):
@@ -214,6 +215,7 @@ async def create_tenant(
         pan_number=data.pan_number,
         currency=data.currency,
         timezone=data.timezone,
+        tenant_type=data.tenant_type,
         subscription_status="trial",
         trial_ends_at=trial_end.replace(hour=23, minute=59, second=59),
         is_active=True,
