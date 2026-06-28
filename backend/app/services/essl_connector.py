@@ -778,6 +778,7 @@ class EsslConnectorService:
                         failed += 1
 
             # Strategy 2: Fallback to per-employee GetEmployeePunchLogs
+            print(f"[SYNC] Strategy 2: bulk_success={bulk_success}, employee_mappings={len(employee_mappings)}, device_mappings={len(device_mappings)}")
             if not bulk_success:
                 history.date_range_from = from_time or (datetime.now(timezone.utc) - timedelta(days=1))
                 history.date_range_to = datetime.now(timezone.utc)
@@ -790,6 +791,7 @@ class EsslConnectorService:
                         punch_result = await self.client.get_employee_punch_logs(
                             emp_code, from_str, to_str, bypass_cache=True
                         )
+                        print(f"[SYNC] {emp_code}: success={punch_result.get('success')}, data_type={type(punch_result.get('data')).__name__}, data={str(punch_result.get('data'))[:200]}")
                         if not punch_result.get("success"):
                             self._log_error(history, "punch_log", emp_code, punch_result.get("error", "Failed"))
                             failed += 1
