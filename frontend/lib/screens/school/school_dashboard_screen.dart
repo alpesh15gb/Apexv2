@@ -105,10 +105,10 @@ class _QuickActions extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
-            _actionChip(context, Icons.person_add, 'Add Student', '/school/students/create'),
+            _actionChip(context, Icons.person_add, 'Add Student', '/school/students'),
             _actionChip(context, Icons.check_circle, 'Mark Attendance', '/school/attendance/mark'),
-            _actionChip(context, Icons.assignment, 'Create Homework', '/school/homework/create'),
-            _actionChip(context, Icons.payment, 'Fee Collection', '/school/fees/collection'),
+            _actionChip(context, Icons.assignment, 'Create Homework', '/school/homework'),
+            _actionChip(context, Icons.payment, 'Fee Collection', '/school/fees'),
             _actionChip(context, Icons.event, 'Exam Management', '/school/exams'),
             _actionChip(context, Icons.calendar_today, 'Timetable', '/school/timetable'),
           ],

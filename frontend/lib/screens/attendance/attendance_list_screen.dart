@@ -10,9 +10,6 @@ import '../../providers/attendance_provider.dart';
 import '../../providers/employee_provider.dart';
 import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
-import '../../widgets/apex_card.dart';
-import '../../widgets/apex_date_picker.dart';
-import '../../widgets/apex_text_field.dart';
 
 class AttendanceListScreen extends ConsumerStatefulWidget {
   const AttendanceListScreen({Key? key}) : super(key: key);

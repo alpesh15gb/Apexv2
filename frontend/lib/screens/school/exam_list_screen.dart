@@ -83,7 +83,7 @@ class ExamListScreen extends ConsumerWidget {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: Icon(Icons.edit, size: 16, color: ApexColors.neutral500),
-                          onPressed: () => context.go('/school/exams/${e['id']}'),
+                          onPressed: () => context.go('/school/exams'),
                         ),
                       ]),
                     );

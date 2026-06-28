@@ -382,38 +382,88 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Widget _buildBottomNav() {
     final route = _currentRoute();
+    final authState = ref.read(authProvider);
+    final user = authState.value;
+    final isSchool = user?.isSchool ?? false;
+
     int idx = 0;
-    if (route.startsWith('/employees')) idx = 1;
-    if (route.startsWith('/attendance')) idx = 2;
-    if (route.startsWith('/leaves') || route.startsWith('/visitors') || route.startsWith('/devices')) idx = 3;
+    if (isSchool) {
+      if (route.startsWith('/school/students')) idx = 1;
+      if (route.startsWith('/school/attendance')) idx = 2;
+      if (route.startsWith('/school/exams')) idx = 3;
+    } else {
+      if (route.startsWith('/employees')) idx = 1;
+      if (route.startsWith('/attendance')) idx = 2;
+      if (route.startsWith('/leaves')) idx = 3;
+    }
+
+    final destinations = isSchool
+        ? const [
+            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
+            NavigationDestination(icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school), label: 'Students'),
+            NavigationDestination(icon: Icon(Icons.fact_check_outlined), selectedIcon: Icon(Icons.fact_check), label: 'Attendance'),
+            NavigationDestination(icon: Icon(Icons.quiz_outlined), selectedIcon: Icon(Icons.quiz), label: 'Exams'),
+            NavigationDestination(icon: Icon(Icons.more_horiz_outlined), selectedIcon: Icon(Icons.more_horiz), label: 'More'),
+          ]
+        : const [
+            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
+            NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: 'Employees'),
+            NavigationDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: 'Attendance'),
+            NavigationDestination(icon: Icon(Icons.event_busy_outlined), selectedIcon: Icon(Icons.event_busy), label: 'Leave'),
+            NavigationDestination(icon: Icon(Icons.more_horiz_outlined), selectedIcon: Icon(Icons.more_horiz), label: 'More'),
+          ];
 
     return NavigationBar(
-      selectedIndex: idx > 3 ? 3 : idx,
+      selectedIndex: idx > 4 ? 4 : idx,
       onDestinationSelected: (i) {
-        if (i == 0) context.go('/dashboard');
-        if (i == 1) context.go('/employees');
-        if (i == 2) context.go('/attendance');
-        if (i == 3) _showMoreMenu();
+        if (isSchool) {
+          if (i == 0) context.go('/dashboard');
+          if (i == 1) context.go('/school/students');
+          if (i == 2) context.go('/school/attendance/mark');
+          if (i == 3) context.go('/school/exams');
+          if (i == 4) _showMoreMenu();
+        } else {
+          if (i == 0) context.go('/dashboard');
+          if (i == 1) context.go('/employees');
+          if (i == 2) context.go('/attendance');
+          if (i == 3) context.go('/leaves');
+          if (i == 4) _showMoreMenu();
+        }
       },
-      destinations: const [
-        NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
-        NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: 'Employees'),
-        NavigationDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: 'Attendance'),
-        NavigationDestination(icon: Icon(Icons.more_horiz_outlined), selectedIcon: Icon(Icons.more_horiz), label: 'More'),
-      ],
+      destinations: destinations,
     );
   }
 
   void _showMoreMenu() {
+    final authState = ref.read(authProvider);
+    final user = authState.value;
+    final isSchool = user?.isSchool ?? false;
+
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(leading: const Icon(Icons.event_busy), title: const Text('Leave'), onTap: () { Navigator.pop(context); context.go('/leaves'); }),
-          ListTile(leading: const Icon(Icons.card_membership), title: const Text('Visitors'), onTap: () { Navigator.pop(context); context.go('/visitors'); }),
-          ListTile(leading: const Icon(Icons.biotech), title: const Text('Devices'), onTap: () { Navigator.pop(context); context.go('/devices'); }),
-          ListTile(leading: const Icon(Icons.assessment), title: const Text('Reports'), onTap: () { Navigator.pop(context); context.go('/reports'); }),
-          ListTile(leading: const Icon(Icons.settings), title: const Text('Administration'), onTap: () { Navigator.pop(context); context.go('/settings'); }),
+          if (isSchool) ...[
+            ListTile(leading: const Icon(Icons.payment), title: const Text('Fees'), onTap: () { Navigator.pop(context); context.go('/school/fees'); }),
+            ListTile(leading: const Icon(Icons.directions_bus), title: const Text('Transport'), onTap: () { Navigator.pop(context); context.go('/school/transport'); }),
+            ListTile(leading: const Icon(Icons.home_work), title: const Text('Hostel'), onTap: () { Navigator.pop(context); context.go('/school/hostel'); }),
+            ListTile(leading: const Icon(Icons.library_books), title: const Text('Library'), onTap: () { Navigator.pop(context); context.go('/school/library'); }),
+            ListTile(leading: const Icon(Icons.schedule), title: const Text('Timetable'), onTap: () { Navigator.pop(context); context.go('/school/timetable'); }),
+            ListTile(leading: const Icon(Icons.assignment), title: const Text('Homework'), onTap: () { Navigator.pop(context); context.go('/school/homework'); }),
+            ListTile(leading: const Icon(Icons.app_registration), title: const Text('Admissions'), onTap: () { Navigator.pop(context); context.go('/school/admissions'); }),
+            ListTile(leading: const Icon(Icons.class_), title: const Text('Classes'), onTap: () { Navigator.pop(context); context.go('/school/classes'); }),
+            ListTile(leading: const Icon(Icons.calendar_month), title: const Text('Academic Year'), onTap: () { Navigator.pop(context); context.go('/school/academic-years'); }),
+          ] else ...[
+            ListTile(leading: const Icon(Icons.event_busy), title: const Text('Leave'), onTap: () { Navigator.pop(context); context.go('/leaves'); }),
+            ListTile(leading: const Icon(Icons.card_membership), title: const Text('Visitors'), onTap: () { Navigator.pop(context); context.go('/visitors'); }),
+            ListTile(leading: const Icon(Icons.biotech), title: const Text('Devices'), onTap: () { Navigator.pop(context); context.go('/devices'); }),
+            ListTile(leading: const Icon(Icons.schedule), title: const Text('Shifts'), onTap: () { Navigator.pop(context); context.go('/shifts'); }),
+            ListTile(leading: const Icon(Icons.payments), title: const Text('Payroll'), onTap: () { Navigator.pop(context); context.go('/payroll'); }),
+            ListTile(leading: const Icon(Icons.assessment), title: const Text('Reports'), onTap: () { Navigator.pop(context); context.go('/reports'); }),
+          ],
+          const Divider(),
+          ListTile(leading: const Icon(Icons.settings), title: const Text('Settings'), onTap: () { Navigator.pop(context); context.go('/settings'); }),
+          ListTile(leading: const Icon(Icons.logout), title: const Text('Logout'), onTap: () { Navigator.pop(context); ref.read(authProvider.notifier).logout(); context.go('/login'); }),
         ]),
       ),
     );

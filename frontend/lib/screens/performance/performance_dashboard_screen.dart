@@ -64,12 +64,12 @@ class PerformanceDashboardScreen extends ConsumerWidget {
             label: const Text('Goals'),
           ),
           TextButton.icon(
-            onPressed: () => context.push('/performance/reviews'),
+            onPressed: () => context.push('/performance'),
             icon: const Icon(Icons.rate_review, size: 16),
             label: const Text('Reviews'),
           ),
           TextButton.icon(
-            onPressed: () => context.push('/performance/competencies'),
+            onPressed: () => context.push('/performance'),
             icon: const Icon(Icons.psychology, size: 16),
             label: const Text('Competencies'),
           ),

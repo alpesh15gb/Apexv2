@@ -7,7 +7,7 @@ import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
 import '../screens/main_shell.dart';
 import '../screens/dashboard/dashboard_screen.dart';
-import '../screens/employees/employee_list_screen.dart';
+
 import '../screens/employees/employee_detail_screen.dart';
 import '../screens/employees/employee_create_screen.dart';
 import '../screens/employees/employee_edit_screen.dart';
@@ -17,11 +17,9 @@ import '../screens/employees/designation_screen.dart';
 import '../screens/devices/device_list_screen.dart';
 import '../screens/devices/device_detail_screen.dart';
 import '../screens/devices/device_health_screen.dart';
-import '../screens/attendance/attendance_list_screen.dart';
 import '../screens/attendance/attendance_detail_screen.dart';
 import '../screens/attendance/daily_summary_screen.dart';
 import '../screens/attendance/mark_attendance_screen.dart';
-import '../screens/shifts/shift_list_screen.dart';
 import '../screens/shifts/shift_create_screen.dart';
 import '../screens/shifts/shift_assign_screen.dart';
 import '../screens/leaves/leave_balance_screen.dart';
@@ -152,6 +150,26 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       return null;
     },
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: const Text('Page Not Found')),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text('Page not found', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(state.uri.toString(), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => context.go('/dashboard'),
+              child: const Text('Go to Dashboard'),
+            ),
+          ],
+        ),
+      ),
+    ),
     routes: [
       GoRoute(
         path: '/splash',
@@ -182,6 +200,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/tenants',
         builder: (context, state) => const AdminTenantListScreen(),
+      ),
+      GoRoute(
+        path: '/admin/tenants/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return AdminTenantDetailScreen(tenantId: id);
+        },
       ),
       GoRoute(
         path: '/admin/plans',
