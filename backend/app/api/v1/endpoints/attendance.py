@@ -35,8 +35,8 @@ async def daily_summary(
 @router.get("/employee/{employee_id}", response_model=AttendanceSummary)
 async def employee_attendance_summary(
     employee_id: uuid.UUID,
-    from_date: date = Query(...),
-    to_date: date = Query(...),
+    from_date: date_type = Query(...),
+    to_date: date_type = Query(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -53,8 +53,8 @@ async def list_attendance(
     employee_id: uuid.UUID = Query(None),
     department_id: uuid.UUID = Query(None),
     status: str = Query(None),
-    from_date: date = Query(None),
-    to_date: date = Query(None),
+    from_date: date_type = Query(None),
+    to_date: date_type = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -81,7 +81,7 @@ async def manual_mark_attendance(
 
 @router.post("/process", response_model=ResponseBase)
 async def process_attendance(
-    target_date: date = Query(...),
+    target_date: date_type = Query(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -105,8 +105,8 @@ async def list_punch_logs(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     employee_id: uuid.UUID = Query(None),
-    from_date: date = Query(None),
-    to_date: date = Query(None),
+    from_date: date_type = Query(None),
+    to_date: date_type = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
