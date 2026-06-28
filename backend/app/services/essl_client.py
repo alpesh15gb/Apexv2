@@ -331,7 +331,7 @@ class ESSLClient:
             logger.error("Failed parsing employee object", error=str(e))
             return {"success": False, "data": None, "error": f"Data validation error: {str(e)}"}
 
-    async def get_employee_punch_logs(self, employee_code: str, from_date: Any, to_date: Any, page: Optional[int] = None, page_size: Optional[int] = None) -> Dict[str, Any]:
+    async def get_employee_punch_logs(self, employee_code: str, from_date: Any, to_date: Any, page: Optional[int] = None, page_size: Optional[int] = None, bypass_cache: bool = False) -> Dict[str, Any]:
         """
         Retrieves employee punch logs and validates them as ESSLPunchLog types.
         """
