@@ -16,7 +16,9 @@ from app.models.user import User
 from app.models.employee import Employee, Department, Designation, Branch
 from app.models.leave import LeaveBalance, LeaveType
 from app.middleware.rate_limit import rate_limit
+import structlog
 
+logger = structlog.get_logger(__name__)
 router = APIRouter(dependencies=[Depends(require_permissions("employee.read"))])
 
 
@@ -41,7 +43,8 @@ async def import_employees(
         else:
             raise HTTPException(status_code=400, detail="Excel support requires openpyxl. Use CSV for now.")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse file: {str(e)}")
+        logger.error("import_parse_failed", error=str(e), filename=file.filename)
+        raise HTTPException(status_code=400, detail="Failed to parse file. Ensure it is valid CSV or Excel.")
 
     results = {"total": len(rows), "created": 0, "skipped": 0, "errors": []}
 
@@ -125,7 +128,8 @@ async def import_employees(
             results["created"] += 1
 
         except Exception as e:
-            results["errors"].append(f"Row {i+1}: {str(e)}")
+            logger.error("employee_import_row_failed", row=i+1, error=str(e))
+            results["errors"].append(f"Row {i+1}: Failed to import employee")
             results["skipped"] += 1
 
     await db.commit()
@@ -205,7 +209,8 @@ async def import_leave_balances(
                 results["created"] += 1
 
         except Exception as e:
-            results["errors"].append(f"Row {i+1}: {str(e)}")
+            logger.error("leave_balance_import_row_failed", row=i+1, error=str(e))
+            results["errors"].append(f"Row {i+1}: Failed to import leave balance")
 
     await db.commit()
     return results

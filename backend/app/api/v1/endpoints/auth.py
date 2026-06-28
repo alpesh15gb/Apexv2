@@ -32,7 +32,9 @@ from app.schemas.auth import (
 )
 from app.schemas.common import StatusResponse
 from app.middleware.rate_limit import rate_limit
+import structlog
 
+logger = structlog.get_logger(__name__)
 settings = get_settings()
 router = APIRouter()
 
@@ -110,9 +112,10 @@ async def register(
 
     except Exception as e:
         await db.rollback()
+        logger.error("tenant_registration_failed", error=str(e), slug=register_data.tenant_slug)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Tenant registration failed: {str(e)}",
+            detail="Tenant registration failed. Please try again.",
         )
 
 
@@ -214,6 +217,13 @@ async def refresh_token(
             detail="Invalid refresh token.",
         )
 
+    # Validate token type — only refresh tokens allowed
+    if payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type. Expected refresh token.",
+        )
+
     # Check if the token has been revoked in Redis
     try:
         redis_client = get_redis()
@@ -264,6 +274,13 @@ async def refresh_token(
         subject=user.id,
         tenant_id=user.tenant_id,
     )
+
+    # Revoke the old refresh token to prevent replay
+    try:
+        redis_client = get_redis()
+        await revoke_token(token, redis_client)
+    except Exception:
+        pass
 
     return LoginResponse(
         access_token=access_token,

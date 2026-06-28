@@ -11,7 +11,9 @@ from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.audit import AuditMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.api.v1.router import api_router
+import structlog
 
+logger = structlog.get_logger(__name__)
 settings = get_settings()
 
 @asynccontextmanager
@@ -27,8 +29,8 @@ async def lifespan(app: FastAPI):
             await conn.execute(text("SELECT 1"))
         print("Database connection verified successfully.")
     except Exception as e:
-        print(f"Database connection verification failed: {e}")
-        raise e
+        logger.error("db_connection_failed", error=str(e))
+        raise
 
     yield
     # Shutdown: Close DB Connections

@@ -53,6 +53,7 @@ def create_access_token(
         "sub": str(subject),
         "tenant_id": str(tenant_id),
         "is_superuser": is_superuser,
+        "type": "access",
     }
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
@@ -77,6 +78,7 @@ def create_refresh_token(
         "iat": datetime.now(timezone.utc),
         "sub": str(subject),
         "tenant_id": str(tenant_id),
+        "type": "refresh",
     }
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM

@@ -12,6 +12,9 @@ from app.core.deps import get_db, get_current_active_user, require_feature, requ
 from app.models.user import User
 from app.models.tenant import Tenant
 
+import structlog
+
+logger = structlog.get_logger(__name__)
 router = APIRouter(dependencies=[Depends(require_permissions("operations.read"))])
 
 
@@ -135,9 +138,11 @@ async def create_backup(
         if result.returncode == 0:
             return {"status": "success", "filename": filename}
         else:
-            return {"status": "error", "error": result.stderr}
+            logger.error("backup_failed", stderr=result.stderr)
+            return {"status": "error", "error": "Backup creation failed. Check server logs."}
     except Exception as e:
-        return {"status": "error", "error": str(e)}
+        logger.error("backup_exception", error=str(e))
+        return {"status": "error", "error": "Backup creation failed. Check server logs."}
 
 
 @router.get("/backup/history")

@@ -118,7 +118,7 @@ async def update_requisition(
     req_id: uuid.UUID,
     data: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     req = await db.get(JobRequisition, req_id)
     if not req or req.tenant_id != current_user.tenant_id:
@@ -134,7 +134,7 @@ async def update_requisition(
 async def submit_requisition(
     req_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     req = await db.get(JobRequisition, req_id)
     if not req or req.tenant_id != current_user.tenant_id:
@@ -148,7 +148,7 @@ async def submit_requisition(
 async def approve_requisition(
     req_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     req = await db.get(JobRequisition, req_id)
     if not req or req.tenant_id != current_user.tenant_id:
@@ -241,7 +241,7 @@ async def list_openings(
 async def create_opening(
     data: OpeningCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     opening = JobOpening(
         tenant_id=current_user.tenant_id,
@@ -258,7 +258,7 @@ async def update_opening(
     opening_id: uuid.UUID,
     data: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     opening = await db.get(JobOpening, opening_id)
     if not opening or opening.tenant_id != current_user.tenant_id:
@@ -274,7 +274,7 @@ async def update_opening(
 async def publish_opening(
     opening_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     opening = await db.get(JobOpening, opening_id)
     if not opening or opening.tenant_id != current_user.tenant_id:
@@ -289,7 +289,7 @@ async def publish_opening(
 async def close_opening(
     opening_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     opening = await db.get(JobOpening, opening_id)
     if not opening or opening.tenant_id != current_user.tenant_id:
@@ -384,7 +384,7 @@ async def list_candidates(
 async def create_candidate(
     data: CandidateCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     candidate = Candidate(
         tenant_id=current_user.tenant_id,
@@ -400,7 +400,7 @@ async def update_candidate(
     candidate_id: uuid.UUID,
     data: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     candidate = await db.get(Candidate, candidate_id)
     if not candidate or candidate.tenant_id != current_user.tenant_id:
@@ -417,7 +417,7 @@ async def move_candidate_stage(
     candidate_id: uuid.UUID,
     data: CandidateStageUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     candidate = await db.get(Candidate, candidate_id)
     if not candidate or candidate.tenant_id != current_user.tenant_id:
@@ -498,7 +498,7 @@ async def list_interviews(
 async def create_interview(
     data: InterviewCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     interview = Interview(
         tenant_id=current_user.tenant_id,
@@ -514,7 +514,7 @@ async def submit_feedback(
     interview_id: uuid.UUID,
     data: InterviewFeedbackUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     interview = await db.get(Interview, interview_id)
     if not interview or interview.tenant_id != current_user.tenant_id:
@@ -579,7 +579,7 @@ async def list_offers(
 async def create_offer(
     data: OfferCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     offer = Offer(
         tenant_id=current_user.tenant_id,
@@ -604,7 +604,7 @@ async def create_offer(
 async def accept_offer(
     offer_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     offer = await db.get(Offer, offer_id)
     if not offer or offer.tenant_id != current_user.tenant_id:
@@ -628,7 +628,7 @@ async def reject_offer(
     offer_id: uuid.UUID,
     data: OfferReject,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     offer = await db.get(Offer, offer_id)
     if not offer or offer.tenant_id != current_user.tenant_id:

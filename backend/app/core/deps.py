@@ -51,6 +51,14 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Validate token type — only access tokens allowed
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type. Expected access token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     # Check token revocation
     try:
         redis_client = _get_redis()

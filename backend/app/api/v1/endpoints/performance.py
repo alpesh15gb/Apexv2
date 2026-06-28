@@ -87,7 +87,7 @@ async def update_cycle(
     cycle_id: uuid.UUID,
     data: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     cycle = await db.get(ReviewCycle, cycle_id)
     if not cycle or cycle.tenant_id != current_user.tenant_id:
@@ -103,7 +103,7 @@ async def update_cycle(
 async def publish_cycle(
     cycle_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     cycle = await db.get(ReviewCycle, cycle_id)
     if not cycle or cycle.tenant_id != current_user.tenant_id:
@@ -165,7 +165,7 @@ async def list_goals(
 async def create_goal(
     data: GoalCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     goal = Goal(tenant_id=current_user.tenant_id, **data.model_dump())
     db.add(goal)
@@ -178,7 +178,7 @@ async def update_goal(
     goal_id: uuid.UUID,
     data: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     goal = await db.get(Goal, goal_id)
     if not goal or goal.tenant_id != current_user.tenant_id:
@@ -195,7 +195,7 @@ async def update_goal_progress(
     goal_id: uuid.UUID,
     data: GoalProgressUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     goal = await db.get(Goal, goal_id)
     if not goal or goal.tenant_id != current_user.tenant_id:
@@ -214,7 +214,7 @@ async def update_goal_progress(
 async def approve_goal(
     goal_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     goal = await db.get(Goal, goal_id)
     if not goal or goal.tenant_id != current_user.tenant_id:
@@ -270,7 +270,7 @@ async def list_reviews(
 async def create_review(
     data: ReviewCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     review = PerformanceReview(
         tenant_id=current_user.tenant_id,
@@ -287,7 +287,7 @@ async def submit_review(
     review_id: uuid.UUID,
     data: ReviewSubmit,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     review = await db.get(PerformanceReview, review_id)
     if not review or review.tenant_id != current_user.tenant_id:
@@ -337,7 +337,7 @@ async def list_competencies(
 async def create_competency(
     data: CompetencyCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     comp = Competency(tenant_id=current_user.tenant_id, **data.model_dump())
     db.add(comp)
@@ -386,7 +386,7 @@ async def list_recommendations(
 async def create_recommendation(
     data: RecommendationCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     rec = PerformanceRecommendation(
         tenant_id=current_user.tenant_id,
@@ -402,7 +402,7 @@ async def create_recommendation(
 async def approve_recommendation(
     rec_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     rec = await db.get(PerformanceRecommendation, rec_id)
     if not rec or rec.tenant_id != current_user.tenant_id:
