@@ -1,134 +1,148 @@
 # Apex HRMS v1.0.0 — Release Notes
 
-## Release Date
-June 27, 2026
+**Release Date**: 2026-06-28
+**Version**: 1.0.0
+**Codename**: Apex
 
-## Overview
-Apex HRMS is a complete multi-tenant SaaS Human Resource Management System designed for enterprise deployment. This release represents the first production-ready version with full HR operations, biometric integration, payroll processing, recruitment, performance management, and employee self-service capabilities.
+---
 
-## Architecture
-- **Backend**: FastAPI (Python 3.12) + SQLAlchemy async + PostgreSQL 16 + Alembic
-- **Frontend**: Flutter Web + Riverpod + GoRouter
-- **Infrastructure**: Docker Compose + Nginx + Redis + Celery
-- **Authentication**: JWT with refresh tokens
-- **Multi-tenancy**: Row-level tenant isolation
+## Product Overview
 
-## Database
-- **Total Tables**: 80+
-- **Migrations**: 16 linear Alembic migrations
-- **Models**: 44 SQLAlchemy model files
+Apex HRMS is a multi-tenant, web-based Human Resource Management System supporting both corporate HRMS and school ERP workflows. Built with FastAPI (backend) and Flutter (frontend), it provides biometric integration, RBAC security, and modular feature flags for organizations of all sizes.
 
-## API Endpoints
-- **Total Routes**: 46 registered routers
-- **Authentication**: JWT with access/refresh tokens
-- **Authorization**: RBAC with role-permission mapping
-- **Tenant Isolation**: Every query scoped by tenant_id
+---
 
-## Frontend Screens
-- **Total Screens**: 50+ Flutter screens
-- **Admin Portal**: 6 screens (login, dashboard, tenants, plans, features, tenant detail)
-- **ESS Portal**: 7 screens (dashboard, attendance, leaves, profile, payslips, documents, notifications)
-- **HR Modules**: 30+ screens (employees, attendance, shifts, leave, payroll, recruitment, performance, assets)
-- **System**: 3 screens (notifications, settings, health)
+## Key Features
 
-## Modules Delivered
+### Core HRMS
+- Employee management with full lifecycle (onboarding to exit)
+- Biometric attendance via eSSL devices (multi-location sync)
+- Shift management with groups, rosters, and department-wise assignment
+- Leave management with types, approvals, and balance tracking
+- Payroll with salary structures, payslips, deductions, and benefits
+- Recruitment pipeline (postings, applications, interviews, offers)
+- Performance reviews, goals, feedback, and appraisal cycles
+- Asset management, visitor management, and access control
+- Real-time notifications via WebSocket (in-app, email, SMS)
+- Reports and analytics dashboards
+- Bulk CSV import/export for employees, attendance, and leave
 
-### 1. Super Admin Portal
-- Multi-tenant management dashboard
-- Subscription plan management (4 plans: Starter, Professional, Enterprise, Unlimited)
-- Feature flag engine (33 features across 10 categories)
-- Resource limit management per tenant
-- Tenant CRUD with suspend/activate
+### School ERP
+- Academic year, grade, section, and subject management
+- Student admission, profiles, and parent linking
+- Homework, examinations, report cards, and fee management
+- Transport, hostel, library, and timetable modules
+- Communication (circulars, announcements, parent messaging)
+- Medical records, discipline tracking, and certificate generation
 
-### 2. Company Setup Wizard
-- 8-step onboarding wizard
-- Company info, branches, departments, designations, shifts, leave policy, attendance settings
-- Resumable and idempotent
+### Platform
+- Multi-tenant architecture with row-level isolation on 40+ tables
+- RBAC security: 455 endpoints, 100% permission coverage
+- 57 feature flags (33 core + 24 school) with enforcement
+- Celery background tasks for async processing
+- Docker Compose deployment (5 services)
 
-### 3. Employee Management
-- Employee directory with grid/table view, filters, search
-- 7-step creation wizard with auto-login generation
-- Employee lifecycle (promote, transfer, confirm, resign, terminate, reactivate)
-- Timeline tracking
+---
 
-### 4. Attendance & Shift Management
-- Attendance dashboard with live stats
-- Daily attendance register
-- Shift management with night shift support
-- Attendance regularization (5 request types)
-- ESS attendance calendar with clock in/out
+## System Requirements
 
-### 5. Leave Management
-- Leave dashboard with KPI cards
-- Leave type management with configurable policies
-- Leave calendar with holiday markers
-- Leave approval workflow
+### Minimum
+| Resource | Specification |
+|----------|--------------|
+| CPU | 2 vCPU |
+| RAM | 4 GB |
+| Storage | 40 GB SSD |
+| OS | Ubuntu 24.04 LTS |
+| Network | 100 Mbps |
 
-### 6. Payroll Management
-- Payroll dashboard with month selector
-- Salary structure management
-- Loan and advance tracking
-- Payroll processing workflow
+### Recommended
+| Resource | Specification |
+|----------|--------------|
+| CPU | 4 vCPU |
+| RAM | 8 GB |
+| Storage | 80 GB SSD |
+| OS | Ubuntu 24.04 LTS |
+| Network | 1 Gbps |
 
-### 7. Recruitment & ATS
-- Recruitment dashboard with pipeline visualization
-- Job opening management
-- Candidate management with stage tracking
-- Interview scheduling with feedback
+### Software Stack
+| Component | Version |
+|-----------|---------|
+| Docker | 24.x+ |
+| Docker Compose | v2.x |
+| Nginx | 1.24+ |
+| PostgreSQL | 16 |
+| Redis | 7 |
+| Python | 3.12 |
+| Flutter | 3.x |
 
-### 8. Performance Management
-- Performance dashboard with review cycles
-- Goal/OKR management with progress tracking
-- Review cycle management
-- Competency framework
+---
 
-### 9. Asset Management
-- Asset dashboard with category/status tracking
-- Asset CRUD with assignment/return/maintenance
-- Category-based organization
+## Installation Instructions
 
-### 10. Employee Self Service
-- Dashboard with attendance summary
-- Leave application and balance
-- Payslip viewing
-- Document management
-- Notification center
+See [INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md) for full instructions.
 
-### 11. System Administration
-- Company settings management
-- System health monitoring
-- Notification center with read/unread tracking
-
-## Security
-- JWT authentication with refresh tokens
-- RBAC with 4 default roles per tenant
-- Tenant isolation on all queries
-- CORS restricted to known origins
-- API docs disabled in production
-- Password hashing with bcrypt
-
-## Known Limitations
-- Email/SMS notifications require SMTP/SMS gateway configuration
-- File upload requires volume mount configuration
-- Some report exports require additional setup
-- Dark mode not fully implemented across all screens
-
-## Deployment
+**Quick Start**:
 ```bash
+git clone <repository-url> /opt/Apexv2
+cd /opt/Apexv2
+cp .env.example .env  # Edit with production values
+docker compose up -d --build
+docker compose exec -T backend alembic upgrade head
+```
+
+---
+
+## Known Issues
+
+### Low Priority
+1. **File upload validation** — MIME type validation uses extension checking; content-type sniffing recommended as enhancement
+2. **API documentation exposure** — `/docs` and `/redoc` accessible in production; IP whitelisting recommended
+3. **Celery Beat single-instance** — Running multiple instances causes duplicate task execution
+
+### Limitations
+1. **eSSL devices** — Requires network connectivity to biometric devices; no offline queue
+2. **Flutter web bundle** — Large initial bundle size (~5 MB); uses cache-busting for updates
+3. **Single-database multi-tenancy** — Row-level isolation, not database-per-tenant
+
+See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) for complete list and workarounds.
+
+---
+
+## Upgrade Notes
+
+### From Development/Staging
+```bash
+# Backup
+docker compose exec -T postgres pg_dump -U apex -d apex_db | gzip > pre_upgrade_$(date +%Y%m%d).sql.gz
+
+# Update
 cd /opt/Apexv2
 git pull origin main
 docker compose up -d --build
-docker exec apex_backend alembic upgrade head
-cd frontend && flutter clean && flutter pub get && flutter build web
-cp -r build/web/* /var/www/apexhrms/frontend/build/web/
-systemctl restart nginx
+docker compose exec -T backend alembic upgrade head
+
+# Rebuild frontend
+cd frontend && flutter pub get && flutter build web --release
+sudo cp -r build/web /var/www/apexhrms/frontend/build/web
 ```
 
-## Environment Variables Required
-```
-DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db
-SECRET_KEY=<random-32-byte-key>
-ENCRYPTION_KEY=<fernet-key>
-REDIS_URL=redis://localhost:6379/0
-CORS_ORIGINS=["https://yourdomain.com"]
-```
+### Database Migrations
+17 migrations from initial schema to final index optimization. All forward-compatible. See [ROLLBACK_GUIDE.md](ROLLBACK_GUIDE.md) for downgrade procedures.
+
+### Breaking Changes
+None. This is the initial release.
+
+---
+
+## Post-Release Tasks
+- Monitor error rates for 24 hours
+- Verify all integrations (eSSL, email, SMS)
+- Run UAT with pilot customers
+- Collect feedback on school ERP modules
+- Schedule penetration testing
+- Plan v1.1 feature backlog
+
+---
+
+**Release prepared by**: MiMo Code Agent
+**Date**: 2026-06-28

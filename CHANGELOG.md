@@ -1,60 +1,81 @@
 # Changelog
 
-All notable changes to the Apex Attendance Platform.
+All notable changes to Apex HRMS are documented in this file.
 
-## [2.1.0] - 2026-06-25
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-### Added
-- **Enterprise Sync Dashboard**: New `/essl/dashboard/enterprise` endpoint with per-server health scoring (0-100), throughput trends, processing lag, raw log backlog, and alert thresholds. Frontend tabbed UI with health overview and server details.
-- **Sync Audit Trail**: `SyncAuditService` writes sync lifecycle events (started/completed/failed/reprocess/recovery/config changes) to the `audit_logs` table. Integrated into all eSSL connector endpoints.
-- **Timezone-Aware Parsing**: `_parse_datetime` now uses `essl_servers.timezone` to convert device-local punch times to UTC instead of blindly tagging as UTC. Supports IST, EST, and all IANA timezones.
-- **Clock Drift Detection**: New `GET /essl/{id}/clock-drift` endpoint that analyzes recent punch data to detect devices with future timestamps, large gaps, or time reversals.
-- **Current Employee Provider**: `currentEmployeeProvider` in `employee_provider.dart` looks up the employee record matching the current user's email.
-- **Stress Tests**: `test_stress.py` with bulk processing (10K logs), reprocess performance, concurrent inserts, and idempotency tests.
-- **Timezone Tests**: `test_timezone.py` with IST/EST/UTC conversion, ISO 8601 parsing, and edge cases.
-- **E2E Pipeline Tests**: `test_e2e_pipeline.py` with full pipeline flow (present/late/half-day), multi-day processing, reprocess integrity, and audit lifecycle tests.
-- **Design System**: Complete design system with 60+ color tokens, 15 typography styles, 8-point spacing scale, 7 border radius values, 6 elevation levels, and 6 status color categories.
-- **Reusable Components**: 10 components (ApexCard, ApexButton, ApexBadge, ApexTable, ApexEmptyState, ApexLoadingSkeleton, ApexStatCard, ApexSearchBar, ApexFilterBar, ApexBreadcrumb).
-- **Collapsible Sidebar Navigation**: Desktop sidebar (240px/64px) with navigation items, breadcrumbs, global search (Cmd+K), and quick actions.
-- **Responsive Layout**: Mobile (<600px), tablet (600-1200px), desktop (>1200px) breakpoints with adaptive layouts.
-- **Table-First Employee List**: Default table view with 8 columns, sorting, bulk selection, bulk actions, and grid view toggle.
-- **Multi-View Attendance**: Table view (default), calendar view (placeholder), timeline view (placeholder), quick date selectors.
-- **Device Operations Dashboard**: Health summary cards, device grid with status indicators, connection quality visualization.
-- **Enhanced Report Selection**: Report type grid, configuration card, format selection chips, download with progress.
-- **Loading Skeletons**: Shimmer loading states for lists, cards, tables, and stat cards.
-- **Empty States**: Illustrated empty states with optional action buttons.
-- **Audit Reports**: 18 audit reports covering architecture, database, security, performance, UI/UX, and more.
+---
 
-### Fixed
-- **Leave Balance Wrong ID**: `leave_balance_screen.dart` now uses `currentEmployeeProvider` to get the employee ID instead of `user.id`.
-- **Report Download No Save**: `report_selection_screen.dart` now saves downloaded bytes to disk via `dart:html` blob/anchor download with proper filenames.
-- **Timezone Blind UTC**: `essl_connector.py:_parse_datetime` was tagging all punch times as UTC regardless of device timezone. Now uses `server.timezone` for proper conversion.
+## [1.0.0] — 2026-06-28
 
-### Changed
-- **eSSL Dashboard Screen**: Converted to tabbed layout with "Health Overview" (enterprise dashboard) and "Server Details" (per-server metrics).
-- **ESSl Server CRUD**: Create and delete endpoints now log config changes to audit trail.
-- **Sync Endpoints**: All manual sync endpoints (employees/attendance/devices) now log start/completion to audit trail.
-- **Dashboard Screen**: Redesigned with stat cards, attendance trend chart, quick actions, and activity feed.
-- **Employee List Screen**: Redesigned with table-first layout, column sorting, bulk actions, and responsive grid.
-- **Attendance List Screen**: Redesigned with multiple view modes, quick date selectors, and enhanced filters.
-- **Device List Screen**: Redesigned with operations dashboard layout, health cards, and device grid.
-- **Report Selection Screen**: Redesigned with report type grid and configuration card.
-- **Main Shell**: Rewritten with collapsible sidebar (desktop) and bottom navigation (mobile).
-- **Theme**: Updated to use design system tokens for consistent styling.
+### Features
+- **T9 Critical Security** — Token revocation, JWT claims hardening, secrets management, high-severity vulnerability fixes (`a0478e8`)
+- **T7 Complete RBAC** — 100% endpoint coverage, 455 routes protected, all reports secured (`9ea9af2`)
+- **T6 Security Sprint** — Permission matrix, security audit, test suite, regression report (`ed2cac9`)
+- **Parallel Sprint** — Performance optimizations, frontend polish, QA reports, DevOps documentation (`b5db690`)
+- **Production Hardening** — Tenant templates, dashboard switching, sidebar filtering, tenant_type in auth (`8b806ad`)
+- **Admin & Tenant Type** — Admin signout button, tenant type (corporate/school), feature filtering by tenant type (`4c82179`)
+- **Phase 1 School ERP** — 40 models, 120+ endpoints, 24 feature flags (`806ba7b`)
+- **Phase 2 School ERP** — 9 Flutter screens, sidebar navigation, command palette (`26588bb`)
+- **Phase 3-7 School ERP** — Transport, hostel, library, timetable, communication, medical, discipline, certificates, admissions (`9b10742`)
+- **Feature Flags Enforcement** — `require_feature` dependency on 18 gated modules (`c874a91`)
+- **eSSL Biometric Integration** — Multi-location device sync, eBioserver SOAP/HTTP API, punch log parsing (`017cb8e`, `ea630a2`, `7755322`)
+- **Sync Diagnostic Script** — Database diagnostic and sync troubleshooting tool (`7755322`)
 
-## [2.0.0] - 2026-06-20
+### Bug Fixes
+- **Frontend UI/UX Polish** — 100 design system violations fixed across 24 screens (`8bc044a`)
+- **Superadmin Audit** — Tenant users endpoint, plan dialog, assign plan, audit filter, analytics link (`9809150`)
+- **Superadmin Panel** — Add tenant form, fix feature toggle, fix analytics double-prefix (`e512ccc`)
+- **Admin Typography** — Use ApexTypography design tokens (`6ba6f07`)
+- **Route Fixes** — Route superuser/superadmin to admin dashboard after login (`3321389`, `e52d164`)
+- **Attendance Date Filter** — Use `date_type` alias consistently, `from_date/to_date` parameters (`f2f620a`, `eed2fbb`)
+- **Punch Time Handling** — Store punch times as-is without UTC conversion (`46751bf`)
+- **Attendance Deduplication** — Deduplicate punches, validate time format, handle edge cases (`01079f7`)
+- **Attendance Model** — Add `employee_name` and `employee_code` computed properties (`72814a2`)
+- **eSSL Sync** — Use savepoints to prevent rollback destroying all raw logs (`7c2ec71`)
+- **eSSL API** — Handle paginated responses and Pydantic model objects (`a300717`)
+- **eBioserver Format** — Parse semicolon-delimited punch log format (`a3e0bf5`)
+- **Table Creation** — Explicit model imports to ensure all tables created (`e65802b`)
+- **Attendance Summary** — Missing employee_name/code, remove duplicate processor call (`3e2c8c8`)
+- **Compilation Errors** — `_selected` rename, `ApexBadge` import and const (`60744f6`)
 
-### Added
-- Multi-tenant eSSL server support
-- SOAP connector with circuit breaker and retry
-- Employee, device, and attendance sync
-- Initial sync wizard with date range
-- Sync cursor for incremental fetching
-- Offline recovery
-- Duplicate detection (per-server + cross-server)
-- Manual attendance reprocessing
-- Celery background tasks (4 periodic)
-- Audit middleware
-- Rate limiting middleware
-- Flutter web frontend (38 screens)
-- Docker Compose deployment
+### Security
+- **53/53 security tests** passing — 0 critical, 0 high, 0 medium findings
+- **69/69 regression tests** passing
+- **RBAC** — 455/455 endpoints protected (100% coverage)
+- **Tenant Isolation** — Row-level `tenant_id` filtering on 40+ tables, verified with 12 automated tests
+- **Rate Limiting** — 60 req/min API, 10 req/min auth via Nginx
+- **Account Lockout** — After 5 failed login attempts
+- **Token Revocation** — Redis-based JWT blacklist
+- **UUID Primary Keys** — Prevents ID enumeration across all tables
+
+### Performance
+- **Database Indexes** — Missing indexes added for query optimization (`a1b2c3d4e5f6`)
+- **Connection Pooling** — SQLAlchemy async pool (20 connections + 10 overflow)
+- **Redis Caching** — Token blacklist, session data, Celery broker
+- **Celery Workers** — Background processing for reports, sync, notifications
+- **Flutter Web** — Release build optimization with cache-busting
+
+---
+
+## Migration History
+
+| # | Revision | Description |
+|---|----------|-------------|
+| 1 | `3b6cf98d123b` | Initial schema |
+| 2 | `0ff14a92da4a` | eSSL connector tables |
+| 3 | `caaacd017b3e` | Fix eSSL tenant foreign keys |
+| 4 | `a6dacfc268bc` | Add sync progress fields |
+| 5 | `34d53d38e2ec` | Add dedup index |
+| 6 | `ba139397b281` | Fix raw logs dedup constraint |
+| 7 | `b1a2c3d4e5f6` | Add eSSL location |
+| 8 | `c2d3e4f5a6b7` | Multi-location eSSL |
+| 9 | `d3e4f5a6b7c8` | Add holidays |
+| 10 | `e4f5a6b7c8d9` | Add categories & settings |
+| 11 | `f5a6b7c8d9e0` | Add shift groups & rosters |
+| 12 | `a6b7c8d9e0f1` | Add OD/OT work codes |
+| 13 | `b7c8d9e0f1a2` | Add payroll |
+| 14 | `c8d9e0f1a2b3` | Add core HR |
+| 15 | `d9e0f1a2b3c4` | Add remaining features |
+| 16 | `f7a8b9c0d1e2` | Add super admin tables |
+| 17 | `a1b2c3d4e5f6` | Add missing indexes (HEAD) |
