@@ -17,11 +17,16 @@ final adminTenantListProvider = FutureProvider<List<Map<String, dynamic>>>((ref)
   return [];
 });
 
-class AdminTenantListScreen extends ConsumerWidget {
+class AdminTenantListScreen extends ConsumerStatefulWidget {
   const AdminTenantListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminTenantListScreen> createState() => _AdminTenantListScreenState();
+}
+
+class _AdminTenantListScreenState extends ConsumerState<AdminTenantListScreen> {
+  @override
+  Widget build(BuildContext context) {
     final tenantsAsync = ref.watch(adminTenantListProvider);
 
     return Scaffold(
@@ -32,6 +37,15 @@ class AdminTenantListScreen extends ConsumerWidget {
         elevation: 0,
         title: Text('Tenant Management', style: ApexTypography.titleLarge.copyWith(color: ApexColors.darkOnSurface)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () => _showAddTenantDialog(context),
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Add Tenant'),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
+          ),
+          const SizedBox(width: 16),
+        ],
       ),
       body: tenantsAsync.when(
         data: (tenants) {
@@ -82,17 +96,111 @@ class AdminTenantListScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator(color: ApexColors.primary500)),
         error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddTenantDialog(context),
+        backgroundColor: ApexColors.primary600,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text('Add Tenant', style: ApexTypography.button.copyWith(color: Colors.white)),
+      ),
     );
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'active': return ApexColors.success;
-      case 'trial': return ApexColors.warning;
-      case 'suspended': return ApexColors.error;
-      case 'expired': return ApexColors.error;
-      default: return ApexColors.darkOnSurfaceVariant;
-    }
+  void _showAddTenantDialog(BuildContext context) {
+    final nameCtrl = TextEditingController();
+    final slugCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final mobileCtrl = TextEditingController();
+    final contactCtrl = TextEditingController();
+    final companyCodeCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ApexColors.darkSurface,
+        title: Text('Add New Tenant', style: ApexTypography.titleLarge.copyWith(color: ApexColors.darkOnSurface)),
+        content: SizedBox(
+          width: 480,
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _dialogField(nameCtrl, 'Company Name', Icons.business, required: true),
+                  const SizedBox(height: 12),
+                  _dialogField(slugCtrl, 'Slug (URL-friendly)', Icons.link, required: true, hint: 'e.g. acme-corp'),
+                  const SizedBox(height: 12),
+                  _dialogField(emailCtrl, 'Email', Icons.email, keyboardType: TextInputType.emailAddress),
+                  const SizedBox(height: 12),
+                  _dialogField(mobileCtrl, 'Mobile', Icons.phone, keyboardType: TextInputType.phone),
+                  const SizedBox(height: 12),
+                  _dialogField(contactCtrl, 'Contact Person', Icons.person),
+                  const SizedBox(height: 12),
+                  _dialogField(companyCodeCtrl, 'Company Code', Icons.code),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant))),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              try {
+                final dio = ref.read(dioProvider);
+                await dio.post('/admin/tenants/', data: {
+                  'name': nameCtrl.text.trim(),
+                  'slug': slugCtrl.text.trim().toLowerCase().replaceAll(' ', '-'),
+                  if (emailCtrl.text.isNotEmpty) 'email': emailCtrl.text.trim(),
+                  if (mobileCtrl.text.isNotEmpty) 'mobile': mobileCtrl.text.trim(),
+                  if (contactCtrl.text.isNotEmpty) 'contact_person': contactCtrl.text.trim(),
+                  if (companyCodeCtrl.text.isNotEmpty) 'company_code': companyCodeCtrl.text.trim(),
+                });
+                Navigator.pop(ctx);
+                ref.invalidate(adminTenantListProvider);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Tenant "${nameCtrl.text}" created successfully'), backgroundColor: ApexColors.success),
+                  );
+                }
+              } catch (e) {
+                Navigator.pop(ctx);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
+            child: Text('Create Tenant', style: ApexTypography.button),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dialogField(TextEditingController ctrl, String label, IconData icon, {bool required = false, String? hint, TextInputType? keyboardType}) {
+    return TextFormField(
+      controller: ctrl,
+      style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurface),
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant),
+        hintText: hint,
+        hintStyle: ApexTypography.captionMedium.copyWith(color: ApexColors.darkOnSurfaceVariant.withOpacity(0.5)),
+        prefixIcon: Icon(icon, color: ApexColors.darkOnSurfaceVariant, size: 18),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.primary500)),
+        filled: true,
+        fillColor: ApexColors.darkBackground,
+      ),
+      validator: required ? (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null : null,
+    );
   }
 }
 

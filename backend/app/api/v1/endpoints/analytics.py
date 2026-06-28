@@ -114,7 +114,7 @@ async def customer_tenants(
     return items
 
 
-@router.get("/analytics/overview")
+@router.get("/overview")
 async def analytics_overview(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_superuser),
@@ -149,7 +149,7 @@ async def analytics_overview(
     }
 
 
-@router.get("/analytics/tenant/{tenant_id}")
+@router.get("/tenant/{tenant_id}")
 async def tenant_analytics(
     tenant_id: str,
     db: AsyncSession = Depends(get_db),

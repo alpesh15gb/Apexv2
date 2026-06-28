@@ -127,6 +127,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
       }
 
+      if (loggedIn && isAdmin && !goingToAdmin) {
+        return '/admin/dashboard';
+      }
+
       if (loggedIn && !isAdmin && goingToAdmin && !goingToAdminLogin) {
         return '/dashboard';
       }

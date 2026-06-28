@@ -23,7 +23,7 @@ class AdminFeatureScreen extends ConsumerStatefulWidget {
 class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
   String _search = '';
   String _categoryFilter = 'All';
-  final Set<String> _selected = {};
+  final Set<String> _selectedIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -38,16 +38,16 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
         title: Text('Feature Management', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
         actions: [
-          if (_selected.isNotEmpty) ...[
+          if (_selectedIds.isNotEmpty) ...[
             TextButton.icon(
               onPressed: () => _bulkToggle(true),
               icon: Icon(Icons.check, size: 16, color: ApexColors.successDark),
-              label: Text('Enable (${_selected.length})', style: ApexTypography.body.copyWith(color: ApexColors.successDark)),
+              label: Text('Enable (${_selectedIds.length})', style: ApexTypography.body.copyWith(color: ApexColors.successDark)),
             ),
             TextButton.icon(
               onPressed: () => _bulkToggle(false),
               icon: Icon(Icons.close, size: 16, color: ApexColors.errorDark),
-              label: Text('Disable (${_selected.length})', style: ApexTypography.body.copyWith(color: ApexColors.errorDark)),
+              label: Text('Disable (${_selectedIds.length})', style: ApexTypography.body.copyWith(color: ApexColors.errorDark)),
             ),
           ],
           const SizedBox(width: 16),
@@ -109,16 +109,17 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                 itemCount: filtered.length,
                 itemBuilder: (context, i) {
                   final f = filtered[i];
+                  final fid = f['id'] as String;
                   final code = f['code'] as String;
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     color: i.isEven ? ApexColors.neutral0 : ApexColors.neutral50,
                     child: Row(children: [
                       Checkbox(
-                        value: _selected.contains(code),
+                        value: _selectedIds.contains(fid),
                         onChanged: (v) => setState(() {
-                          if (v == true) _selected.add(code);
-                          else _selected.remove(code);
+                          if (v == true) _selectedIds.add(fid);
+                          else _selectedIds.remove(fid);
                         }),
                       ),
                       const SizedBox(width: 8),
@@ -143,7 +144,7 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                         child: Switch(
                           value: f['is_active'] == true,
                           activeColor: ApexColors.primary600,
-                          onChanged: (v) => _toggleFeature(code, v),
+                          onChanged: (v) => _toggleFeature(fid, v),
                         ),
                       ),
                     ]),
@@ -159,18 +160,18 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
     );
   }
 
-  void _toggleFeature(String code, bool active) async {
+  void _toggleFeature(String featureId, bool active) async {
     final dio = ref.read(dioProvider);
-    await dio.put('/admin/features/$code', data: {'is_active': active});
+    await dio.put('/admin/features/$featureId', data: {'is_active': active});
     ref.invalidate(adminFeaturesProvider);
   }
 
   void _bulkToggle(bool enabled) async {
     final dio = ref.read(dioProvider);
-    for (final code in _selected) {
-      await dio.put('/admin/features/$code', data: {'is_active': enabled});
+    for (final fid in _selectedIds) {
+      await dio.put('/admin/features/$fid', data: {'is_active': enabled});
     }
-    setState(() => _selected.clear());
+    setState(() => _selectedIds.clear());
     ref.invalidate(adminFeaturesProvider);
   }
 }
