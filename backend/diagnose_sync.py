@@ -19,16 +19,16 @@ async def diagnose():
         print(f"Raw logs: {total} total, {unproc} unprocessed")
 
         # 2. Employee mappings
-        r = await db.execute(text("SELECT COUNT(*) FROM essl_employee_mappings"))
+        r = await db.execute(text("SELECT COUNT(*) FROM essl_employee_mapping"))
         emp_maps = r.scalar()
         print(f"Employee mappings: {emp_maps}")
 
-        r = await db.execute(text("SELECT COUNT(*) FROM essl_employee_mappings WHERE employee_id IS NOT NULL"))
+        r = await db.execute(text("SELECT COUNT(*) FROM essl_employee_mapping WHERE employee_id IS NOT NULL"))
         mapped = r.scalar()
         print(f"Mapped to internal employees: {mapped}")
 
         # 3. Device mappings
-        r = await db.execute(text("SELECT COUNT(*) FROM essl_device_mappings"))
+        r = await db.execute(text("SELECT COUNT(*) FROM essl_device_mapping"))
         dev_maps = r.scalar()
         print(f"Device mappings: {dev_maps}")
 
