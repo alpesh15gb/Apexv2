@@ -832,6 +832,14 @@ class EsslConnectorService:
 
                             dev_mapping = device_mappings.get(str(dev_serial).strip()) if dev_serial else None
 
+                            # Convert raw_data datetime objects to strings for JSONB
+                            raw_data = {}
+                            for k, v in punch.items():
+                                if isinstance(v, datetime):
+                                    raw_data[k] = v.isoformat()
+                                else:
+                                    raw_data[k] = v
+
                             raw_log = AttendanceRawLog(
                                 tenant_id=self.server.tenant_id,
                                 essl_server_id=self.server.id,
@@ -841,7 +849,7 @@ class EsslConnectorService:
                                 device_id=dev_mapping.device_id if dev_mapping else None,
                                 punch_time=punch_time,
                                 punch_type=str(pt_type).lower() if pt_type else None,
-                                raw_data=punch,
+                                raw_data=raw_data,
                                 processed=False,
                             )
                             self.db.add(raw_log)
