@@ -101,6 +101,28 @@ async def debug():
             print(f"Data type: {type(log_data).__name__}")
             print(f"Data: {str(log_data)[:500]}")
 
+        # Step 6: Raw SOAP GetEmployeePunchLogs for one day
+        print("\n=== STEP 6: Raw SOAP GetEmployeePunchLogs ===")
+        if emp_maps:
+            code = emp_maps[0].employee_code
+            raw = await soap._execute_soap_call(
+                "GetEmployeePunchLogs",
+                {"EmployeeCode": code, "AttendanceDate": "2026-06-27"}
+            )
+            print(f"Raw response for {code} on 2026-06-27:")
+            print(f"  {str(raw)[:500]}")
+
+        # Step 7: Check DeviceCommand_GetDeviceLogs
+        print("\n=== STEP 7: DeviceCommand_GetDeviceLogs ===")
+        if isinstance(raw_data, str) and ";" in raw_data:
+            first_device = raw_data.split(";")[0].split(",")[1].strip()
+            raw = await soap._execute_soap_call(
+                "DeviceCommand_GetDeviceLogs",
+                {"DeviceSerialNumber": first_device, "varFromDate": "2026-06-01", "varToDate": "2026-06-28"}
+            )
+            print(f"Raw response for {first_device}:")
+            print(f"  {str(raw)[:500]}")
+
 
 if __name__ == "__main__":
     asyncio.run(debug())
