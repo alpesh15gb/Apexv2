@@ -56,6 +56,15 @@ import '../screens/admin/admin_tenant_detail_screen.dart';
 import '../screens/admin/admin_plan_screen.dart';
 import '../screens/admin/admin_feature_screen.dart';
 import '../screens/admin/admin_analytics_screen.dart';
+import '../screens/school/school_dashboard_screen.dart';
+import '../screens/school/student_list_screen.dart';
+import '../screens/school/student_detail_screen.dart';
+import '../screens/school/academic_year_screen.dart';
+import '../screens/school/grade_section_screen.dart';
+import '../screens/school/attendance_mark_screen.dart';
+import '../screens/school/homework_screen.dart';
+import '../screens/school/exam_list_screen.dart';
+import '../screens/school/fee_collection_screen.dart';
 import '../screens/ess/ess_dashboard_screen.dart';
 import '../screens/ess/ess_attendance_screen.dart';
 import '../screens/ess/ess_leave_screen.dart';
@@ -534,6 +543,43 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/leaves/requests',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const LeaveRequestsScreen(),
+      ),
+      // School ERP routes
+      GoRoute(
+        path: '/school/dashboard',
+        builder: (context, state) => const SchoolDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/school/students',
+        builder: (context, state) => const StudentListScreen(),
+      ),
+      GoRoute(
+        path: '/school/students/:id',
+        builder: (context, state) => StudentDetailScreen(studentId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/school/academic-years',
+        builder: (context, state) => const AcademicYearScreen(),
+      ),
+      GoRoute(
+        path: '/school/classes',
+        builder: (context, state) => const GradeSectionScreen(),
+      ),
+      GoRoute(
+        path: '/school/attendance/mark',
+        builder: (context, state) => const AttendanceMarkScreen(),
+      ),
+      GoRoute(
+        path: '/school/homework',
+        builder: (context, state) => const HomeworkScreen(),
+      ),
+      GoRoute(
+        path: '/school/exams',
+        builder: (context, state) => const ExamListScreen(),
+      ),
+      GoRoute(
+        path: '/school/fees',
+        builder: (context, state) => const FeeCollectionScreen(),
       ),
     ],
   );

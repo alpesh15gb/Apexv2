@@ -109,6 +109,16 @@ class _MainShellState extends ConsumerState<MainShell> {
                     _nav(Icons.receipt_long_outlined, Icons.receipt_long, 'Expenses', '/expenses'),
                     _nav(Icons.folder_outlined, Icons.folder, 'Documents', '/documents'),
                   ], isDark),
+                  _navSection('SCHOOL', [
+                    _nav(Icons.school_outlined, Icons.school, 'School Dashboard', '/school/dashboard'),
+                    _nav(Icons.person_search_outlined, Icons.person_search, 'Students', '/school/students'),
+                    _nav(Icons.fact_check_outlined, Icons.fact_check, 'Attendance', '/school/attendance/mark'),
+                    _nav(Icons.assignment_outlined, Icons.assignment, 'Homework', '/school/homework'),
+                    _nav(Icons.quiz_outlined, Icons.quiz, 'Examinations', '/school/exams'),
+                    _nav(Icons.payment_outlined, Icons.payment, 'Fee Collection', '/school/fees'),
+                    _nav(Icons.class_outlined, Icons.class_, 'Classes', '/school/classes'),
+                    _nav(Icons.calendar_month_outlined, Icons.calendar_month, 'Academic Year', '/school/academic-years'),
+                  ], isDark),
                   const Divider(height: 1, indent: 16, endIndent: 16),
                   _nav(Icons.settings_outlined, Icons.settings, 'Administration', '/settings', isDark),
                 ],
@@ -414,6 +424,15 @@ class _CommandPaletteState extends State<_CommandPalette> {
     {'label': 'Add Employee', 'route': '/employees/create', 'icon': Icons.person_add},
     {'label': 'Mark Attendance', 'route': '/attendance/mark', 'icon': Icons.add_task},
     {'label': 'Apply Leave', 'route': '/leaves/apply', 'icon': Icons.event_busy},
+    // School ERP
+    {'label': 'School Dashboard', 'route': '/school/dashboard', 'icon': Icons.school},
+    {'label': 'Students', 'route': '/school/students', 'icon': Icons.person_search},
+    {'label': 'Mark Student Attendance', 'route': '/school/attendance/mark', 'icon': Icons.fact_check},
+    {'label': 'Homework', 'route': '/school/homework', 'icon': Icons.assignment},
+    {'label': 'Examinations', 'route': '/school/exams', 'icon': Icons.quiz},
+    {'label': 'Fee Collection', 'route': '/school/fees', 'icon': Icons.payment},
+    {'label': 'Classes & Sections', 'route': '/school/classes', 'icon': Icons.class_},
+    {'label': 'Academic Years', 'route': '/school/academic-years', 'icon': Icons.calendar_month},
   ];
 
   @override
