@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final gradesProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -77,9 +80,13 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
           ),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const LoadingWidget()
                 : _timetable.isEmpty
-                    ? Center(child: Text('Select a section to view timetable', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)))
+                    ? const EmptyState(
+                        icon: Icons.calendar_month_outlined,
+                        title: 'No Timetable',
+                        description: 'Select a section to view its timetable.',
+                      )
                     : SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: Column(

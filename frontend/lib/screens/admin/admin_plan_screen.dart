@@ -7,6 +7,9 @@ import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final adminPlansProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -40,7 +43,15 @@ class AdminPlanScreen extends ConsumerWidget {
         ],
       ),
       body: plansAsync.when(
-        data: (plans) => ListView.builder(
+        data: (plans) {
+          if (plans.isEmpty) return const EmptyState(
+            icon: Icons.payment_outlined,
+            title: 'No Plans Created',
+            description: 'Create subscription plans for your tenants.',
+            actionLabel: 'New Plan',
+            onActionPressed: null,
+          );
+          return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: plans.length,
           itemBuilder: (context, i) {
@@ -89,8 +100,11 @@ class AdminPlanScreen extends ConsumerWidget {
             );
           },
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        loading: () => const LoadingWidget(),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(adminPlansProvider),
+        ),
       ),
     );
   }

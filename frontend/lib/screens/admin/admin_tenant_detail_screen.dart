@@ -10,6 +10,9 @@ import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/apex_text_field.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 class AdminTenantDetailScreen extends ConsumerStatefulWidget {
   final String tenantId;
@@ -43,8 +46,11 @@ class _AdminTenantDetailScreenState extends ConsumerState<AdminTenantDetailScree
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_tenant == null) return const Scaffold(body: Center(child: Text('Tenant not found')));
+    if (_loading) return const Scaffold(body: LoadingWidget(useShimmer: false));
+    if (_tenant == null) return Scaffold(body: CustomErrorWidget(
+      errorMessage: 'Tenant not found',
+      onRetry: _loadTenant,
+    ));
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
@@ -218,7 +224,7 @@ class _SubscriptionTabState extends ConsumerState<_SubscriptionTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const LoadingWidget(useShimmer: false);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -317,7 +323,7 @@ class _LimitsTabState extends ConsumerState<_LimitsTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const LoadingWidget(useShimmer: false);
     final defaultLimits = [
       {'key': 'max_employees', 'label': 'Max Employees', 'max': 50, 'current': 0},
       {'key': 'max_branches', 'label': 'Max Branches', 'max': 5, 'current': 0},
@@ -433,7 +439,7 @@ class _FeaturesTabState extends ConsumerState<_FeaturesTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const LoadingWidget(useShimmer: false);
     final tenantFeatures = _filterByTenantType(_features);
     final categories = ['All', ...{...tenantFeatures.map((f) => f['category'] as String)}..toList()];
     final filtered = tenantFeatures.where((f) {
@@ -523,8 +529,12 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_users.isEmpty) return Center(child: Text('No users found', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+    if (_loading) return const LoadingWidget(useShimmer: false);
+    if (_users.isEmpty) return const EmptyState(
+      icon: Icons.people_outline,
+      title: 'No Users Found',
+      description: 'This tenant has no users yet.',
+    );
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _users.length,
@@ -584,7 +594,7 @@ class _AuditTabState extends ConsumerState<_AuditTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const LoadingWidget(useShimmer: false);
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _logs.length,

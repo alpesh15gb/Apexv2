@@ -59,6 +59,7 @@ import '../screens/admin/admin_analytics_screen.dart';
 import '../screens/school/school_dashboard_screen.dart';
 import '../screens/school/student_list_screen.dart';
 import '../screens/school/student_detail_screen.dart';
+import '../screens/school/student_edit_screen.dart';
 import '../screens/school/academic_year_screen.dart';
 import '../screens/school/grade_section_screen.dart';
 import '../screens/school/attendance_mark_screen.dart';
@@ -183,10 +184,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AdminTenantListScreen(),
       ),
       GoRoute(
-        path: '/admin/tenants/:tenantId',
-        builder: (context, state) => AdminTenantDetailScreen(tenantId: state.pathParameters['tenantId']!),
-      ),
-      GoRoute(
         path: '/admin/plans',
         builder: (context, state) => const AdminPlanScreen(),
       ),
@@ -197,31 +194,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/analytics',
         builder: (context, state) => const AdminAnalyticsScreen(),
-      ),
-      // ESS routes
-      GoRoute(
-        path: '/ess/dashboard',
-        builder: (context, state) => const EssDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/ess/attendance',
-        builder: (context, state) => const EssAttendanceCalendarScreen(),
-      ),
-      GoRoute(
-        path: '/ess/profile',
-        builder: (context, state) => const EssProfileScreen(),
-      ),
-      GoRoute(
-        path: '/ess/payslips',
-        builder: (context, state) => const EssPayslipScreen(),
-      ),
-      GoRoute(
-        path: '/ess/documents',
-        builder: (context, state) => const EssDocumentScreen(),
-      ),
-      GoRoute(
-        path: '/ess/notifications',
-        builder: (context, state) => const EssNotificationScreen(),
       ),
       ShellRoute(
         navigatorKey: shellNavigatorKey,
@@ -480,6 +452,100 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/attendance/outdoor-duty',
             builder: (context, state) => const OutdoorDutyScreen(),
           ),
+          // ESS routes
+          GoRoute(
+            path: '/ess/dashboard',
+            builder: (context, state) => const EssDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/ess/attendance',
+            builder: (context, state) => const EssAttendanceCalendarScreen(),
+          ),
+          GoRoute(
+            path: '/ess/attendance/calendar',
+            builder: (context, state) => const EssAttendanceCalendarScreen(),
+          ),
+          GoRoute(
+            path: '/ess/leaves',
+            builder: (context, state) => const EssLeaveScreen(),
+          ),
+          GoRoute(
+            path: '/ess/profile',
+            builder: (context, state) => const EssProfileScreen(),
+          ),
+          GoRoute(
+            path: '/ess/payslips',
+            builder: (context, state) => const EssPayslipScreen(),
+          ),
+          GoRoute(
+            path: '/ess/documents',
+            builder: (context, state) => const EssDocumentScreen(),
+          ),
+          GoRoute(
+            path: '/ess/notifications',
+            builder: (context, state) => const EssNotificationScreen(),
+          ),
+          // School ERP routes
+          GoRoute(
+            path: '/school/dashboard',
+            builder: (context, state) => const SchoolDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/school/students',
+            builder: (context, state) => const StudentListScreen(),
+          ),
+          GoRoute(
+            path: '/school/students/:id',
+            builder: (context, state) => StudentDetailScreen(studentId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/school/students/:id/edit',
+            builder: (context, state) => StudentEditScreen(studentId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/school/academic-years',
+            builder: (context, state) => const AcademicYearScreen(),
+          ),
+          GoRoute(
+            path: '/school/classes',
+            builder: (context, state) => const GradeSectionScreen(),
+          ),
+          GoRoute(
+            path: '/school/attendance/mark',
+            builder: (context, state) => const AttendanceMarkScreen(),
+          ),
+          GoRoute(
+            path: '/school/homework',
+            builder: (context, state) => const HomeworkScreen(),
+          ),
+          GoRoute(
+            path: '/school/exams',
+            builder: (context, state) => const ExamListScreen(),
+          ),
+          GoRoute(
+            path: '/school/fees',
+            builder: (context, state) => const FeeCollectionScreen(),
+          ),
+          GoRoute(
+            path: '/school/transport',
+            builder: (context, state) => const TransportScreen(),
+          ),
+          GoRoute(
+            path: '/school/hostel',
+            builder: (context, state) => const HostelScreen(),
+          ),
+          GoRoute(
+            path: '/school/library',
+            builder: (context, state) => const LibraryScreen(),
+          ),
+          GoRoute(
+            path: '/school/timetable',
+            builder: (context, state) => const TimetableScreen(),
+          ),
+          GoRoute(
+            path: '/school/admissions',
+            builder: (context, state) => const AdmissionScreen(),
+          ),
         ],
       ),
       GoRoute(
@@ -548,63 +614,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/leaves/requests',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const LeaveRequestsScreen(),
-      ),
-      // School ERP routes
-      GoRoute(
-        path: '/school/dashboard',
-        builder: (context, state) => const SchoolDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/school/students',
-        builder: (context, state) => const StudentListScreen(),
-      ),
-      GoRoute(
-        path: '/school/students/:id',
-        builder: (context, state) => StudentDetailScreen(studentId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/school/academic-years',
-        builder: (context, state) => const AcademicYearScreen(),
-      ),
-      GoRoute(
-        path: '/school/classes',
-        builder: (context, state) => const GradeSectionScreen(),
-      ),
-      GoRoute(
-        path: '/school/attendance/mark',
-        builder: (context, state) => const AttendanceMarkScreen(),
-      ),
-      GoRoute(
-        path: '/school/homework',
-        builder: (context, state) => const HomeworkScreen(),
-      ),
-      GoRoute(
-        path: '/school/exams',
-        builder: (context, state) => const ExamListScreen(),
-      ),
-      GoRoute(
-        path: '/school/fees',
-        builder: (context, state) => const FeeCollectionScreen(),
-      ),
-      GoRoute(
-        path: '/school/transport',
-        builder: (context, state) => const TransportScreen(),
-      ),
-      GoRoute(
-        path: '/school/hostel',
-        builder: (context, state) => const HostelScreen(),
-      ),
-      GoRoute(
-        path: '/school/library',
-        builder: (context, state) => const LibraryScreen(),
-      ),
-      GoRoute(
-        path: '/school/timetable',
-        builder: (context, state) => const TimetableScreen(),
-      ),
-      GoRoute(
-        path: '/school/admissions',
-        builder: (context, state) => const AdmissionScreen(),
       ),
     ],
   );

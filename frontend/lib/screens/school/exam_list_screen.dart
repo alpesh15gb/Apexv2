@@ -6,6 +6,9 @@ import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/apex_badge.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final examsProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -51,7 +54,13 @@ class ExamListScreen extends ConsumerWidget {
           Expanded(
             child: examsAsync.when(
               data: (exams) {
-                if (exams.isEmpty) return Center(child: Text('No exams created', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+                if (exams.isEmpty) return const EmptyState(
+                  icon: Icons.quiz_outlined,
+                  title: 'No Exams Created',
+                  description: 'Create exams to manage schedules and marks entry.',
+                  actionLabel: 'Create Exam',
+                  onActionPressed: null,
+                );
                 return ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: exams.length,
@@ -81,8 +90,11 @@ class ExamListScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              loading: () => const LoadingWidget(),
+              error: (e, _) => CustomErrorWidget(
+                errorMessage: e.toString(),
+                onRetry: () => ref.invalidate(examsProvider),
+              ),
             ),
           ),
         ],

@@ -7,6 +7,8 @@ import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_card.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
 
 final essDashboardProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -50,8 +52,11 @@ class EssDashboardScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        loading: () => const LoadingWidget(),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(essDashboardProvider),
+        ),
       ),
     );
   }

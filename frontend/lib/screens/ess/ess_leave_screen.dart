@@ -9,6 +9,9 @@ import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/apex_text_field.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final essLeavesProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -69,15 +72,24 @@ class _EssLeaveScreenState extends ConsumerState<EssLeaveScreen> {
                 ),
               )).toList(),
             ),
-            loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
+            loading: () => const SizedBox(height: 60, child: Center(child: LoadingWidget(useShimmer: false))),
+            error: (e, _) => CustomErrorWidget(
+              errorMessage: e.toString(),
+              onRetry: () => ref.invalidate(essBalanceProvider),
+            ),
           ),
           const SizedBox(height: 24),
           Text('Leave History', style: ApexTypography.titleMedium),
           const SizedBox(height: 8),
           leavesAsync.when(
             data: (leaves) {
-              if (leaves.isEmpty) return Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No leave requests', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))));
+              if (leaves.isEmpty) return const Padding(padding: EdgeInsets.all(32), child: EmptyState(
+                icon: Icons.event_busy_outlined,
+                title: 'No Leave Requests',
+                description: 'Apply for leave and your requests will appear here.',
+                actionLabel: 'Apply Leave',
+                onActionPressed: null,
+              ));
               return Column(children: leaves.map((l) => Container(
                 margin: const EdgeInsets.only(bottom: 6),
                 child: ApexCard(
@@ -92,8 +104,11 @@ class _EssLeaveScreenState extends ConsumerState<EssLeaveScreen> {
                 ),
               )).toList());
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            loading: () => const LoadingWidget(),
+            error: (e, _) => CustomErrorWidget(
+              errorMessage: e.toString(),
+              onRetry: () => ref.invalidate(essLeavesProvider),
+            ),
           ),
         ]),
       ),

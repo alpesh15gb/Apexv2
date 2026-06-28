@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final homeworkListProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -49,7 +52,13 @@ class HomeworkScreen extends ConsumerWidget {
           Expanded(
             child: homeworkAsync.when(
               data: (items) {
-                if (items.isEmpty) return Center(child: Text('No homework assigned', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+                if (items.isEmpty) return const EmptyState(
+                  icon: Icons.assignment_outlined,
+                  title: 'No Homework Assigned',
+                  description: 'Create homework assignments for your students.',
+                  actionLabel: 'Create Homework',
+                  onActionPressed: null,
+                );
                 return ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: items.length,
@@ -80,8 +89,11 @@ class HomeworkScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              loading: () => const LoadingWidget(),
+              error: (e, _) => CustomErrorWidget(
+                errorMessage: e.toString(),
+                onRetry: () => ref.invalidate(homeworkListProvider),
+              ),
             ),
           ),
         ],

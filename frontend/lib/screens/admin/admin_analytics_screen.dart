@@ -6,6 +6,7 @@ import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../widgets/loading_widget.dart';
 
 final customerSuccessProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -75,7 +76,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                 ],
                 isMobile: isMobile,
               ),
-              loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+              loading: () => const SizedBox(height: 80, child: Center(child: LoadingWidget(useShimmer: false))),
               error: (e, _) => Text('Error: $e'),
             ),
             const SizedBox(height: 24),
@@ -97,7 +98,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                   isMobile: isMobile,
                 );
               },
-              loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+              loading: () => const SizedBox(height: 80, child: Center(child: LoadingWidget(useShimmer: false))),
               error: (e, _) => Text('Error: $e'),
             ),
             const SizedBox(height: 24),
@@ -128,7 +129,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                   )).toList(),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const LoadingWidget(useShimmer: false),
               error: (e, _) => Text('Error: $e'),
             ),
           ],

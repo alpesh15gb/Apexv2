@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final gradesProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -49,7 +52,13 @@ class GradeSectionScreen extends ConsumerWidget {
           Expanded(
             child: gradesAsync.when(
               data: (grades) {
-                if (grades.isEmpty) return Center(child: Text('No grades created', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+                if (grades.isEmpty) return const EmptyState(
+                  icon: Icons.class_outlined,
+                  title: 'No Grades Created',
+                  description: 'Add grades and sections to organize your classes.',
+                  actionLabel: 'Add Grade',
+                  onActionPressed: null,
+                );
                 return ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: grades.length,
@@ -59,8 +68,11 @@ class GradeSectionScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              loading: () => const LoadingWidget(),
+              error: (e, _) => CustomErrorWidget(
+                errorMessage: e.toString(),
+                onRetry: () => ref.invalidate(gradesProvider),
+              ),
             ),
           ),
         ],

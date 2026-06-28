@@ -9,6 +9,8 @@ import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
 
 final adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -89,8 +91,11 @@ class AdminDashboardScreen extends ConsumerWidget {
             ],
           ),
         ),
-        loading: () => const Center(child: CircularProgressIndicator(color: ApexColors.primary500)),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        loading: () => const LoadingWidget(useShimmer: false),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(adminStatsProvider),
+        ),
       ),
     );
   }

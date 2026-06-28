@@ -8,6 +8,9 @@ import '../../core/constants.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/apex_badge.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final adminTenantListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -63,7 +66,13 @@ class _AdminTenantListScreenState extends ConsumerState<AdminTenantListScreen> {
       body: tenantsAsync.when(
         data: (tenants) {
           if (tenants.isEmpty) {
-            return Center(child: Text('No tenants found', style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant)));
+            return const EmptyState(
+              icon: Icons.business_outlined,
+              title: 'No Tenants Found',
+              description: 'Add your first tenant to get started.',
+              actionLabel: 'Add Tenant',
+              onActionPressed: null,
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -106,8 +115,11 @@ class _AdminTenantListScreenState extends ConsumerState<AdminTenantListScreen> {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator(color: ApexColors.primary500)),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        loading: () => const LoadingWidget(useShimmer: false),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(adminTenantListProvider),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddTenantDialog(context),

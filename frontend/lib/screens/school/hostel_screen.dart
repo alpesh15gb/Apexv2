@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final hostelsProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -42,7 +45,13 @@ class HostelScreen extends ConsumerWidget {
           Expanded(
             child: hostelsAsync.when(
               data: (hostels) {
-                if (hostels.isEmpty) return Center(child: Text('No hostels configured', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+                if (hostels.isEmpty) return const EmptyState(
+                  icon: Icons.home_work_outlined,
+                  title: 'No Hostels Configured',
+                  description: 'Add your first hostel to manage rooms and allocations.',
+                  actionLabel: 'Add Hostel',
+                  onActionPressed: null,
+                );
                 return ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: hostels.length,
@@ -68,8 +77,11 @@ class HostelScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              loading: () => const LoadingWidget(),
+              error: (e, _) => CustomErrorWidget(
+                errorMessage: e.toString(),
+                onRetry: () => ref.invalidate(hostelsProvider),
+              ),
             ),
           ),
         ],

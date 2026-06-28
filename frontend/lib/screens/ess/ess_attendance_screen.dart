@@ -7,6 +7,9 @@ import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_card.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final essAttendanceProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -45,7 +48,11 @@ class EssAttendanceScreen extends ConsumerWidget {
       ),
       body: attAsync.when(
         data: (records) {
-          if (records.isEmpty) return Center(child: Text('No attendance records', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+          if (records.isEmpty) return const EmptyState(
+            icon: Icons.access_time_outlined,
+            title: 'No Attendance Records',
+            description: 'Your attendance history will appear here.',
+          );
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: records.length,
@@ -79,8 +86,11 @@ class EssAttendanceScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        loading: () => const LoadingWidget(),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(essAttendanceProvider),
+        ),
       ),
     );
   }

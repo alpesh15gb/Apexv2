@@ -9,6 +9,9 @@ import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final essAttendanceProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -93,13 +96,20 @@ class _EssAttendanceCalendarScreenState extends ConsumerState<EssAttendanceCalen
             const SizedBox(height: 8),
             attAsync.when(
               data: (records) {
-                if (records.isEmpty) return Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No attendance records this month', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))));
+                if (records.isEmpty) return const Padding(padding: EdgeInsets.all(32), child: EmptyState(
+                  icon: Icons.calendar_month_outlined,
+                  title: 'No Records This Month',
+                  description: 'Your attendance for this month will appear here.',
+                ));
                 return Column(
                   children: records.map((r) => _DailyLogCard(record: r)).toList(),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error)),
+              loading: () => const LoadingWidget(useShimmer: false),
+              error: (e, _) => CustomErrorWidget(
+                errorMessage: e.toString(),
+                onRetry: () => ref.invalidate(essAttendanceProvider),
+              ),
             ),
           ],
         ),
@@ -186,7 +196,7 @@ class _TodayCard extends StatelessWidget {
           ),
         );
       },
-      loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+      loading: () => const SizedBox(height: 100, child: Center(child: LoadingWidget(useShimmer: false))),
       error: (e, _) => const SizedBox.shrink(),
     );
   }
@@ -313,8 +323,11 @@ class _CalendarGrid extends StatelessWidget {
           ),
         );
       },
-      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error)),
+      loading: () => const SizedBox(height: 200, child: Center(child: LoadingWidget(useShimmer: false))),
+      error: (e, _) => CustomErrorWidget(
+        errorMessage: e.toString(),
+        onRetry: () => ref.invalidate(essAttendanceProvider),
+      ),
     );
   }
 

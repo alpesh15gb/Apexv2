@@ -7,6 +7,9 @@ import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/apex_section.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final essProfileProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -86,8 +89,11 @@ class EssProfileScreen extends ConsumerWidget {
             ]),
           ]),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
+        loading: () => const LoadingWidget(),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(essProfileProvider),
+        ),
       ),
     );
   }
@@ -115,7 +121,11 @@ class EssPayslipScreen extends ConsumerWidget {
       appBar: const ApexAppBar(title: 'My Payslips'),
       body: payslipsAsync.when(
         data: (payslips) {
-          if (payslips.isEmpty) return Center(child: Text('No payslips', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+          if (payslips.isEmpty) return const EmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: 'No Payslips',
+            description: 'Your payslips will appear here once generated.',
+          );
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: payslips.length,
@@ -143,8 +153,11 @@ class EssPayslipScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
+        loading: () => const LoadingWidget(),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(essPayslipsProvider),
+        ),
       ),
     );
   }
@@ -162,7 +175,11 @@ class EssDocumentScreen extends ConsumerWidget {
       appBar: const ApexAppBar(title: 'My Documents'),
       body: docsAsync.when(
         data: (docs) {
-          if (docs.isEmpty) return Center(child: Text('No documents', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+          if (docs.isEmpty) return const EmptyState(
+            icon: Icons.description_outlined,
+            title: 'No Documents',
+            description: 'Your documents will appear here once uploaded.',
+          );
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,
@@ -186,8 +203,11 @@ class EssDocumentScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
+        loading: () => const LoadingWidget(),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(essDocumentsProvider),
+        ),
       ),
     );
   }
@@ -205,7 +225,11 @@ class EssNotificationScreen extends ConsumerWidget {
       appBar: const ApexAppBar(title: 'Notifications'),
       body: notifsAsync.when(
         data: (notifs) {
-          if (notifs.isEmpty) return Center(child: Text('No notifications', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
+          if (notifs.isEmpty) return const EmptyState(
+            icon: Icons.notifications_none_outlined,
+            title: 'No Notifications',
+            description: 'You\'re all caught up!',
+          );
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: notifs.length,
@@ -228,8 +252,11 @@ class EssNotificationScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
+        loading: () => const LoadingWidget(),
+        error: (e, _) => CustomErrorWidget(
+          errorMessage: e.toString(),
+          onRetry: () => ref.invalidate(essNotificationsProvider),
+        ),
       ),
     );
   }

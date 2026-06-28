@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state.dart';
 
 final gradesProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -116,14 +119,20 @@ class _AttendanceMarkScreenState extends ConsumerState<AttendanceMarkScreen> {
           Expanded(
             child: studentsAsync != null
                 ? studentsAsync.when(
-                    data: (students) => ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: students.length,
-                      itemBuilder: (context, i) {
-                        final s = students[i];
-                        final sid = s['id'] as String;
-                        final currentStatus = _attendanceMap[sid] ?? 'present';
-                        return Container(
+                    data: (students) {
+                      if (students.isEmpty) return const EmptyState(
+                        icon: Icons.people_outline,
+                        title: 'No Students Found',
+                        description: 'No students are enrolled in this section.',
+                      );
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: students.length,
+                        itemBuilder: (context, i) {
+                          final s = students[i];
+                          final sid = s['id'] as String;
+                          final currentStatus = _attendanceMap[sid] ?? 'present';
+                          return Container(
                           margin: const EdgeInsets.only(bottom: 4),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
@@ -154,10 +163,17 @@ class _AttendanceMarkScreenState extends ConsumerState<AttendanceMarkScreen> {
                         );
                       },
                     ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(child: Text('Error: $e')),
+                    loading: () => const LoadingWidget(),
+                    error: (e, _) => CustomErrorWidget(
+                      errorMessage: e.toString(),
+                      onRetry: () => ref.invalidate(sectionStudentsProvider(_selectedSectionId!)),
+                    ),
                   )
-                : Center(child: Text('Select a grade and section', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
+                : const EmptyState(
+                    icon: Icons.school_outlined,
+                    title: 'Select Grade & Section',
+                    description: 'Choose a grade and section to mark attendance.',
+                  ),
           ),
         ],
       ),
