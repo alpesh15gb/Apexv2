@@ -820,7 +820,7 @@ class EsslConnectorService:
                                 tenant_id=self.server.tenant_id,
                                 essl_server_id=self.server.id,
                                 employee_code=emp_code,
-                                employee_id=emp_mapping.employee_id,
+                                employee_id=emp_mapping.employee_id if emp_mapping else None,
                                 device_serial=str(dev_serial).strip() if dev_serial else None,
                                 device_id=dev_mapping.device_id if dev_mapping else None,
                                 punch_time=punch_time,
@@ -830,10 +830,10 @@ class EsslConnectorService:
                             )
                             self.db.add(raw_log)
                             try:
-                                await self.db.flush()
+                                async with self.db.begin_nested():
+                                    await self.db.flush()
                                 created += 1
                             except Exception:
-                                await self.db.rollback()
                                 skipped += 1
 
                     except Exception as e:
