@@ -65,6 +65,11 @@ import '../screens/school/attendance_mark_screen.dart';
 import '../screens/school/homework_screen.dart';
 import '../screens/school/exam_list_screen.dart';
 import '../screens/school/fee_collection_screen.dart';
+import '../screens/school/transport_screen.dart';
+import '../screens/school/hostel_screen.dart';
+import '../screens/school/library_screen.dart';
+import '../screens/school/timetable_screen.dart';
+import '../screens/school/admission_screen.dart';
 import '../screens/ess/ess_dashboard_screen.dart';
 import '../screens/ess/ess_attendance_screen.dart';
 import '../screens/ess/ess_leave_screen.dart';
@@ -580,6 +585,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/school/fees',
         builder: (context, state) => const FeeCollectionScreen(),
+      ),
+      GoRoute(
+        path: '/school/transport',
+        builder: (context, state) => const TransportScreen(),
+      ),
+      GoRoute(
+        path: '/school/hostel',
+        builder: (context, state) => const HostelScreen(),
+      ),
+      GoRoute(
+        path: '/school/library',
+        builder: (context, state) => const LibraryScreen(),
+      ),
+      GoRoute(
+        path: '/school/timetable',
+        builder: (context, state) => const TimetableScreen(),
+      ),
+      GoRoute(
+        path: '/school/admissions',
+        builder: (context, state) => const AdmissionScreen(),
       ),
     ],
   );

@@ -55,6 +55,14 @@ from app.api.v1.endpoints.school import (
     examination as school_examination,
     fee as school_fee,
     school_dashboard as school_dashboard_ep,
+    transport as school_transport,
+    hostel as school_hostel,
+    library as school_library,
+    timetable as school_timetable,
+    communication as school_communication,
+    medical as school_medical,
+    certificate as school_certificate,
+    admission as school_admission,
 )
 
 api_router = APIRouter()
@@ -119,3 +127,13 @@ api_router.include_router(school_homework.router, prefix="/school/homework", tag
 api_router.include_router(school_examination.router, prefix="/school", tags=["School Examinations"])
 api_router.include_router(school_fee.router, prefix="/school/fees", tags=["School Fees"])
 api_router.include_router(school_dashboard_ep.router, prefix="/school/dashboard", tags=["School Dashboard"])
+api_router.include_router(school_transport.router, prefix="/school/transport", tags=["School Transport"])
+api_router.include_router(school_hostel.router, prefix="/school/hostel", tags=["School Hostel"])
+api_router.include_router(school_library.router, prefix="/school/library", tags=["School Library"])
+api_router.include_router(school_timetable.router, prefix="/school/timetable", tags=["School Timetable"])
+api_router.include_router(school_communication.circular_router, prefix="/school/circulars", tags=["School Circulars"])
+api_router.include_router(school_communication.event_router, prefix="/school/events", tags=["School Events"])
+api_router.include_router(school_medical.medical_router, prefix="/school/health", tags=["School Medical"])
+api_router.include_router(school_medical.discipline_router, prefix="/school/discipline", tags=["School Discipline"])
+api_router.include_router(school_certificate.router, prefix="/school/certificates", tags=["School Certificates"])
+api_router.include_router(school_admission.router, prefix="/school/admissions", tags=["School Admissions"])
