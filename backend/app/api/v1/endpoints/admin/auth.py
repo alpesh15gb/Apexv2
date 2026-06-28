@@ -49,7 +49,7 @@ async def admin_login(
     if is_locked:
         raise HTTPException(status_code=423, detail=lock_msg)
 
-    access_token = create_access_token(subject=str(user.id), tenant_id=str(user.tenant_id))
+    access_token = create_access_token(subject=str(user.id), tenant_id=str(user.tenant_id), is_superuser=True)
     refresh_token = create_refresh_token(subject=str(user.id), tenant_id=str(user.tenant_id))
 
     return {

@@ -14,6 +14,8 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    revoke_token,
+    revoke_all_user_tokens,
 )
 from app.core.deps import get_current_active_user, get_db
 from app.models.user import User
@@ -169,6 +171,7 @@ async def login(
     access_token = create_access_token(
         subject=user.id,
         tenant_id=user.tenant_id,
+        is_superuser=user.is_superuser,
     )
     refresh_token = create_refresh_token(
         subject=user.id,
@@ -251,6 +254,7 @@ async def refresh_token(
     access_token = create_access_token(
         subject=user.id,
         tenant_id=user.tenant_id,
+        is_superuser=user.is_superuser,
     )
     new_refresh_token = create_refresh_token(
         subject=user.id,
@@ -267,22 +271,16 @@ async def refresh_token(
 @router.post("/logout", response_model=StatusResponse)
 async def logout(
     logout_data: RefreshTokenRequest,
+    request: Request,
 ) -> StatusResponse:
-    """Revoke a refresh token, preventing its reuse."""
-    token = logout_data.refresh_token
-    payload = decode_token(token)
-    if payload:
-        exp = payload.get("exp")
-        if exp:
-            now = datetime.now(timezone.utc).timestamp()
-            ttl = int(exp - now)
-            if ttl > 0:
-                try:
-                    redis_client = get_redis()
-                    await redis_client.setex(f"revoked_token:{token}", ttl, "1")
-                except Exception:
-                    # If Redis fails, log might not persist, but we avoid 500 error
-                    pass
+    """Revoke access and refresh tokens, preventing their reuse."""
+    redis_client = get_redis()
+    await revoke_token(logout_data.refresh_token, redis_client)
+
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        access_token = auth_header[7:]
+        await revoke_token(access_token, redis_client)
 
     return StatusResponse(
         status="success",
@@ -356,11 +354,8 @@ async def logout_all_devices(
     current_user: User = Depends(get_current_active_user),
 ) -> StatusResponse:
     """Revoke all tokens for the current user across all devices."""
-    try:
-        redis_client = get_redis()
-        await redis_client.set(f"revoked_user:{current_user.id}", datetime.now(timezone.utc).isoformat())
-    except Exception:
-        pass
+    redis_client = get_redis()
+    await revoke_all_user_tokens(str(current_user.id), redis_client)
 
     return StatusResponse(
         status="success",

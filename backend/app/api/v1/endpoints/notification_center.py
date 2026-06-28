@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.notification import Notification
 

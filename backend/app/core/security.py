@@ -38,8 +38,9 @@ def create_access_token(
     subject: str | uuid.UUID,
     tenant_id: str | uuid.UUID,
     expires_delta: Optional[timedelta] = None,
+    is_superuser: bool = False,
 ) -> str:
-    """Create a JWT access token containing subject (user_id) and tenant_id."""
+    """Create a JWT access token containing subject (user_id), tenant_id, and is_superuser."""
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -51,6 +52,7 @@ def create_access_token(
         "iat": datetime.now(timezone.utc),
         "sub": str(subject),
         "tenant_id": str(tenant_id),
+        "is_superuser": is_superuser,
     }
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
@@ -141,7 +143,8 @@ async def is_user_revoked(user_id: str, token_iat: int = 0, redis_client=None) -
         revocation_time = await redis_client.get(f"revoked_user:{user_id}")
         if not revocation_time:
             return False
-        # If token was issued before revocation, it's revoked
-        return True
+        from datetime import datetime as _dt
+        revoked_at = _dt.fromisoformat(revocation_time).timestamp()
+        return token_iat < revoked_at
     except Exception:
         return False

@@ -5,7 +5,7 @@ from datetime import date as date_type
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_permissions, require_permissions
+from app.core.deps import get_db, get_current_active_user, require_permissions
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseBase
 from app.schemas.attendance import (

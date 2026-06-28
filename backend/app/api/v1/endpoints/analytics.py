@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func, and_, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_superuser, require_permissions, require_permissions
+from app.core.deps import get_db, get_current_superuser, require_permissions
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.employee import Employee

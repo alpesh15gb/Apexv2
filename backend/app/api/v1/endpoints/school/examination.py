@@ -71,7 +71,7 @@ async def list_exam_types(
     }
 
 
-@router.post("/exam-types")
+@router.post("/exam-types", dependencies=[Depends(require_permissions("exam.create"))])
 async def create_exam_type(
     data: ExamTypeCreate,
     db: AsyncSession = Depends(get_db),
@@ -106,7 +106,7 @@ async def list_exams(
     }
 
 
-@router.post("/exams")
+@router.post("/exams", dependencies=[Depends(require_permissions("exam.create"))])
 async def create_exam(
     data: ExamCreate,
     db: AsyncSession = Depends(get_db),
@@ -144,7 +144,7 @@ async def list_exam_schedules(
     }
 
 
-@router.post("/exams/{exam_id}/schedules")
+@router.post("/exams/{exam_id}/schedules", dependencies=[Depends(require_permissions("exam.manage"))])
 async def create_exam_schedule(
     exam_id: uuid.UUID,
     data: ExamScheduleCreate,
@@ -168,13 +168,17 @@ async def create_exam_schedule(
     return {"id": str(schedule.id)}
 
 
-@router.post("/marks/enter")
+@router.post("/marks/enter", dependencies=[Depends(require_permissions("exam.manage"))])
 async def enter_marks(
     data: MarkEntry,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    stmt = select(ExamMark).where(ExamMark.exam_schedule_id == data.exam_schedule_id, ExamMark.student_id == data.student_id)
+    stmt = select(ExamMark).where(
+        ExamMark.exam_schedule_id == data.exam_schedule_id,
+        ExamMark.student_id == data.student_id,
+        ExamMark.tenant_id == current_user.tenant_id,
+    )
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
 
@@ -197,7 +201,7 @@ async def enter_marks(
     return {"status": "entered"}
 
 
-@router.post("/marks/bulk-enter")
+@router.post("/marks/bulk-enter", dependencies=[Depends(require_permissions("exam.manage"))])
 async def bulk_enter_marks(
     data: List[MarkEntry],
     db: AsyncSession = Depends(get_db),
@@ -277,7 +281,7 @@ async def list_grading_scales(
     }
 
 
-@router.post("/grading-scales")
+@router.post("/grading-scales", dependencies=[Depends(require_permissions("exam.manage"))])
 async def create_grading_scale(
     data: dict,
     db: AsyncSession = Depends(get_db),

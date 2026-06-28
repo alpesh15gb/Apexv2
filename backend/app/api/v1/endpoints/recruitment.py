@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.recruitment import JobRequisition, JobOpening, Candidate, Interview, Offer
 
@@ -589,7 +589,10 @@ async def create_offer(
     db.add(offer)
 
     # Update candidate stage
-    candidate = await db.get(Candidate, data.candidate_id)
+    candidate = await db.execute(
+        select(Candidate).where(Candidate.id == data.candidate_id, Candidate.tenant_id == current_user.tenant_id)
+    )
+    candidate = candidate.scalar_one_or_none()
     if candidate:
         candidate.stage = "offer"
 
@@ -609,7 +612,10 @@ async def accept_offer(
     offer.status = "accepted"
     offer.accepted_at = datetime.now(timezone.utc)
 
-    candidate = await db.get(Candidate, offer.candidate_id)
+    candidate = await db.execute(
+        select(Candidate).where(Candidate.id == offer.candidate_id, Candidate.tenant_id == current_user.tenant_id)
+    )
+    candidate = candidate.scalar_one_or_none()
     if candidate:
         candidate.stage = "accepted"
 
@@ -631,7 +637,10 @@ async def reject_offer(
     offer.rejected_at = datetime.now(timezone.utc)
     offer.rejection_reason = data.reason
 
-    candidate = await db.get(Candidate, offer.candidate_id)
+    candidate = await db.execute(
+        select(Candidate).where(Candidate.id == offer.candidate_id, Candidate.tenant_id == current_user.tenant_id)
+    )
+    candidate = candidate.scalar_one_or_none()
     if candidate:
         candidate.stage = "rejected"
 

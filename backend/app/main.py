@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.core.config import get_settings
+from app.core.config import get_settings, validate_secrets
 from app.db.session import engine
 from app.middleware.tenant import TenantMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -16,6 +16,11 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup: Validate secrets
+    issues = validate_secrets(settings, on_startup=True)
+    for issue in issues:
+        print(f"⚠️  {issue}")
+
     # Startup: Verify DB Connection
     try:
         async with engine.connect() as conn:
@@ -24,10 +29,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Database connection verification failed: {e}")
         raise e
-
-    # Security check: warn if SECRET_KEY is default
-    if "change-this" in settings.SECRET_KEY:
-        print("WARNING: SECRET_KEY is using default value. Set a proper key in .env for production!")
 
     yield
     # Shutdown: Close DB Connections

@@ -97,7 +97,10 @@ async def allocate_student(
 ):
     allocation = HostelAllocation(tenant_id=current_user.tenant_id, status="active", **data.model_dump())
     db.add(allocation)
-    student = await db.get(Student, data.student_id)
+    student = await db.execute(
+        select(Student).where(Student.id == data.student_id, Student.tenant_id == current_user.tenant_id)
+    )
+    student = student.scalar_one_or_none()
     if student:
         student.hostel_room_id = data.room_id
     await db.commit()

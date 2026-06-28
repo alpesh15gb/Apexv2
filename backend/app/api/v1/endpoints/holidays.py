@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.holiday import Holiday
 from app.schemas.common import ResponseBase

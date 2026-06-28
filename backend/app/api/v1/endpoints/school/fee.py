@@ -134,7 +134,10 @@ async def record_payment(
     )
     db.add(payment)
 
-    student_fee = await db.get(StudentFee, data.student_fee_id)
+    student_fee = await db.execute(
+        select(StudentFee).where(StudentFee.id == data.student_fee_id, StudentFee.tenant_id == current_user.tenant_id)
+    )
+    student_fee = student_fee.scalar_one_or_none()
     if student_fee:
         total_paid = (await db.execute(
             select(func.coalesce(func.sum(FeePayment.amount), 0)).where(FeePayment.student_fee_id == data.student_fee_id)

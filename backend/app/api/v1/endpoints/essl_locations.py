@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_permissions, require_permissions, require_feature
+from app.core.deps import get_db, get_current_active_user, require_permissions, require_feature
 from app.models.user import User
 from app.models.essl_server import EsslServer
 from app.models.essl_location import EsslLocation

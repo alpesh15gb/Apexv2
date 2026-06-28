@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.schemas.dashboard import (
     DashboardStats, AttendanceTrend, RecentActivity,

@@ -105,7 +105,10 @@ async def assign_student(
 ):
     assignment = StudentTransport(tenant_id=current_user.tenant_id, **data.model_dump())
     db.add(assignment)
-    student = await db.get(Student, data.student_id)
+    student = await db.execute(
+        select(Student).where(Student.id == data.student_id, Student.tenant_id == current_user.tenant_id)
+    )
+    student = student.scalar_one_or_none()
     if student:
         student.transport_route_id = data.route_id
     await db.commit()

@@ -9,12 +9,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import get_settings
-from app.core.security import decode_token
+from app.core.security import decode_token, is_token_revoked, is_user_revoked
 from app.db.session import get_db
 from app.models.user import User
 from app.models.tenant import Tenant
 
+from redis.asyncio import Redis
+
 settings = get_settings()
+
+_redis = None
+def _get_redis():
+    global _redis
+    if _redis is None:
+        _redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+    return _redis
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_PREFIX}/auth/login",
@@ -41,6 +50,28 @@ async def get_current_user(
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Check token revocation
+    try:
+        redis_client = _get_redis()
+        if await is_token_revoked(token, redis_client):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        iat = payload.get("iat", 0)
+        sub = payload.get("sub", "")
+        if sub and await is_user_revoked(sub, iat, redis_client):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="All sessions revoked. Please login again.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
 
     sub = payload.get("sub")
     if not sub:

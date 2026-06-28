@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_permissions, require_permissions
+from app.core.deps import get_db, get_current_active_user, require_permissions
 from app.models.user import User
 from app.models.employee import Employee, Department, Designation, Branch
 from app.models.leave import LeaveBalance, LeaveType
@@ -19,7 +19,7 @@ from app.models.leave import LeaveBalance, LeaveType
 router = APIRouter(dependencies=[Depends(require_permissions("employee.read"))])
 
 
-@router.post("/import/employees")
+@router.post("/import/employees", dependencies=[Depends(require_permissions("employee.create"))])
 async def import_employees(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
@@ -130,7 +130,7 @@ async def import_employees(
     return results
 
 
-@router.post("/import/leave-balances")
+@router.post("/import/leave-balances", dependencies=[Depends(require_permissions("employee.manage"))])
 async def import_leave_balances(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
