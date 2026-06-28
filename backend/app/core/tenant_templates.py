@@ -241,9 +241,8 @@ async def create_school_default_roles(db: AsyncSession, tenant_id):
         role = Role(
             tenant_id=tenant_id,
             name=role_def["name"],
-            codename=role_def["codename"],
             description=role_def["description"],
-            is_system=False,
+            is_system_role=False,
         )
         db.add(role)
         await db.flush()
