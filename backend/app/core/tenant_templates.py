@@ -234,7 +234,7 @@ async def create_school_default_roles(db: AsyncSession, tenant_id):
     await db.flush()
 
     for role_def in school_roles:
-        existing = await db.execute(select(Role).where(Role.tenant_id == tenant_id, Role.codename == role_def["codename"]))
+        existing = await db.execute(select(Role).where(Role.tenant_id == tenant_id, Role.name == role_def["name"]))
         if existing.scalar_one_or_none():
             continue
 
