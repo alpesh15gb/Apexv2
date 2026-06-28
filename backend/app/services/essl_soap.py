@@ -303,9 +303,9 @@ class ESSLSoapService:
     async def get_employee_punch_logs(self, employee_code: str, from_date: Any, to_date: Any) -> Dict[str, Any]:
         """
         Gets employee punch logs over date range by querying day-by-day.
+        Response format: "first_punch;last_punch;time1,time2,..." (semicolon-delimited)
         """
         try:
-            # Standardize date types
             if isinstance(from_date, str):
                 from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
             elif isinstance(from_date, datetime):
@@ -327,14 +327,34 @@ class ESSLSoapService:
                 )
                 parsed = self._xml_to_dict_or_list(raw)
                 
-                # Check for individual call success
-                if parsed and parsed != "error" and parsed != "0":
-                    if isinstance(parsed, list):
-                        all_logs.extend(parsed)
-                    elif isinstance(parsed, dict):
-                        all_logs.append(parsed)
-                    else:
-                        pass # Ignore plain status codes
+                # Parse semicolon-delimited format: "datetime1;datetime2;time1,time2,..."
+                if isinstance(parsed, str) and parsed not in ("error", "0", "", ";;"):
+                    parts = parsed.split(";")
+                    if len(parts) >= 3 and parts[2].strip():
+                        # Part 3 has comma-separated punch times
+                        punch_times = [t.strip() for t in parts[2].split(",") if t.strip()]
+                        for pt in punch_times:
+                            # Combine date with time
+                            full_dt = f"{date_str} {pt}"
+                            all_logs.append({
+                                "employee_code": employee_code,
+                                "punch_time": full_dt,
+                                "punch_type": None,
+                                "device_serial": None,
+                            })
+                    elif len(parts) >= 1 and parts[0].strip() and ";" not in parts[0]:
+                        # Single punch format: just datetime
+                        all_logs.append({
+                            "employee_code": employee_code,
+                            "punch_time": parts[0].strip(),
+                            "punch_type": None,
+                            "device_serial": None,
+                        })
+                elif isinstance(parsed, list):
+                    all_logs.extend(parsed)
+                elif isinstance(parsed, dict):
+                    all_logs.append(parsed)
+                
                 current_date += timedelta(days=1)
 
             return {"success": True, "data": all_logs, "error": None}

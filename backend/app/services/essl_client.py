@@ -340,15 +340,32 @@ class ESSLClient:
             return res
 
         raw_logs = res["data"]
-        normalized = normalize_keys(raw_logs)
-
+        
         typed_logs = []
-        for log in normalized:
+        for log in raw_logs:
             try:
-                # SOAP returns punch times in standard strings. Map appropriately.
-                typed_logs.append(ESSLPunchLog(**log))
+                if isinstance(log, dict):
+                    # Convert punch_time string to datetime if needed
+                    if isinstance(log.get("punch_time"), str):
+                        try:
+                            log["punch_time"] = datetime.fromisoformat(log["punch_time"])
+                        except ValueError:
+                            # Try common formats
+                            for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"]:
+                                try:
+                                    log["punch_time"] = datetime.strptime(log["punch_time"], fmt)
+                                    break
+                                except ValueError:
+                                    continue
+                            else:
+                                logger.warn("Skipped punch with unparseable time", punch_time=log["punch_time"])
+                                continue
+                    typed_logs.append(ESSLPunchLog(**log))
+                elif isinstance(log, str) and log not in ("error", "0", ""):
+                    # Handle raw string format
+                    logger.warn("Skipped raw string punch log", data=log[:100])
             except Exception as e:
-                logger.warn("Skipped malformed punch log", data=log, error=str(e))
+                logger.warn("Skipped malformed punch log", data=str(log)[:100], error=str(e))
 
         paginated = self._paginate(typed_logs, page, page_size)
         return {"success": True, "data": paginated, "error": None}
