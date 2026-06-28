@@ -267,7 +267,7 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
               child: Row(children: [
                 Icon(Icons.calendar_today, size: 14, color: ApexColors.primary),
                 const SizedBox(width: 6),
-                Text(DateFormat('dd MMM yyyy').format(_selectedDate), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ApexColors.primary)),
+                Text(DateFormat('dd MMM yyyy').format(_selectedDate), style: ApexTypography.captionMedium.copyWith(color: ApexColors.primary)),
               ]),
             ),
           ),
@@ -304,10 +304,12 @@ class _AttendanceTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading) return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
-    if (records.isEmpty) return Container(
-      height: 200,
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
-      child: const Center(child: Text('No attendance records for this date', style: TextStyle(color: ApexColors.neutral500))),
+    if (records.isEmpty) return ApexCard(
+      padding: const EdgeInsets.all(32),
+      child: SizedBox(
+        height: 136,
+        child: Center(child: Text('No attendance records for this date', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
+      ),
     );
 
     return Container(

@@ -12,7 +12,8 @@ import '../../widgets/apex_dropdown.dart';
 import '../../widgets/apex_text_field.dart';
 
 class ShiftCreateScreen extends ConsumerStatefulWidget {
-  const ShiftCreateScreen({Key? key}) : super(key: key);
+  final String? shiftId;
+  const ShiftCreateScreen({Key? key, this.shiftId}) : super(key: key);
 
   @override
   ConsumerState<ShiftCreateScreen> createState() => _ShiftCreateScreenState();
@@ -29,6 +30,46 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
   bool _isNightShift = false;
+
+  bool _isLoading = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.shiftId != null) {
+      _isLoading = true;
+      _loadShift();
+    }
+  }
+
+  Future<void> _loadShift() async {
+    try {
+      final asyncShifts = ref.read(shiftListProvider);
+      final shifts = asyncShifts.value ?? [];
+      final shift = shifts.firstWhere((s) => s.id == widget.shiftId);
+      setState(() {
+        _nameController.text = shift.name;
+        final startParts = shift.startTime.split(':');
+        _startTime = TimeOfDay(hour: int.parse(startParts[0]), minute: int.parse(startParts[1]));
+        final endParts = shift.endTime.split(':');
+        _endTime = TimeOfDay(hour: int.parse(endParts[0]), minute: int.parse(endParts[1]));
+        _graceController.text = shift.gracePeriodMinutes.toString();
+        _lateRuleController.text = shift.lateRuleMinutes.toString();
+        _earlyOutController.text = shift.earlyRuleMinutes.toString();
+        _overtimeThresholdController.text = shift.overtimeThresholdMinutes.toString();
+        _isNightShift = shift.isNightShift;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading shift: $e'), backgroundColor: ApexColors.error),
+        );
+        context.pop();
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -48,6 +89,7 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
 
   void _save() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isSaving = true);
       final data = {
         'name': _nameController.text.trim(),
         'start_time': _formatTime(_startTime),
@@ -61,15 +103,20 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
       };
 
       try {
-        await ref.read(shiftListProvider.notifier).addShift(data);
+        if (widget.shiftId != null) {
+          await ref.read(shiftListProvider.notifier).updateShift(widget.shiftId!, data);
+        } else {
+          await ref.read(shiftListProvider.notifier).addShift(data);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Shift created successfully'), backgroundColor: ApexColors.success),
+            SnackBar(content: Text(widget.shiftId != null ? 'Shift updated successfully' : 'Shift created successfully'), backgroundColor: ApexColors.success),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
+          setState(() => _isSaving = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
           );
@@ -82,8 +129,10 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: const ApexAppBar(title: 'Create Shift'),
-      body: Form(
+      appBar: ApexAppBar(title: widget.shiftId != null ? 'Edit Shift' : 'Create Shift'),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -165,9 +214,11 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
                 ),
                 const SizedBox(height: 24),
                 ApexButton(
-                  label: 'Create Shift',
+                  label: _isSaving
+                      ? (widget.shiftId != null ? 'Updating...' : 'Creating...')
+                      : (widget.shiftId != null ? 'Update Shift' : 'Create Shift'),
                   expanded: true,
-                  onPressed: _save,
+                  onPressed: _isSaving ? null : _save,
                 ),
               ],
             ),

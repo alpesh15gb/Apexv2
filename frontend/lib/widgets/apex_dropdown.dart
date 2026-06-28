@@ -28,6 +28,7 @@ class ApexDropdown<T> extends StatelessWidget {
       value: value,
       items: items,
       onChanged: enabled ? onChanged : null,
+      dropdownColor: Colors.white,
       style: ApexTypography.body.copyWith(fontWeight: FontWeight.w500, color: ApexColors.neutral900),
       validator: validator ?? (required ? (v) => v == null ? '$label is required' : null : null),
       decoration: InputDecoration(

@@ -69,7 +69,7 @@ class AttendanceDetailScreen extends ConsumerWidget {
                 ],
               ),
               loading: () => const LoadingWidget(count: 1),
-              error: (err, stack) => Center(child: Text('Summary Error: ${err.toString()}')),
+              error: (err, stack) => Center(child: Text('Summary Error: ${err.toString()}', style: TextStyle(color: ApexColors.error))),
             ),
             const SizedBox(height: 24),
 
@@ -109,7 +109,7 @@ class AttendanceDetailScreen extends ConsumerWidget {
                 );
               },
               loading: () => const LoadingWidget(count: 3),
-              error: (err, stack) => Center(child: Text('Logs Error: ${err.toString()}')),
+              error: (err, stack) => Center(child: Text('Logs Error: ${err.toString()}', style: TextStyle(color: ApexColors.error))),
             ),
           ],
         ),

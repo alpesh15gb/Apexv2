@@ -206,7 +206,7 @@ class HolidayCalendarScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
     );
   }
@@ -219,8 +219,9 @@ class HolidayCalendarScreen extends ConsumerWidget {
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
+        builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
           title: Text(holiday != null ? 'Edit Holiday' : 'Add Holiday', style: ApexTypography.sectionTitle),
           content: SizedBox(
             width: 400,
@@ -284,8 +285,9 @@ class HolidayCalendarScreen extends ConsumerWidget {
   void _confirmDelete(BuildContext context, WidgetRef ref, Holiday holiday) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Delete Holiday', style: ApexTypography.sectionTitle),
+        builder: (ctx) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text('Delete Holiday', style: ApexTypography.sectionTitle),
         content: Text('Delete "${holiday.name}" on ${DateFormat('MMM dd, yyyy').format(holiday.date)}?'),
         actions: [
           ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
@@ -350,6 +352,7 @@ class _HolidayCard extends StatelessWidget {
             ApexBadge(label: holiday.type, type: _typeBadge(holiday.type)),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, size: 16),
+              color: Colors.white,
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
                 PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error))),

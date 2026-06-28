@@ -505,6 +505,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ShiftAssignScreen(),
       ),
       GoRoute(
+        path: '/shifts/:id/edit',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ShiftCreateScreen(shiftId: id);
+        },
+      ),
+      GoRoute(
         path: '/leaves/balance',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const LeaveBalanceScreen(),
