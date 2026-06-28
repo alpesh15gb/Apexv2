@@ -99,7 +99,8 @@ class AdminPlanScreen extends ConsumerWidget {
               ]),
             );
           },
-        ),
+        );
+        },
         loading: () => const LoadingWidget(),
         error: (e, _) => CustomErrorWidget(
           errorMessage: e.toString(),

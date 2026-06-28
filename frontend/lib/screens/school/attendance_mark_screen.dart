@@ -162,7 +162,8 @@ class _AttendanceMarkScreenState extends ConsumerState<AttendanceMarkScreen> {
                           ]),
                         );
                       },
-                    ),
+                    );
+                    },
                     loading: () => const LoadingWidget(),
                     error: (e, _) => CustomErrorWidget(
                       errorMessage: e.toString(),

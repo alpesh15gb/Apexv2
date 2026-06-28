@@ -247,14 +247,14 @@ class _CalendarHeader extends StatelessWidget {
   }
 }
 
-class _CalendarGrid extends StatelessWidget {
+class _CalendarGrid extends ConsumerWidget {
   final DateTime month;
   final AsyncValue<List<dynamic>> attAsync;
 
   const _CalendarGrid({required this.month, required this.attAsync});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final firstDay = DateTime(month.year, month.month, 1);
     final lastDay = DateTime(month.year, month.month + 1, 0);
     final startWeekday = firstDay.weekday % 7;
