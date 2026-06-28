@@ -46,6 +46,16 @@ from app.api.v1.endpoints import (
     operations,
 )
 from app.api.v1.endpoints.admin import auth as admin_auth, dashboard as admin_dashboard, tenants as admin_tenants, plans as admin_plans, features as admin_features
+from app.api.v1.endpoints.school import (
+    academic_year as school_academic_year,
+    grade_section as school_grade_section,
+    student as school_student,
+    student_attendance as school_student_attendance,
+    homework as school_homework,
+    examination as school_examination,
+    fee as school_fee,
+    school_dashboard as school_dashboard_ep,
+)
 
 api_router = APIRouter()
 
@@ -98,3 +108,14 @@ api_router.include_router(billing.router, prefix="/admin/billing", tags=["Billin
 api_router.include_router(analytics.router, prefix="/admin/analytics", tags=["Analytics"])
 api_router.include_router(import_export.router, prefix="/data", tags=["Import/Export"])
 api_router.include_router(operations.router, prefix="/ops", tags=["Operations"])
+# School ERP routes
+api_router.include_router(school_academic_year.router, prefix="/school/academic-years", tags=["School Academic Years"])
+api_router.include_router(school_grade_section.router, prefix="/school", tags=["School Grades & Sections"])
+api_router.include_router(school_grade_section.subjects_router, prefix="/school", tags=["School Subjects"])
+api_router.include_router(school_grade_section.alloc_router, prefix="/school", tags=["School Teacher Allocation"])
+api_router.include_router(school_student.router, prefix="/school/students", tags=["School Students"])
+api_router.include_router(school_student_attendance.router, prefix="/school/student-attendance", tags=["School Student Attendance"])
+api_router.include_router(school_homework.router, prefix="/school/homework", tags=["School Homework"])
+api_router.include_router(school_examination.router, prefix="/school", tags=["School Examinations"])
+api_router.include_router(school_fee.router, prefix="/school/fees", tags=["School Fees"])
+api_router.include_router(school_dashboard_ep.router, prefix="/school/dashboard", tags=["School Dashboard"])

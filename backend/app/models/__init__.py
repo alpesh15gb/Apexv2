@@ -45,6 +45,28 @@ from app.models.timeline import EmployeeEvent
 from app.models.work_code import WorkCode
 from app.models.asset_travel import CompanyAsset, TravelRequest
 
+# School ERP models
+from app.models.school import (
+    AcademicYear, AcademicTerm, SchoolHoliday,
+    Campus, Building, Room,
+    Grade, Section, House,
+    Student, Guardian, StudentGuardian, StudentSibling,
+    Subject, GradeSubject, TeacherAllocation,
+    PeriodDefinition, TimetableEntry, Substitution,
+    StudentAttendance, StudentAttendanceSummary,
+    Homework, HomeworkSubmission, Assignment, AssignmentSubmission,
+    ExamType, Exam, ExamSchedule, ExamMark, GradingScale, GradingScaleDetail,
+    FeeCategory, FeeStructure, StudentFee, FeePayment, FeeFineRule, Scholarship, StudentScholarship,
+    TransportRoute, TransportStop, StudentTransport,
+    Hostel, HostelRoom, HostelAllocation,
+    LibraryBook, LibraryTransaction,
+    LessonPlan,
+    SchoolEvent, Circular,
+    HealthRecord, DisciplineIncident,
+    CertificateTemplate, IssuedCertificate,
+    AdmissionInquiry, AdmissionApplication,
+)
+
 __all__ = [
     "Tenant",
     "User",
@@ -152,4 +174,23 @@ __all__ = [
     "WorkCode",
     "CompanyAsset",
     "TravelRequest",
+    # School ERP
+    "AcademicYear", "AcademicTerm", "SchoolHoliday",
+    "Campus", "Building", "Room",
+    "Grade", "Section", "House",
+    "Student", "Guardian", "StudentGuardian", "StudentSibling",
+    "Subject", "GradeSubject", "TeacherAllocation",
+    "PeriodDefinition", "TimetableEntry", "Substitution",
+    "StudentAttendance", "StudentAttendanceSummary",
+    "Homework", "HomeworkSubmission", "Assignment", "AssignmentSubmission",
+    "ExamType", "Exam", "ExamSchedule", "ExamMark", "GradingScale", "GradingScaleDetail",
+    "FeeCategory", "FeeStructure", "StudentFee", "FeePayment", "FeeFineRule", "Scholarship", "StudentScholarship",
+    "TransportRoute", "TransportStop", "StudentTransport",
+    "Hostel", "HostelRoom", "HostelAllocation",
+    "LibraryBook", "LibraryTransaction",
+    "LessonPlan",
+    "SchoolEvent", "Circular",
+    "HealthRecord", "DisciplineIncident",
+    "CertificateTemplate", "IssuedCertificate",
+    "AdmissionInquiry", "AdmissionApplication",
 ]
