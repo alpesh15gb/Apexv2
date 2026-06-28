@@ -193,7 +193,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
           if (!isMobile) ...[
             const SizedBox(width: 12),
             _filterChip('Department', dirState.departmentFilter, () => _showDepartmentFilter()),
-            _filterChip('Branch', dirState.branchFilter, () => _showBranchFilter()),
+            _filterChip('Location', dirState.branchFilter, () => _showBranchFilter()),
             _filterChip('Status', dirState.statusFilter, () => _showStatusFilter()),
             if (dirState.departmentFilter != null || dirState.branchFilter != null || dirState.statusFilter != null)
               TextButton(onPressed: () => ref.read(employeeDirectoryProvider.notifier).clearFilters(), child: const Text('Clear')),
@@ -376,7 +376,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
 
   void _showBranchFilter() {
     showDialog(context: context, builder: (ctx) => _FilterDialog(
-      title: 'Select Branch',
+      title: 'Select Location',
       endpoint: '/employees/branches',
       onSelect: (id) => ref.read(employeeDirectoryProvider.notifier).setFilter(branch: id),
     ));
