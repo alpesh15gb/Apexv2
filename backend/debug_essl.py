@@ -45,8 +45,12 @@ async def debug():
 
         # Call GetDeviceList API
         print("\n=== Calling GetDeviceList ===")
+        from app.services.essl_soap import ESSLSoapService
         from app.services.essl_client import ESSLClient
-        client = ESSLClient(server.server_url, server.username, server.password_encrypted, server.timeout_seconds)
+        from app.core.encryption import decrypt_value
+        password = decrypt_value(server.password_encrypted)
+        soap = ESSLSoapService(server.server_url, server.username, password, server.timeout_seconds)
+        client = ESSLClient(soap)
         result = await client.get_devices(bypass_cache=True)
         print(f"Success: {result.get('success')}")
         print(f"Error: {result.get('error')}")
