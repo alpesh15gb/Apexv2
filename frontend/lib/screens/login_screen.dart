@@ -37,7 +37,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _emailController.text.trim(),
           _passwordController.text,
         );
-        if (mounted) context.go('/dashboard');
+        if (mounted) {
+          final user = ref.read(authProvider).value;
+          if (user != null && user.isSuperuser) {
+            context.go('/admin/dashboard');
+          } else {
+            context.go('/dashboard');
+          }
+        }
       } catch (e) {
         // Error handled by listener
       }
