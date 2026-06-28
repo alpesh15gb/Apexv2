@@ -82,7 +82,10 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
     state = state.copyWith(loading: true, error: null, page: page);
     try {
       final params = <String, dynamic>{'page': page, 'page_size': 20};
-      if (state.dateFilter != null) params['date'] = state.dateFilter;
+      if (state.dateFilter != null) {
+        params['from_date'] = state.dateFilter;
+        params['to_date'] = state.dateFilter;
+      }
       if (state.departmentFilter != null) params['department_id'] = state.departmentFilter;
       if (state.statusFilter != null) params['status'] = state.statusFilter;
 
@@ -308,33 +311,35 @@ class _AttendanceTable extends StatelessWidget {
       ),
     );
 
-    return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 1000),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                color: ApexColors.neutral50,
-                child: Row(children: [
-                  SizedBox(width: 180, child: Text('EMPLOYEE', style: ApexTypography.tableHeader)),
-                  SizedBox(width: 100, child: Text('CODE', style: ApexTypography.tableHeader)),
-                  SizedBox(width: 100, child: Text('CHECK IN', style: ApexTypography.tableHeader)),
-                  SizedBox(width: 100, child: Text('CHECK OUT', style: ApexTypography.tableHeader)),
-                  SizedBox(width: 80, child: Text('HOURS', style: ApexTypography.tableHeader)),
-                  SizedBox(width: 80, child: Text('STATUS', style: ApexTypography.tableHeader)),
-                  SizedBox(width: 80, child: Text('SOURCE', style: ApexTypography.tableHeader)),
-                ]),
-              ),
+    return SizedBox(
+      width: double.infinity,
+      child: Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 800),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  color: ApexColors.neutral50,
+                  child: Row(children: [
+                    const SizedBox(width: 180, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280), letterSpacing: 0.5))),
+                    const SizedBox(width: 100, child: Text('CODE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280), letterSpacing: 0.5))),
+                    const SizedBox(width: 100, child: Text('CHECK IN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280), letterSpacing: 0.5))),
+                    const SizedBox(width: 100, child: Text('CHECK OUT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280), letterSpacing: 0.5))),
+                    const SizedBox(width: 80, child: Text('HOURS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280), letterSpacing: 0.5))),
+                    const SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280), letterSpacing: 0.5))),
+                    const SizedBox(width: 80, child: Text('SOURCE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280), letterSpacing: 0.5))),
+                  ]),
+                ),
               ...records.asMap().entries.map((entry) {
                 final i = entry.key;
                 final r = entry.value;
                 final status = r['status'] ?? 'unknown';
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   color: i.isEven ? Colors.white : ApexColors.neutral50,
                   child: Row(children: [
                     SizedBox(width: 180, child: Row(children: [
@@ -361,6 +366,7 @@ class _AttendanceTable extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
