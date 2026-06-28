@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../models/employee.dart';
 import '../../providers/employee_provider.dart';
@@ -16,15 +17,6 @@ final employeeDetailProvider = FutureProvider.family<Employee, String>((ref, id)
   return await service.getEmployee(id);
 });
 
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 class EmployeeDetailScreen extends ConsumerStatefulWidget {
   final String employeeId;
@@ -57,7 +49,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
 
     return detailAsync.when(
       data: (emp) => Scaffold(
-        backgroundColor: _bg,
+        backgroundColor: ApexColors.neutral50,
         body: Column(
           children: [
             // Header
@@ -68,8 +60,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
             // Tabs
             Container(
               decoration: const BoxDecoration(
-                color: _surface,
-                border: Border(bottom: BorderSide(color: _border)),
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
               ),
               child: TabBar(
                 controller: _tabController,
@@ -82,9 +74,9 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
                   Tab(text: 'Emergency'),
                   Tab(text: 'Activity'),
                 ],
-                labelColor: _primary,
-                unselectedLabelColor: _muted,
-                indicatorColor: _primary,
+                labelColor: ApexColors.primary,
+                unselectedLabelColor: ApexColors.neutral500,
+                indicatorColor: ApexColors.primary,
               ),
             ),
             // Tab content
@@ -114,7 +106,7 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 40, color: _danger),
+              Icon(Icons.error_outline, size: 40, color: ApexColors.error),
               const SizedBox(height: 12),
               Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
               const SizedBox(height: 12),
@@ -142,8 +134,8 @@ class _ProfileHeader extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: 12),
       decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: isMobile
           ? Column(
@@ -169,7 +161,7 @@ class _ProfileHeader extends StatelessWidget {
       radius: 28,
       backgroundImage: employee.photoUrl != null ? NetworkImage(employee.photoUrl!) : null,
       child: employee.photoUrl == null
-          ? Text(employee.firstName[0].toUpperCase(), style: ApexTypography.titleLarge.copyWith(color: _primary))
+          ? Text(employee.firstName[0].toUpperCase(), style: ApexTypography.titleLarge.copyWith(color: ApexColors.primary))
           : null,
     );
   }
@@ -180,14 +172,14 @@ class _ProfileHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(employee.fullName, style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text(employee.fullName, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(width: 8),
             _StatusBadge(status: employee.status),
           ],
         ),
         const SizedBox(height: 2),
         Text('${employee.employeeCode} • ${employee.designationName ?? 'No Designation'}',
-          style: ApexTypography.bodySmall.copyWith(color: _muted)),
+          style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
         const SizedBox(height: 6),
         Wrap(
           spacing: 6,
@@ -206,14 +198,14 @@ class _ProfileHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _bg,
+        color: ApexColors.neutral50,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.neutral200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: _muted),
+          Icon(icon, size: 12, color: ApexColors.neutral500),
           const SizedBox(width: 4),
           Text(label, style: ApexTypography.captionSmall),
         ],
@@ -254,9 +246,9 @@ class _OverviewTab extends StatelessWidget {
             title: 'CURRENT STATUS',
             child: Column(
               children: [
-                _statusRow('Status', employee.status.toUpperCase(), employee.status == 'active' ? _success : _danger),
-                _statusRow('Shift', employee.shiftName ?? 'Not assigned', _primary),
-                _statusRow('Department', employee.departmentName ?? 'Not assigned', _muted),
+                _statusRow('Status', employee.status.toUpperCase(), employee.status == 'active' ? ApexColors.success : ApexColors.error),
+                _statusRow('Shift', employee.shiftName ?? 'Not assigned', ApexColors.primary),
+                _statusRow('Department', employee.departmentName ?? 'Not assigned', ApexColors.neutral500),
               ],
             ),
           ),
@@ -321,9 +313,9 @@ class _OverviewTab extends StatelessWidget {
         children: [
           Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 10),
-          Text(label, style: ApexTypography.bodySmall.copyWith(color: _muted)),
+          Text(label, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
           const Spacer(),
-          Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: _text)),
+          Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
         ],
       ),
     );
@@ -334,7 +326,7 @@ class _OverviewTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          SizedBox(width: 100, child: Text(label, style: ApexTypography.bodySmall.copyWith(color: _muted))),
+          SizedBox(width: 100, child: Text(label, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500))),
           Expanded(child: Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600))),
         ],
       ),
@@ -353,15 +345,15 @@ class _AttendanceTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.calendar_today, size: 48, color: _muted),
+          Icon(Icons.calendar_today, size: 48, color: ApexColors.neutral500),
           const SizedBox(height: 16),
-          Text('Attendance History', style: ApexTypography.headingMedium.copyWith(color: _text)),
+          Text('Attendance History', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          Text('View detailed attendance records', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+          Text('View detailed attendance records', style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => context.push('/attendance/detail?employeeId=$employeeId'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary, foregroundColor: Colors.white),
             child: const Text('View Attendance'),
           ),
         ],
@@ -391,13 +383,13 @@ class _LeavesTab extends ConsumerWidget {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: _surface,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _border),
+                border: Border.all(color: ApexColors.neutral200),
               ),
               child: Row(
                 children: [
-                  Expanded(child: Text(b.leaveTypeName ?? 'Leave', style: ApexTypography.titleSmall.copyWith(color: _text))),
+                  Expanded(child: Text(b.leaveTypeName ?? 'Leave', style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900))),
                   _leaveStat('Total', '${b.totalDays}'),
                   _leaveStat('Used', '${b.usedDays}'),
                   _leaveStat('Pending', '${b.pendingDays}'),
@@ -418,7 +410,7 @@ class _LeavesTab extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         children: [
-          Text(value, style: ApexTypography.titleMedium.copyWith(color: _text)),
+          Text(value, style: ApexTypography.titleMedium.copyWith(color: ApexColors.neutral900)),
           Text(label, style: ApexTypography.kpiLabel),
         ],
       ),
@@ -437,11 +429,11 @@ class _DevicesTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.biotech, size: 48, color: _muted),
+          Icon(Icons.biotech, size: 48, color: ApexColors.neutral500),
           const SizedBox(height: 16),
-          Text('Assigned Devices', style: ApexTypography.headingMedium.copyWith(color: _text)),
+          Text('Assigned Devices', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          Text('Biometric devices assigned to this employee', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+          Text('Biometric devices assigned to this employee', style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -473,9 +465,9 @@ class _EmergencyTab extends StatelessWidget {
             title: 'BLOOD GROUP',
             child: Row(
               children: [
-                const Icon(Icons.bloodtype, color: _danger),
+                Icon(Icons.bloodtype, color: ApexColors.error),
                 const SizedBox(width: 12),
-                Text(employee.bloodGroup ?? 'Not specified', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                Text(employee.bloodGroup ?? 'Not specified', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
               ],
             ),
           ),
@@ -489,7 +481,7 @@ class _EmergencyTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          SizedBox(width: 100, child: Text(label, style: ApexTypography.bodySmall.copyWith(color: _muted))),
+          SizedBox(width: 100, child: Text(label, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500))),
           Expanded(child: Text(value, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600))),
         ],
       ),
@@ -508,11 +500,11 @@ class _ActivityTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.timeline, size: 48, color: _muted),
+          Icon(Icons.timeline, size: 48, color: ApexColors.neutral500),
           const SizedBox(height: 16),
-          Text('Activity Timeline', style: ApexTypography.headingMedium.copyWith(color: _text)),
+          Text('Activity Timeline', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          Text('Employee activity and audit logs', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+          Text('Employee activity and audit logs', style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -531,9 +523,9 @@ class _Section extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,13 +549,13 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1),
+        color: isActive ? ApexColors.success.withOpacity(0.1) : ApexColors.neutral500.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         status.toUpperCase(),
         style: ApexTypography.captionSmall.copyWith(
-          color: isActive ? _success : _muted,
+          color: isActive ? ApexColors.success : ApexColors.neutral500,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -579,7 +571,9 @@ class _EmptyBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(32),
-      child: Center(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: _muted))),
+      child: Center(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500))),
     );
   }
 }
+
+

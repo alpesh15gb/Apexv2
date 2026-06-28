@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _warning = Color(0xFFF59E0B);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
 
 class AnnouncementItem {
   final String id, title, body, priority;
@@ -54,6 +50,12 @@ class AnnouncementListNotifier extends StateNotifier<AsyncValue<List<Announcemen
   }
 }
 
+ApexBadgeType _priorityBadge(String priority) {
+  if (priority == 'urgent') return ApexBadgeType.danger;
+  if (priority == 'important') return ApexBadgeType.warning;
+  return ApexBadgeType.info;
+}
+
 class AnnouncementScreen extends ConsumerWidget {
   const AnnouncementScreen({Key? key}) : super(key: key);
 
@@ -62,31 +64,36 @@ class AnnouncementScreen extends ConsumerWidget {
     final annAsync = ref.watch(announcementListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: ApexAppBar(title: 'Announcements', actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))]),
       body: annAsync.when(
         data: (items) {
           if (items.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.campaign_outlined, size: 48, color: _muted),
+            Icon(Icons.campaign_outlined, size: 48, color: ApexColors.neutral400),
             const SizedBox(height: 16),
-            Text('No Announcements', style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text('No Announcements', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text('Create announcements to share with your team', style: ApexTypography.body.copyWith(color: _muted)),
+            Text('Create announcements to share with your team', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
           ]));
           return ListView.builder(padding: const EdgeInsets.all(16), itemCount: items.length, itemBuilder: (context, i) {
             final a = items[i];
-            final priorityColor = a.priority == 'urgent' ? _danger : a.priority == 'important' ? _warning : _primary;
-            return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: priorityColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(a.priority.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: priorityColor, fontWeight: FontWeight.w600))),
-                const Spacer(),
-                IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: _danger), onPressed: () => ref.read(announcementListProvider.notifier).delete(a.id)),
-              ]),
-              const SizedBox(height: 8),
-              Text(a.title, style: ApexTypography.titleSmall.copyWith(color: _text)),
-              const SizedBox(height: 4),
-              Text(a.body, style: ApexTypography.body.copyWith(color: _muted)),
-            ]));
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ApexCard(
+                padding: const EdgeInsets.all(14),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    ApexBadge(label: a.priority, type: _priorityBadge(a.priority)),
+                    const Spacer(),
+                    IconButton(icon: Icon(Icons.delete_outline, size: 16, color: ApexColors.error), onPressed: () => ref.read(announcementListProvider.notifier).delete(a.id)),
+                  ]),
+                  const SizedBox(height: 8),
+                  Text(a.title, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                  const SizedBox(height: 4),
+                  Text(a.body, style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
+                ]),
+              ),
+            );
           });
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -100,25 +107,25 @@ class AnnouncementScreen extends ConsumerWidget {
     final bodyCtrl = TextEditingController();
     String priority = 'normal';
     showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
-      title: const Text('New Announcement'),
+      title: Text('New Announcement', style: ApexTypography.sectionTitle),
       content: SizedBox(width: 450, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title *', border: OutlineInputBorder())),
+        ApexTextField(label: 'Title', controller: titleCtrl, required: true),
         const SizedBox(height: 12),
-        TextField(controller: bodyCtrl, decoration: const InputDecoration(labelText: 'Body *', border: OutlineInputBorder()), maxLines: 4),
+        ApexTextField(label: 'Body', controller: bodyCtrl, required: true, maxLines: 4),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(value: priority, decoration: const InputDecoration(labelText: 'Priority', border: OutlineInputBorder()), items: const [
+        ApexDropdown<String>(label: 'Priority', value: priority, items: const [
           DropdownMenuItem(value: 'normal', child: Text('Normal')),
           DropdownMenuItem(value: 'important', child: Text('Important')),
           DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
         ], onChanged: (v) => setS(() => priority = v ?? 'normal')),
       ])),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () async {
+        ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+        ApexButton(label: 'Publish', onPressed: () async {
           if (titleCtrl.text.trim().isEmpty || bodyCtrl.text.trim().isEmpty) return;
           await ref.read(announcementListProvider.notifier).add({'title': titleCtrl.text.trim(), 'body': bodyCtrl.text.trim(), 'priority': priority});
           if (ctx.mounted) Navigator.pop(ctx);
-        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: const Text('Publish')),
+        }),
       ],
     )));
   }

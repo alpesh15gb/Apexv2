@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/visitor_provider.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_button.dart';
 
 class ActiveVisitorsScreen extends ConsumerWidget {
   const ActiveVisitorsScreen({Key? key}) : super(key: key);
@@ -15,9 +20,8 @@ class ActiveVisitorsScreen extends ConsumerWidget {
     final activeAsync = ref.watch(activeVisitorsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Active Visitors (Inside)'),
-      ),
+      backgroundColor: ApexColors.neutral50,
+      appBar: const ApexAppBar(title: 'Active Visitors (Inside)'),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(activeVisitorsProvider),
         child: activeAsync.when(
@@ -33,19 +37,37 @@ class ActiveVisitorsScreen extends ConsumerWidget {
               itemCount: passes.length,
               itemBuilder: (context, idx) {
                 final pass = passes[idx];
-                return Card(
-                  child: ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.badge)),
-                    title: Text(pass.visitorName ?? 'Visitor', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Host: ${pass.hostName ?? 'N/A'}\nChecked-in at: ${pass.checkInTime != null ? DateFormat('hh:mm a').format(pass.checkInTime!) : ''}'),
-                    isThreeLine: true,
-                    trailing: ElevatedButton(
-                      onPressed: () async {
-                        await ref.read(visitorPassesProvider.notifier).checkOut(pass.id);
-                        ref.invalidate(activeVisitorsProvider);
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12)),
-                      child: const Text('Check Out', style: TextStyle(fontSize: 12)),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ApexCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: ApexColors.primary100,
+                          child: Icon(Icons.badge, color: ApexColors.primary600),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(pass.visitorName ?? 'Visitor', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text('Host: ${pass.hostName ?? 'N/A'}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                              Text('Checked-in: ${pass.checkInTime != null ? DateFormat('hh:mm a').format(pass.checkInTime!) : ''}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                            ],
+                          ),
+                        ),
+                        ApexButton(
+                          label: 'Check Out',
+                          type: ApexButtonType.danger,
+                          onPressed: () async {
+                            await ref.read(visitorPassesProvider.notifier).checkOut(pass.id);
+                            ref.invalidate(activeVisitorsProvider);
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 );

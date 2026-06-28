@@ -3,17 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 final candidatesProvider = StateNotifierProvider<CandidatesNotifier, CandidatesState>((ref) {
   return CandidatesNotifier(ref.read(dioProvider));
@@ -114,10 +108,10 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
     final candState = ref.watch(candidatesProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Candidates', style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
@@ -125,7 +119,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
             onPressed: () => _showAddCandidateDialog(context),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Add Candidate'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -134,7 +128,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(color: _surface, border: Border(bottom: BorderSide(color: _border))),
+            decoration: BoxDecoration(color: ApexColors.neutral0, border: Border(bottom: BorderSide(color: ApexColors.neutral200))),
             child: Row(children: [
               Expanded(
                 child: TextField(
@@ -142,7 +136,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search candidates...',
                     prefixIcon: const Icon(Icons.search, size: 18),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     isDense: true,
                   ),
@@ -167,7 +161,7 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
             child: candState.loading && candState.candidates.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : candState.candidates.isEmpty
-                    ? const Center(child: Text('No candidates found', style: TextStyle(color: _muted)))
+                    ? const Center(child: Text('No candidates found', style: TextStyle(color: ApexColors.neutral500)))
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: candState.candidates.length,
@@ -185,11 +179,11 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
   Widget _stageChip(String label, String? stage, CandidatesState state) {
     final isActive = state.stageFilter == stage;
     return FilterChip(
-      label: Text(label, style: TextStyle(fontSize: 11, color: isActive ? _primary : _muted)),
+      label: Text(label, style: TextStyle(fontSize: 11, color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
       selected: isActive,
       onSelected: (_) => ref.read(candidatesProvider.notifier).setFilter(stage: stage),
-      selectedColor: _primary.withOpacity(0.1),
-      side: BorderSide(color: isActive ? _primary : _border),
+      selectedColor: ApexColors.primary600.withOpacity(0.1),
+      side: BorderSide(color: isActive ? ApexColors.primary600 : ApexColors.neutral200),
     );
   }
 
@@ -253,12 +247,12 @@ class _CandidatesScreenState extends ConsumerState<CandidatesScreen> {
                   });
                   Navigator.pop(ctx);
                   ref.read(candidatesProvider.notifier).fetch();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Candidate added'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Candidate added'), backgroundColor: ApexColors.successDark));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
               child: const Text('Add'),
             ),
           ],
@@ -286,13 +280,13 @@ class _CandidateCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
       child: Row(
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: _primary.withOpacity(0.1),
-            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _primary)),
+            backgroundColor: ApexColors.primary600.withOpacity(0.1),
+            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: ApexTypography.cardTitle.copyWith(color: ApexColors.primary600)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -300,24 +294,24 @@ class _CandidateCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+                  Text(name, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                   const SizedBox(width: 8),
                   if (rating != null) ...[
-                    Icon(Icons.star, size: 14, color: _warning),
+                    Icon(Icons.star, size: 14, color: ApexColors.warning),
                     const SizedBox(width: 2),
-                    Text('$rating', style: const TextStyle(fontSize: 12, color: _warning, fontWeight: FontWeight.w600)),
+                    Text('$rating', style: ApexTypography.captionMedium.copyWith(color: ApexColors.warning, fontWeight: FontWeight.w600)),
                   ],
                 ]),
                 const SizedBox(height: 4),
                 Row(children: [
-                  Text(email, style: const TextStyle(fontSize: 12, color: _muted)),
+                  Text(email, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                   if (experience != null) ...[
                     const SizedBox(width: 12),
-                    Text('• $experience yrs exp', style: const TextStyle(fontSize: 12, color: _muted)),
+                    Text('• $experience yrs exp', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                   ],
                   if (source.isNotEmpty) ...[
                     const SizedBox(width: 12),
-                    Text('• $source', style: const TextStyle(fontSize: 12, color: _muted)),
+                    Text('• $source', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                   ],
                 ]),
               ],
@@ -326,7 +320,7 @@ class _CandidateCard extends StatelessWidget {
           _stageBadge(stage),
           const SizedBox(width: 8),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, size: 18, color: _muted),
+            icon: Icon(Icons.more_vert, size: 18, color: ApexColors.neutral500),
             itemBuilder: (ctx) => [
               const PopupMenuItem(value: 'screening', child: Text('Move to Screening')),
               const PopupMenuItem(value: 'hr_interview', child: Text('Move to HR Interview')),
@@ -358,17 +352,18 @@ class _CandidateCard extends StatelessWidget {
 
   Color _stageColor(String stage) {
     switch (stage) {
-      case 'applied': return _muted;
-      case 'screening': return _primary;
+      case 'applied': return ApexColors.neutral500;
+      case 'screening': return ApexColors.primary600;
       case 'hr_interview':
       case 'technical_interview':
       case 'manager_interview':
-      case 'final_round': return _warning;
+      case 'final_round': return ApexColors.warning;
       case 'offer': return const Color(0xFF6366F1);
       case 'accepted':
-      case 'joined': return _success;
-      case 'rejected': return _danger;
-      default: return _muted;
+      case 'joined': return ApexColors.successDark;
+      case 'rejected': return ApexColors.error;
+      default: return ApexColors.neutral500;
     }
   }
 }
+

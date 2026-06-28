@@ -4,19 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/essl_provider.dart';
 import '../../services/essl_service.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _warning = Color(0xFFF59E0B);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
 
 class EsslServerListScreen extends ConsumerWidget {
   const EsslServerListScreen({Key? key}) : super(key: key);
@@ -27,13 +20,13 @@ class EsslServerListScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: const Text('eSSL Servers'),
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [
           IconButton(icon: const Icon(Icons.add, size: 18), tooltip: 'Add Server', onPressed: () => context.push('/settings/essl/create')),
         ],
@@ -45,16 +38,16 @@ class EsslServerListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.dns, size: 48, color: _muted),
+                  Icon(Icons.dns, size: 48, color: ApexColors.neutral500),
                   const SizedBox(height: 16),
-                  Text('No eSSL Servers', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  Text('No eSSL Servers', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
                   const SizedBox(height: 8),
-                  Text('Connect to your eBioserverNew to start syncing', style: ApexTypography.body.copyWith(color: _muted)),
+                  Text('Connect to your eBioserverNew to start syncing', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  ApexButton(
+                    label: 'Add Server',
                     onPressed: () => context.push('/settings/essl/create'),
-                    style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-                    child: const Text('Add Server'),
+                    type: ApexButtonType.primary,
                   ),
                 ],
               ),
@@ -65,23 +58,19 @@ class EsslServerListScreen extends ConsumerWidget {
             itemCount: servers.length,
             itemBuilder: (context, i) {
               final s = servers[i];
-              final statusColor = s.status == 'connected' ? _success : s.status == 'error' ? _danger : _muted;
+              final statusColor = s.status == 'connected' ? ApexColors.success : s.status == 'error' ? ApexColors.error : ApexColors.neutral500;
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _border),
-                ),
-                child: Row(
-                  children: [
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ApexCard(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
                     Container(
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(Icons.dns, color: statusColor, size: 20),
@@ -91,15 +80,15 @@ class EsslServerListScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(s.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
-                          Text(s.serverUrl, style: ApexTypography.caption.copyWith(color: _muted), overflow: TextOverflow.ellipsis),
+                          Text(s.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                          Text(s.serverUrl, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
                         ],
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(s.status.toUpperCase(), style: ApexTypography.badge.copyWith(color: statusColor)),
@@ -130,19 +119,19 @@ class EsslServerListScreen extends ConsumerWidget {
                             if (result.success) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text('Connected! Server: ${result.serverVersion ?? "OK"} (${result.responseTimeMs}ms)'),
-                                backgroundColor: _success,
+                                backgroundColor: ApexColors.success,
                               ));
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text('Failed: ${result.error}'),
-                                backgroundColor: _danger,
+                                backgroundColor: ApexColors.error,
                               ));
                             }
                             ref.read(esslServerListProvider.notifier).fetchServers(isRefresh: true);
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text('Error: $e'),
-                              backgroundColor: _danger,
+                              backgroundColor: ApexColors.error,
                             ));
                           }
                         }
@@ -158,13 +147,13 @@ class EsslServerListScreen extends ConsumerWidget {
                                     : await service.syncDevices(s.id);
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text('$label sync completed: ${result.recordsFetched} fetched, ${result.recordsCreated} created'),
-                              backgroundColor: _success,
+                              backgroundColor: ApexColors.success,
                             ));
                             ref.read(esslServerListProvider.notifier).fetchServers(isRefresh: true);
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text('Sync failed: $e'),
-                              backgroundColor: _danger,
+                              backgroundColor: ApexColors.error,
                             ));
                           }
                         }
@@ -172,12 +161,13 @@ class EsslServerListScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                  ),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
       ),
     );
   }

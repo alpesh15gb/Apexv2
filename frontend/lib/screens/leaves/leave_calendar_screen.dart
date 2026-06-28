@@ -3,17 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
 
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 final holidayListProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -49,10 +42,10 @@ class _LeaveCalendarScreenState extends ConsumerState<LeaveCalendarScreen> {
     final holidaysAsync = ref.watch(holidayListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Leave Calendar', style: TextStyle(fontWeight: FontWeight.w600)),
       ),
@@ -69,7 +62,7 @@ class _LeaveCalendarScreenState extends ConsumerState<LeaveCalendarScreen> {
             const SizedBox(height: 8),
             _CalendarGrid(month: _selectedMonth, holidaysAsync: holidaysAsync),
             const SizedBox(height: 24),
-            const Text('Upcoming Holidays', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
+            const Text('Upcoming Holidays', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
             holidaysAsync.when(
               data: (holidays) {
@@ -82,34 +75,34 @@ class _LeaveCalendarScreenState extends ConsumerState<LeaveCalendarScreen> {
                   }
                 }).toList();
 
-                if (upcoming.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No upcoming holidays', style: TextStyle(color: _muted))));
+                if (upcoming.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No upcoming holidays', style: TextStyle(color: ApexColors.neutral500))));
 
                 return Column(
                   children: upcoming.map((h) => Container(
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
                     child: Row(children: [
                       Container(
                         width: 44,
                         height: 44,
-                        decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(_getDay(h['date']), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _primary)),
-                              Text(_getMonth(h['date']), style: const TextStyle(fontSize: 10, color: _primary)),
+                              Text(_getDay(h['date']), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ApexColors.primary)),
+                              Text(_getMonth(h['date']), style: TextStyle(fontSize: 10, color: ApexColors.primary)),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(h['name'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-                        Text(h['type'] ?? 'Company', style: const TextStyle(fontSize: 12, color: _muted)),
+                        Text(h['name'] ?? '', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                        Text(h['type'] ?? 'Company', style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
                       ])),
-                      Text(_getWeekday(h['date']), style: const TextStyle(fontSize: 12, color: _muted)),
+                      Text(_getWeekday(h['date']), style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
                     ]),
                   )).toList(),
                 );
@@ -148,7 +141,7 @@ class _CalendarHeader extends StatelessWidget {
     return Row(
       children: [
         IconButton(icon: const Icon(Icons.chevron_left), onPressed: onPrev),
-        Text(DateFormat('MMMM yyyy').format(month), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+        Text(DateFormat('MMMM yyyy').format(month), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
         IconButton(icon: const Icon(Icons.chevron_right), onPressed: onNext),
       ],
     );
@@ -179,18 +172,18 @@ class _CalendarGrid extends StatelessWidget {
         }
 
         return Container(
-          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
           child: Column(
             children: [
               Row(
                 children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) =>
                   Expanded(child: Center(child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(d, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted)),
+                    child: Text(d, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500)),
                   )))
                 ).toList(),
               ),
-              const Divider(height: 1, color: _border),
+              const Divider(height: 1, color: ApexColors.neutral200),
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -207,9 +200,9 @@ class _CalendarGrid extends StatelessWidget {
                   return Container(
                     margin: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: holiday != null ? _primary.withOpacity(0.08) : (isSunday ? _danger.withOpacity(0.03) : null),
+                      color: holiday != null ? ApexColors.primary.withOpacity(0.08) : (isSunday ? ApexColors.error.withOpacity(0.03) : null),
                       borderRadius: BorderRadius.circular(6),
-                      border: isToday ? Border.all(color: _primary, width: 2) : null,
+                      border: isToday ? Border.all(color: ApexColors.primary, width: 2) : null,
                     ),
                     child: Center(
                       child: Column(
@@ -218,13 +211,13 @@ class _CalendarGrid extends StatelessWidget {
                           Text('$day', style: TextStyle(
                             fontSize: 13,
                             fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
-                            color: holiday != null ? _primary : (isSunday ? _danger : _text),
+                            color: holiday != null ? ApexColors.primary : (isSunday ? ApexColors.error : ApexColors.neutral900),
                           )),
                           if (holiday != null)
                             Container(
                               width: 6,
                               height: 6,
-                              decoration: const BoxDecoration(color: _primary, shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: ApexColors.primary, shape: BoxShape.circle),
                             ),
                         ],
                       ),
@@ -241,3 +234,7 @@ class _CalendarGrid extends StatelessWidget {
     );
   }
 }
+
+
+
+

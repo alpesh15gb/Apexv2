@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../services/access_control_service.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_card.dart';
 
 final accessLogsProvider = FutureProvider((ref) async {
   final service = ref.read(accessControlServiceProvider);
@@ -21,7 +25,8 @@ class AccessLogsScreen extends ConsumerWidget {
     final logsAsync = ref.watch(accessLogsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Access Attempt Logs')),
+      backgroundColor: ApexColors.neutral50,
+      appBar: const ApexAppBar(title: 'Access Attempt Logs'),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(accessLogsProvider),
         child: logsAsync.when(
@@ -38,24 +43,44 @@ class AccessLogsScreen extends ConsumerWidget {
               itemBuilder: (context, idx) {
                 final log = logs[idx];
                 final time = DateTime.parse(log['access_time']);
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: log['granted'] ? Colors.green.shade50 : Colors.red.shade50,
-                      child: Icon(
-                        log['granted'] ? Icons.lock_open : Icons.lock,
-                        color: log['granted'] ? Colors.green : Colors.red,
-                      ),
+                final granted = log['granted'] as bool;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ApexCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: granted ? ApexColors.successLight : ApexColors.errorLight,
+                          child: Icon(
+                            granted ? Icons.lock_open : Icons.lock,
+                            color: granted ? ApexColors.success : ApexColors.error,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                granted ? 'Access Granted' : 'Access Denied',
+                                style: ApexTypography.body.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: granted ? ApexColors.successDark : ApexColors.errorDark,
+                                ),
+                              ),
+                              Text('Door: ${log['door_name'] ?? 'N/A'}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                              Text('Time: ${DateFormat('MMM dd, hh:mm a').format(time)}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                            ],
+                          ),
+                        ),
+                        if (log['denial_reason'] != null)
+                          Tooltip(
+                            message: log['denial_reason'],
+                            child: Icon(Icons.info_outline, color: ApexColors.warning, size: 20),
+                          ),
+                      ],
                     ),
-                    title: Text(
-                      log['granted'] ? 'Access Granted' : 'Access Denied',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: log['granted'] ? Colors.green.shade900 : Colors.red.shade900,
-                      ),
-                    ),
-                    subtitle: Text('Door: ${log['door_name'] ?? 'N/A'}\nTime: ${DateFormat('MMM dd, hh:mm a').format(time)}'),
-                    trailing: log['denial_reason'] != null ? Tooltip(message: log['denial_reason'], child: const Icon(Icons.info_outline, color: Colors.orange)) : null,
                   ),
                 );
               },

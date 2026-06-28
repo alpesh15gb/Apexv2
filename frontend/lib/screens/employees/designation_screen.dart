@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/employee_provider.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 class DesignationScreen extends ConsumerWidget {
   const DesignationScreen({Key? key}) : super(key: key);
@@ -21,13 +15,13 @@ class DesignationScreen extends ConsumerWidget {
     final desgsAsync = ref.watch(designationsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: const Text('Designations'),
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
       ),
       body: desgsAsync.when(
         data: (desgs) {
@@ -36,16 +30,16 @@ class DesignationScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.work_outline, size: 48, color: _muted),
+                  Icon(Icons.work_outline, size: 48, color: ApexColors.neutral500),
                   const SizedBox(height: 16),
-                  Text('No Designations', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  Text('No Designations', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
                   const SizedBox(height: 8),
-                  Text('Create designations for job roles', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+                  Text('Create designations for job roles', style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  ApexButton(
+                    label: 'Add Designation',
                     onPressed: () => _showAddDialog(context, ref),
-                    style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-                    child: const Text('Add Designation'),
+                    type: ApexButtonType.primary,
                   ),
                 ],
               ),
@@ -60,9 +54,9 @@ class DesignationScreen extends ConsumerWidget {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: _surface,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _border),
+                  border: Border.all(color: ApexColors.neutral200),
                 ),
                 child: Row(
                   children: [
@@ -70,37 +64,27 @@ class DesignationScreen extends ConsumerWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _primary.withOpacity(0.1),
+                        color: ApexColors.primary600.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.work_outline, color: _primary, size: 20),
+                      child: Icon(Icons.work_outline, color: ApexColors.primary600, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(d.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
-                          Text('Code: ${d.code}', style: ApexTypography.captionMedium.copyWith(color: _muted)),
+                          Text(d.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                          Text('Code: ${d.code}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: d.isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        d.isActive ? 'ACTIVE' : 'INACTIVE',
-                        style: ApexTypography.captionSmall.copyWith(color: d.isActive ? _success : _muted, fontWeight: FontWeight.w600),
-                      ),
-                    ),
+                    d.isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert, size: 16),
                       itemBuilder: (context) => [
                         const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: _danger))),
+                        PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error))),
                       ],
                       onSelected: (v) {
                         if (v == 'edit') _showEditDialog(context, ref, d);
@@ -118,7 +102,7 @@ class DesignationScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context, ref),
-        backgroundColor: _primary,
+        backgroundColor: ApexColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -143,8 +127,13 @@ class DesignationScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(
+            label: 'Cancel',
+            onPressed: () => Navigator.pop(ctx),
+            type: ApexButtonType.outline,
+          ),
+          ApexButton(
+            label: 'Add',
             onPressed: () async {
               final name = nameCtrl.text.trim();
               final code = codeCtrl.text.trim().toUpperCase();
@@ -153,11 +142,10 @@ class DesignationScreen extends ConsumerWidget {
                 await ref.read(designationsProvider.notifier).addDesignation({'name': name, 'code': code});
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
-                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: _danger));
+                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: ApexColors.error));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-            child: const Text('Add'),
+            type: ApexButtonType.primary,
           ),
         ],
       ),
@@ -183,8 +171,13 @@ class DesignationScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(
+            label: 'Cancel',
+            onPressed: () => Navigator.pop(ctx),
+            type: ApexButtonType.outline,
+          ),
+          ApexButton(
+            label: 'Update',
             onPressed: () async {
               final name = nameCtrl.text.trim();
               final code = codeCtrl.text.trim().toUpperCase();
@@ -193,11 +186,10 @@ class DesignationScreen extends ConsumerWidget {
                 await ref.read(designationsProvider.notifier).updateDesignation(desg.id, {'name': name, 'code': code});
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {
-                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: _danger));
+                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: ApexColors.error));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-            child: const Text('Update'),
+            type: ApexButtonType.primary,
           ),
         ],
       ),
@@ -211,14 +203,18 @@ class DesignationScreen extends ConsumerWidget {
         title: const Text('Delete Designation'),
         content: Text('Delete "$name"? This cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(
+            label: 'Cancel',
+            onPressed: () => Navigator.pop(ctx),
+            type: ApexButtonType.outline,
+          ),
+          ApexButton(
+            label: 'Delete',
             onPressed: () async {
               await ref.read(designationsProvider.notifier).deleteDesignation(id);
               if (ctx.mounted) Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
-            child: const Text('Delete'),
+            type: ApexButtonType.danger,
           ),
         ],
       ),

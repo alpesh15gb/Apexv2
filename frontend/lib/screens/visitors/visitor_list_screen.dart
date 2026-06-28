@@ -4,18 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/visitor_provider.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 class VisitorListScreen extends ConsumerWidget {
   const VisitorListScreen({Key? key}) : super(key: key);
@@ -26,7 +21,7 @@ class VisitorListScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: ApexAppBar(title: 'Visitors', actions: [
           IconButton(icon: const Icon(Icons.person_add, size: 18), tooltip: 'Register Visitor', onPressed: () => context.push('/visitors/register')),
           IconButton(icon: const Icon(Icons.card_membership, size: 18), tooltip: 'Active Visitors', onPressed: () => context.push('/visitors/active')),
@@ -38,16 +33,16 @@ class VisitorListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.card_membership, size: 48, color: _muted),
+                  Icon(Icons.card_membership, size: 48, color: ApexColors.neutral400),
                   const SizedBox(height: 16),
-                  Text('No Visitors', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  Text('No Visitors', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
                   const SizedBox(height: 8),
-                  Text('Register a visitor to get started', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+                  Text('Register a visitor to get started', style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  ApexButton(
+                    label: 'Register Visitor',
+                    icon: Icons.person_add,
                     onPressed: () => context.push('/visitors/register'),
-                    style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-                    child: const Text('Register Visitor'),
                   ),
                 ],
               ),
@@ -58,40 +53,30 @@ class VisitorListScreen extends ConsumerWidget {
             itemCount: visitors.length,
             itemBuilder: (context, i) {
               final v = visitors[i];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _border),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: _primary.withOpacity(0.1),
-                      child: Text((v.visitorName ?? 'V')[0].toUpperCase(), style: ApexTypography.titleSmall.copyWith(color: _primary)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(v.visitorName ?? 'Visitor', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                          Text('${v.visitorName ?? 'Visitor'} • ${v.purpose ?? '—'}', style: ApexTypography.captionMedium.copyWith(color: _muted)),
-                        ],
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ApexCard(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: ApexColors.primary600.withOpacity(0.1),
+                        child: Text((v.visitorName ?? 'V')[0].toUpperCase(), style: ApexTypography.titleSmall.copyWith(color: ApexColors.primary600)),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: _success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(v.visitorName ?? 'Visitor', style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                            Text('${v.visitorName ?? 'Visitor'} • ${v.purpose ?? '—'}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
+                          ],
+                        ),
                       ),
-                      child: Text(v.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: _success, fontWeight: FontWeight.w600)),
-                    ),
-                  ],
+                      ApexBadge(label: v.status, type: ApexBadgeType.success),
+                    ],
+                  ),
                 ),
               );
             },
@@ -102,7 +87,7 @@ class VisitorListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/visitors/register'),
-        backgroundColor: _primary,
+        backgroundColor: ApexColors.primary600,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

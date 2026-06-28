@@ -3,16 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFF0F172A);
-const _surface = Color(0xFF1E293B);
-const _border = Color(0xFF334155);
-const _primary = Color(0xFF3B82F6);
-const _success = Color(0xFF22C55E);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFEF4444);
-const _text = Color(0xFFF1F5F9);
-const _muted = Color(0xFF94A3B8);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
 
 final adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -28,30 +22,30 @@ class AdminDashboardScreen extends ConsumerWidget {
     final statsAsync = ref.watch(adminStatsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.darkBackground,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.darkSurface,
+        foregroundColor: ApexColors.darkOnSurface,
         elevation: 0,
-        title: const Text('Super Admin Dashboard', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Super Admin Dashboard', style: ApexTypography.titleLarge.copyWith(color: ApexColors.darkOnSurface)),
         actions: [
           TextButton.icon(
             onPressed: () => context.go('/admin/tenants'),
             icon: const Icon(Icons.business, size: 16),
             label: const Text('Tenants'),
-            style: TextButton.styleFrom(foregroundColor: _text),
+            style: TextButton.styleFrom(foregroundColor: ApexColors.darkOnSurface),
           ),
           TextButton.icon(
             onPressed: () => context.go('/admin/plans'),
             icon: const Icon(Icons.payment, size: 16),
             label: const Text('Plans'),
-            style: TextButton.styleFrom(foregroundColor: _text),
+            style: TextButton.styleFrom(foregroundColor: ApexColors.darkOnSurface),
           ),
           TextButton.icon(
             onPressed: () => context.go('/admin/features'),
             icon: const Icon(Icons.tune, size: 16),
             label: const Text('Features'),
-            style: TextButton.styleFrom(foregroundColor: _text),
+            style: TextButton.styleFrom(foregroundColor: ApexColors.darkOnSurface),
           ),
           const SizedBox(width: 16),
         ],
@@ -62,7 +56,7 @@ class AdminDashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Platform Overview', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _text)),
+              Text('Platform Overview', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.darkOnSurface)),
               const SizedBox(height: 20),
               _StatsGrid(stats: stats),
               const SizedBox(height: 32),
@@ -70,8 +64,8 @@ class AdminDashboardScreen extends ConsumerWidget {
             ],
           ),
         ),
-        loading: () => const Center(child: CircularProgressIndicator(color: _primary)),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: _danger))),
+        loading: () => const Center(child: CircularProgressIndicator(color: ApexColors.primary500)),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }
@@ -91,14 +85,14 @@ class _StatsGrid extends StatelessWidget {
       crossAxisSpacing: 16,
       childAspectRatio: 1.6,
       children: [
-        _StatCard(title: 'Total Tenants', value: '${stats['total_tenants'] ?? 0}', icon: Icons.business, color: _primary),
-        _StatCard(title: 'Active Tenants', value: '${stats['active_tenants'] ?? 0}', icon: Icons.check_circle, color: _success),
-        _StatCard(title: 'Trial Tenants', value: '${stats['trial_tenants'] ?? 0}', icon: Icons.access_time, color: _warning),
-        _StatCard(title: 'Suspended', value: '${stats['suspended_tenants'] ?? 0}', icon: Icons.block, color: _danger),
-        _StatCard(title: 'Total Employees', value: '${stats['total_employees'] ?? 0}', icon: Icons.people, color: _primary),
-        _StatCard(title: 'Total Users', value: '${stats['total_users'] ?? 0}', icon: Icons.person, color: _success),
-        _StatCard(title: 'Active Users', value: '${stats['active_users'] ?? 0}', icon: Icons.verified_user, color: _warning),
-        _StatCard(title: 'Expired Subs', value: '${stats['expired_subscriptions'] ?? 0}', icon: Icons.warning, color: _danger),
+        _StatCard(title: 'Total Tenants', value: '${stats['total_tenants'] ?? 0}', icon: Icons.business, color: ApexColors.primary500),
+        _StatCard(title: 'Active Tenants', value: '${stats['active_tenants'] ?? 0}', icon: Icons.check_circle, color: ApexColors.success),
+        _StatCard(title: 'Trial Tenants', value: '${stats['trial_tenants'] ?? 0}', icon: Icons.access_time, color: ApexColors.warning),
+        _StatCard(title: 'Suspended', value: '${stats['suspended_tenants'] ?? 0}', icon: Icons.block, color: ApexColors.error),
+        _StatCard(title: 'Total Employees', value: '${stats['total_employees'] ?? 0}', icon: Icons.people, color: ApexColors.primary500),
+        _StatCard(title: 'Total Users', value: '${stats['total_users'] ?? 0}', icon: Icons.person, color: ApexColors.success),
+        _StatCard(title: 'Active Users', value: '${stats['active_users'] ?? 0}', icon: Icons.verified_user, color: ApexColors.warning),
+        _StatCard(title: 'Expired Subs', value: '${stats['expired_subscriptions'] ?? 0}', icon: Icons.warning, color: ApexColors.error),
       ],
     );
   }
@@ -117,9 +111,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _surface,
+        color: ApexColors.darkSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.darkSurfaceVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,11 +127,11 @@ class _StatCard extends StatelessWidget {
                 child: Icon(icon, size: 18, color: color),
               ),
               const Spacer(),
-              Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: color)),
+              Text(value, style: ApexTypography.kpiValue.copyWith(color: color)),
             ],
           ),
           const SizedBox(height: 12),
-          Text(title, style: const TextStyle(fontSize: 13, color: _muted, fontWeight: FontWeight.w500)),
+          Text(title, style: ApexTypography.caption.copyWith(color: ApexColors.darkOnSurfaceVariant)),
         ],
       ),
     );
@@ -150,7 +144,7 @@ class _QuickActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+        Text('Quick Actions', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.darkOnSurface)),
         const SizedBox(height: 16),
         Wrap(
           spacing: 12,
@@ -181,19 +175,20 @@ class _ActionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: _surface,
+          color: ApexColors.darkSurface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _border),
+          border: Border.all(color: ApexColors.darkSurfaceVariant),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: _primary),
+            Icon(icon, size: 16, color: ApexColors.primary500),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: _text, fontWeight: FontWeight.w500)),
+            Text(label, style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurface, fontWeight: FontWeight.w500)),
           ],
         ),
       ),
     );
   }
 }
+

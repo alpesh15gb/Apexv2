@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_text_field.dart';
 
 class ShiftGroupItem {
   final String id, name;
@@ -65,36 +62,42 @@ class ShiftGroupScreen extends ConsumerWidget {
     final groupsAsync = ref.watch(shiftGroupListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: const Text('Shift Groups'),
-        backgroundColor: _surface, foregroundColor: _text, elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        backgroundColor: Colors.white, foregroundColor: ApexColors.neutral900, elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))],
       ),
       body: groupsAsync.when(
         data: (groups) {
           if (groups.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.group_work_outlined, size: 48, color: _muted),
+            Icon(Icons.group_work_outlined, size: 48, color: ApexColors.neutral500),
             const SizedBox(height: 16),
-            Text('No Shift Groups', style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text('No Shift Groups', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text('Group shifts together for easier assignment', style: ApexTypography.body.copyWith(color: _muted)),
+            Text('Group shifts together for easier assignment', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: () => _showDialog(context, ref), style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: const Text('Add Group')),
+            ApexButton(label: 'Add Group', onPressed: () => _showDialog(context, ref)),
           ]));
           return ListView.builder(padding: const EdgeInsets.all(16), itemCount: groups.length, itemBuilder: (context, i) {
             final g = groups[i];
-            return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [
-              Container(width: 40, height: 40, decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.group_work, color: _primary, size: 20)),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ApexCard(
+              padding: const EdgeInsets.all(14),
+              child: Row(children: [
+              Container(width: 40, height: 40, decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.group_work, color: ApexColors.primary, size: 20)),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(g.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
-                if (g.description != null && g.description!.isNotEmpty) Text(g.description!, style: ApexTypography.caption.copyWith(color: _muted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(g.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                if (g.description != null && g.description!.isNotEmpty) Text(g.description!, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
               ])),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: g.isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(g.isActive ? 'ACTIVE' : 'INACTIVE', style: ApexTypography.captionSmall.copyWith(color: g.isActive ? _success : _muted, fontWeight: FontWeight.w600))),
-              PopupMenuButton<String>(icon: const Icon(Icons.more_vert, size: 16), itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Edit')), const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: _danger)))], onSelected: (v) { if (v == 'edit') _showDialog(context, ref, group: g); if (v == 'delete') _confirmDelete(context, ref, g.id, g.name); }),
-            ]));
+              g.isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
+              PopupMenuButton<String>(icon: Icon(Icons.more_vert, size: 16), itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Edit')), const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error)))], onSelected: (v) { if (v == 'edit') _showDialog(context, ref, group: g); if (v == 'delete') _confirmDelete(context, ref, g.id, g.name); }),
+            ]),
+            ),
+            );
           });
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -109,26 +112,27 @@ class ShiftGroupScreen extends ConsumerWidget {
     showDialog(context: context, builder: (ctx) => AlertDialog(
       title: Text(group != null ? 'Edit Shift Group' : 'Add Shift Group'),
       content: SizedBox(width: 350, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder())),
+        ApexTextField(label: 'Name', controller: nameCtrl, required: true),
         const SizedBox(height: 12),
-        TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder())),
+        ApexTextField(label: 'Description', controller: descCtrl),
       ])),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () async {
+        ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+        ApexButton(label: group != null ? 'Update' : 'Add', onPressed: () async {
           final data = {'name': nameCtrl.text.trim(), 'description': descCtrl.text.trim()};
           final notifier = ref.read(shiftGroupListProvider.notifier);
           if (group != null) { await notifier.update(group.id, data); } else { await notifier.add(data); }
           if (ctx.mounted) Navigator.pop(ctx);
-        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: Text(group != null ? 'Update' : 'Add')),
+        }),
       ],
     ));
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String id, String name) {
     showDialog(context: context, builder: (ctx) => AlertDialog(title: const Text('Delete Group'), content: Text('Delete "$name"?'), actions: [
-      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-      ElevatedButton(onPressed: () { ref.read(shiftGroupListProvider.notifier).delete(id); Navigator.pop(ctx); }, style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white), child: const Text('Delete')),
+      ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+      ApexButton(label: 'Delete', type: ApexButtonType.danger, onPressed: () { ref.read(shiftGroupListProvider.notifier).delete(id); Navigator.pop(ctx); }),
     ]));
   }
 }
+

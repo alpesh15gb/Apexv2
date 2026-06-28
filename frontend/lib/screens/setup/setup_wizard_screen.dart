@@ -4,15 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_button.dart';
 
 final setupProgressProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -59,7 +53,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       body: SafeArea(
         child: Column(
           children: [
@@ -80,16 +74,16 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+        color: ApexColors.neutral0,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.rocket_launch, color: _primary, size: 24),
+          Icon(Icons.rocket_launch, color: ApexColors.primary600, size: 24),
           const SizedBox(width: 12),
-          const Text('Setup Wizard', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text)),
+          const Text('Setup Wizard', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const Spacer(),
-          Text('Step ${_currentStep + 1} of ${_steps.length}', style: const TextStyle(fontSize: 13, color: _muted)),
+          Text('Step ${_currentStep + 1} of ${_steps.length}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -101,8 +95,8 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
         Container(
           width: 240,
           decoration: const BoxDecoration(
-            color: _surface,
-            border: Border(right: BorderSide(color: _border)),
+            color: ApexColors.neutral0,
+            border: Border(right: BorderSide(color: ApexColors.neutral200)),
           ),
           child: _buildStepper(),
         ),
@@ -129,11 +123,11 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isActive ? _primary.withOpacity(0.05) : null,
+              color: isActive ? ApexColors.primary600.withOpacity(0.05) : null,
               border: Border(
                 left: BorderSide(
                   width: 3,
-                  color: isActive ? _primary : isCompleted ? _success : _border,
+                  color: isActive ? ApexColors.primary600 : isCompleted ? ApexColors.successDark : ApexColors.neutral200,
                 ),
               ),
             ),
@@ -143,7 +137,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: isCompleted ? _success : isActive ? _primary : _border,
+                    color: isCompleted ? ApexColors.successDark : isActive ? ApexColors.primary600 : ApexColors.neutral200,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -152,7 +146,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                         : Text('${i + 1}', style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isActive ? Colors.white : _muted,
+                            color: isActive ? Colors.white : ApexColors.neutral500,
                           )),
                   ),
                 ),
@@ -163,7 +157,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                      color: isActive ? _primary : _text,
+                      color: isActive ? ApexColors.primary600 : ApexColors.neutral900,
                     ),
                   ),
                 ),
@@ -226,8 +220,8 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(top: BorderSide(color: _border)),
+        color: ApexColors.neutral0,
+        border: Border(top: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Row(
         children: [
@@ -239,7 +233,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
               },
               icon: const Icon(Icons.arrow_back, size: 16),
               label: const Text('Back'),
-              style: OutlinedButton.styleFrom(foregroundColor: _text),
+              style: OutlinedButton.styleFrom(foregroundColor: ApexColors.neutral900),
             ),
           const Spacer(),
           if (_currentStep < _steps.length - 1)
@@ -252,7 +246,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.arrow_forward, size: 16),
               label: Text(_loading ? 'Saving...' : 'Continue'),
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
             ),
         ],
       ),
@@ -272,7 +266,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: _danger),
+          SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error),
         );
       }
     } finally {
@@ -338,9 +332,9 @@ class _CompanyStepState extends State<_CompanyStep> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Company Information', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text)),
+            const Text('Company Information', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            const Text('Set up your company profile. This information appears on payslips and official documents.', style: TextStyle(fontSize: 13, color: _muted)),
+            const Text('Set up your company profile. This information appears on payslips and official documents.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
             const SizedBox(height: 32),
             _card(children: [
               _field(_nameCtrl, 'Company Name *', Icons.business),
@@ -375,7 +369,7 @@ class _CompanyStepState extends State<_CompanyStep> {
   Widget _card({required List<Widget> children}) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
       child: Column(children: children),
     );
   }
@@ -455,23 +449,23 @@ class _BranchStepState extends State<_BranchStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Branches', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text)),
+          const Text('Branches', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add your office locations. At least one branch is required.', style: TextStyle(fontSize: 13, color: _muted)),
+          const Text('Add your office locations. At least one branch is required.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           ..._branches.asMap().entries.map((entry) => Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+            decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
             child: Row(children: [
-              const Icon(Icons.location_on, size: 18, color: _primary),
+              Icon(Icons.location_on, size: 18, color: ApexColors.primary600),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(entry.value['name'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-                Text('Code: ${entry.value['code']}', style: const TextStyle(fontSize: 12, color: _muted)),
+                Text(entry.value['name'] as String, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                Text('Code: ${entry.value['code']}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
               ])),
               if (entry.value['isDefault'] == true)
-                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Text('DEFAULT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _primary))),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: ApexColors.primary600.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Text('DEFAULT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: ApexColors.primary600))),
             ]),
           )),
           const SizedBox(height: 12),
@@ -550,9 +544,9 @@ class _DepartmentStepState extends State<_DepartmentStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Departments', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text)),
+          const Text('Departments', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add your organizational departments.', style: TextStyle(fontSize: 13, color: _muted)),
+          const Text('Add your organizational departments.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           Wrap(
             spacing: 8,
@@ -642,9 +636,9 @@ class _DesignationStepState extends State<_DesignationStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Designations', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text)),
+          const Text('Designations', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add job titles and designations for your organization.', style: TextStyle(fontSize: 13, color: _muted)),
+          const Text('Add job titles and designations for your organization.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           Wrap(
             spacing: 8,
@@ -731,20 +725,20 @@ class _ShiftStepState extends State<_ShiftStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Shifts', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text)),
+          const Text('Shifts', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Define work shifts for your organization.', style: TextStyle(fontSize: 13, color: _muted)),
+          const Text('Define work shifts for your organization.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           ..._shifts.map((s) => Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+            decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
             child: Row(children: [
-              const Icon(Icons.schedule, size: 18, color: _primary),
+              Icon(Icons.schedule, size: 18, color: ApexColors.primary600),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(s['name'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-                Text('${s['start']} - ${s['end']} • Grace: ${s['grace']} min', style: const TextStyle(fontSize: 12, color: _muted)),
+                Text(s['name'] as String, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                Text('${s['start']} - ${s['end']} • Grace: ${s['grace']} min', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
               ])),
             ]),
           )),
@@ -822,20 +816,20 @@ class _LeaveStepState extends State<_LeaveStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Leave Policy', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text)),
+          const Text('Leave Policy', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Configure leave types and annual allocations.', style: TextStyle(fontSize: 13, color: _muted)),
+          const Text('Configure leave types and annual allocations.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           ..._leaveTypes.map((l) => Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+            decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
             child: Row(children: [
-              const Icon(Icons.event_busy, size: 18, color: _primary),
+              Icon(Icons.event_busy, size: 18, color: ApexColors.primary600),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${l['name']} (${l['code']})', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-                Text('${l['days']} days/year • Carry forward: ${l['carry'] == true ? 'Yes' : 'No'}', style: const TextStyle(fontSize: 12, color: _muted)),
+                Text('${l['name']} (${l['code']})', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                Text('${l['days']} days/year • Carry forward: ${l['carry'] == true ? 'Yes' : 'No'}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
               ])),
             ]),
           )),
@@ -916,13 +910,13 @@ class _AttendanceStepState extends State<_AttendanceStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Attendance Settings', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text)),
+          const Text('Attendance Settings', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Configure attendance rules and weekly offs.', style: TextStyle(fontSize: 13, color: _muted)),
+          const Text('Configure attendance rules and weekly offs.', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+            decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
             child: Column(children: [
               Row(children: [
                 Expanded(child: DropdownButtonFormField<String>(
@@ -977,20 +971,20 @@ class _CompleteStep extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: const BoxDecoration(color: _success, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: ApexColors.successDark, shape: BoxShape.circle),
               child: const Icon(Icons.check, size: 40, color: Colors.white),
             ),
             const SizedBox(height: 24),
-            const Text('Setup Complete!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: _text)),
+            const Text('Setup Complete!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            const Text('Your HRMS is configured and ready to use.', style: TextStyle(fontSize: 15, color: _muted)),
+            const Text('Your HRMS is configured and ready to use.', style: TextStyle(fontSize: 15, color: ApexColors.neutral500)),
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () => context.go('/dashboard'),
               icon: const Icon(Icons.dashboard, size: 18),
               label: const Text('Go to Dashboard'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _primary,
+                backgroundColor: ApexColors.primary600,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
@@ -1001,3 +995,4 @@ class _CompleteStep extends StatelessWidget {
     );
   }
 }
+

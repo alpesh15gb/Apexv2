@@ -3,16 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFF0F172A);
-const _surface = Color(0xFF1E293B);
-const _border = Color(0xFF334155);
-const _primary = Color(0xFF3B82F6);
-const _success = Color(0xFF22C55E);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFEF4444);
-const _text = Color(0xFFF1F5F9);
-const _muted = Color(0xFF94A3B8);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_badge.dart';
 
 final adminTenantListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -32,18 +25,18 @@ class AdminTenantListScreen extends ConsumerWidget {
     final tenantsAsync = ref.watch(adminTenantListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.darkBackground,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.darkSurface,
+        foregroundColor: ApexColors.darkOnSurface,
         elevation: 0,
-        title: const Text('Tenant Management', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('Tenant Management', style: ApexTypography.titleLarge.copyWith(color: ApexColors.darkOnSurface)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
       ),
       body: tenantsAsync.when(
         data: (tenants) {
           if (tenants.isEmpty) {
-            return const Center(child: Text('No tenants found', style: TextStyle(color: _muted)));
+            return Center(child: Text('No tenants found', style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant)));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -54,34 +47,30 @@ class AdminTenantListScreen extends ConsumerWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: _surface,
+                  color: ApexColors.darkSurface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _border),
+                  border: Border.all(color: ApexColors.darkSurfaceVariant),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: CircleAvatar(
-                    backgroundColor: _primary.withOpacity(0.15),
+                    backgroundColor: ApexColors.primary500.withOpacity(0.15),
                     child: Text(
                       (t['name'] ?? '?')[0].toUpperCase(),
-                      style: const TextStyle(color: _primary, fontWeight: FontWeight.w700),
+                      style: ApexTypography.titleLarge.copyWith(color: ApexColors.primary500),
                     ),
                   ),
-                  title: Text(t['name'] ?? '', style: const TextStyle(color: _text, fontWeight: FontWeight.w600)),
-                  subtitle: Text('${t['slug']} • ${t['employee_count'] ?? 0} employees • ${t['user_count'] ?? 0} users', style: const TextStyle(color: _muted, fontSize: 12)),
+                  title: Text(t['name'] ?? '', style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurface, fontWeight: FontWeight.w600)),
+                  subtitle: Text('${t['slug']} • ${t['employee_count'] ?? 0} employees • ${t['user_count'] ?? 0} users', style: ApexTypography.captionMedium.copyWith(color: ApexColors.darkOnSurfaceVariant)),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _statusColor(status).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(status.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor(status))),
+                      ApexBadge(
+                        label: status,
+                        type: status == 'active' ? ApexBadgeType.success : status == 'trial' ? ApexBadgeType.warning : (status == 'suspended' || status == 'expired') ? ApexBadgeType.danger : ApexBadgeType.neutral,
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.chevron_right, color: _muted),
+                      Icon(Icons.chevron_right, color: ApexColors.darkOnSurfaceVariant),
                     ],
                   ),
                   onTap: () => context.go('/admin/tenants/${t['id']}'),
@@ -90,19 +79,20 @@ class AdminTenantListScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator(color: _primary)),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: _danger))),
+        loading: () => const Center(child: CircularProgressIndicator(color: ApexColors.primary500)),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'active': return _success;
-      case 'trial': return _warning;
-      case 'suspended': return _danger;
-      case 'expired': return _danger;
-      default: return _muted;
+      case 'active': return ApexColors.success;
+      case 'trial': return ApexColors.warning;
+      case 'suspended': return ApexColors.error;
+      case 'expired': return ApexColors.error;
+      default: return ApexColors.darkOnSurfaceVariant;
     }
   }
 }
+

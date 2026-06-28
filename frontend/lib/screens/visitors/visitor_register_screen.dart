@@ -3,9 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/visitor_provider.dart';
 import '../../providers/employee_provider.dart';
 import '../../services/visitor_service.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_section.dart';
 
 class VisitorRegisterScreen extends ConsumerStatefulWidget {
   const VisitorRegisterScreen({Key? key}) : super(key: key);
@@ -45,7 +53,7 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
     if (_formKey.currentState!.validate()) {
       if (_selectedHostId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a host employee'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Please select a host employee'), backgroundColor: ApexColors.error),
         );
         return;
       }
@@ -53,7 +61,6 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
       try {
         final service = ref.read(visitorServiceProvider);
         
-        // 1. Register visitor profile
         final visitor = await service.registerVisitor({
           'name': _nameController.text.trim(),
           'phone': _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
@@ -64,7 +71,6 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
           'address': _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
         });
 
-        // 2. Create visitor pass
         await ref.read(visitorPassesProvider.notifier).createPass({
           'visitor_id': visitor.id,
           'host_employee_id': _selectedHostId,
@@ -74,14 +80,14 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Visitor Pass created successfully'), backgroundColor: Colors.green),
+            SnackBar(content: Text('Visitor Pass created successfully'), backgroundColor: ApexColors.success),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: ApexColors.error),
           );
         }
       }
@@ -93,9 +99,8 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
     final employeesAsync = ref.watch(employeeListProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register Visitor'),
-      ),
+      backgroundColor: ApexColors.neutral50,
+      appBar: const ApexAppBar(title: 'Register Visitor'),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -103,87 +108,58 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Visitor Information', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              const Divider(),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Visitor Name *'),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email Address'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              Row(
+              ApexSection(
+                title: 'VISITOR INFORMATION',
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _idTypeController,
-                      decoration: const InputDecoration(labelText: 'ID Proof Type'),
-                    ),
+                  ApexTextField(label: 'Visitor Name', controller: _nameController, required: true),
+                  const SizedBox(height: 16),
+                  ApexTextField(label: 'Phone Number', controller: _phoneController, keyboardType: TextInputType.phone),
+                  const SizedBox(height: 16),
+                  ApexTextField(label: 'Email Address', controller: _emailController, keyboardType: TextInputType.emailAddress),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: ApexTextField(label: 'ID Proof Type', controller: _idTypeController)),
+                      const SizedBox(width: 16),
+                      Expanded(child: ApexTextField(label: 'ID Proof Number', controller: _idNumberController)),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _idNumberController,
-                      decoration: const InputDecoration(labelText: 'ID Proof Number'),
+                  const SizedBox(height: 16),
+                  ApexTextField(label: 'Company / Organization', controller: _companyController),
+                ],
+              ),
+              const SizedBox(height: 24),
+              ApexSection(
+                title: 'VISIT DETAILS',
+                children: [
+                  employeesAsync.employees.maybeWhen(
+                    data: (list) => ApexDropdown<String>(
+                      label: 'Host Employee',
+                      value: _selectedHostId,
+                      required: true,
+                      items: list.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName))).toList(),
+                      onChanged: (v) => setState(() => _selectedHostId = v),
                     ),
+                    orElse: () => const SizedBox(),
+                  ),
+                  const SizedBox(height: 16),
+                  ApexTextField(label: 'Purpose of Visit', controller: _purposeController, required: true),
+                  const SizedBox(height: 16),
+                  ApexDatePicker(
+                    label: 'Expected Date',
+                    value: _expectedDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 90)),
+                    onChanged: (picked) { if (picked != null) setState(() => _expectedDate = picked); },
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _companyController,
-                decoration: const InputDecoration(labelText: 'Company / Organization'),
-              ),
-              const SizedBox(height: 24),
-              Text('Visit Details', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              const Divider(),
-              employeesAsync.employees.maybeWhen(
-                data: (list) => DropdownButtonFormField<String>(
-                  value: _selectedHostId,
-                  decoration: const InputDecoration(labelText: 'Host Employee *'),
-                  items: list.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName))).toList(),
-                  onChanged: (v) => setState(() => _selectedHostId = v),
-                  validator: (v) => v == null ? 'Required' : null,
-                ),
-                orElse: () => const SizedBox(),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _purposeController,
-                decoration: const InputDecoration(labelText: 'Purpose of Visit *'),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _expectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 90)),
-                  );
-                  if (picked != null) setState(() => _expectedDate = picked);
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Expected Date'),
-                  child: Text(DateFormat('MMM dd, yyyy').format(_expectedDate)),
-                ),
-              ),
               const SizedBox(height: 32),
-              ElevatedButton(
+              ApexButton(
+                label: 'Register & Create Pass',
+                icon: Icons.person_add,
+                expanded: true,
                 onPressed: _submit,
-                child: const Text('Register & Create Pass'),
               ),
             ],
           ),

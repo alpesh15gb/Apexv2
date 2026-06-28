@@ -4,17 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 final recruitmentStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -57,10 +51,10 @@ class RecruitmentDashboardScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Recruitment', style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
@@ -159,12 +153,12 @@ class RecruitmentDashboardScreen extends ConsumerWidget {
                   });
                   Navigator.pop(ctx);
                   ref.invalidate(openingsProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening created'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening created'), backgroundColor: ApexColors.successDark));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
               child: const Text('Create'),
             ),
           ],
@@ -176,13 +170,13 @@ class RecruitmentDashboardScreen extends ConsumerWidget {
   Widget _emptyCard(String title, String subtitle) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
       child: Center(
         child: Column(children: [
-          Icon(Icons.work_off, size: 40, color: _muted.withOpacity(0.3)),
+          Icon(Icons.work_off, size: 40, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 12),
-          Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
-          Text(subtitle, style: const TextStyle(fontSize: 12, color: _muted)),
+          Text(title, style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
+          Text(subtitle, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
         ]),
       ),
     );
@@ -198,11 +192,11 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = [
-      _StatCard(title: 'Open Positions', value: '${stats['open_positions'] ?? 0}', icon: Icons.work, color: _primary),
-      _StatCard(title: 'Active Candidates', value: '${stats['active_candidates'] ?? 0}', icon: Icons.people, color: _success),
-      _StatCard(title: 'Interviews', value: '${stats['interviews_scheduled'] ?? 0}', icon: Icons.event, color: _warning),
-      _StatCard(title: 'Offers', value: '${stats['offers_released'] ?? 0}', icon: Icons.description, color: _primary),
-      _StatCard(title: 'Hired', value: '${stats['hired_this_month'] ?? 0}', icon: Icons.check_circle, color: _success),
+      _StatCard(title: 'Open Positions', value: '${stats['open_positions'] ?? 0}', icon: Icons.work, color: ApexColors.primary600),
+      _StatCard(title: 'Active Candidates', value: '${stats['active_candidates'] ?? 0}', icon: Icons.people, color: ApexColors.successDark),
+      _StatCard(title: 'Interviews', value: '${stats['interviews_scheduled'] ?? 0}', icon: Icons.event, color: ApexColors.warning),
+      _StatCard(title: 'Offers', value: '${stats['offers_released'] ?? 0}', icon: Icons.description, color: ApexColors.primary600),
+      _StatCard(title: 'Hired', value: '${stats['hired_this_month'] ?? 0}', icon: Icons.check_circle, color: ApexColors.successDark),
     ];
 
     return Wrap(
@@ -228,7 +222,7 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -242,7 +236,7 @@ class _StatCard extends StatelessWidget {
             Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
           ]),
           const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 12, color: _muted, fontWeight: FontWeight.w500)),
+          Text(title, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -260,9 +254,9 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+        Text(title, style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
         const Spacer(),
-        TextButton(onPressed: onTap, child: Text(action, style: const TextStyle(fontSize: 13))),
+        TextButton(onPressed: onTap, child: Text(action, style: ApexTypography.caption)),
       ],
     );
   }
@@ -287,15 +281,15 @@ class _PipelineView extends StatelessWidget {
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _surface,
+              color: ApexColors.neutral0,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _border),
+              border: Border.all(color: ApexColors.neutral200),
             ),
             child: Column(
               children: [
-                Text('$count', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: count > 0 ? _primary : _muted)),
+                Text('$count', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: count > 0 ? ApexColors.primary600 : ApexColors.neutral500)),
                 const SizedBox(height: 4),
-                Text(_stageName(stage), style: const TextStyle(fontSize: 11, color: _muted), textAlign: TextAlign.center),
+                Text(_stageName(stage), style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
               ],
             ),
           );
@@ -324,14 +318,14 @@ class _OpeningCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.work, size: 22, color: _primary),
+            decoration: BoxDecoration(color: ApexColors.primary600.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(Icons.work, size: 22, color: ApexColors.primary600),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -339,7 +333,7 @@ class _OpeningCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+                  Text(title, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -362,7 +356,7 @@ class _OpeningCard extends ConsumerWidget {
             ),
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, size: 18, color: _muted),
+            icon: Icon(Icons.more_vert, size: 18, color: ApexColors.neutral500),
             itemBuilder: (ctx) => [
               if (status == 'draft') const PopupMenuItem(value: 'publish', child: Text('Publish')),
               if (status == 'published') const PopupMenuItem(value: 'close', child: Text('Close')),
@@ -389,19 +383,20 @@ class _OpeningCard extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: _muted),
+        Icon(icon, size: 12, color: ApexColors.neutral500),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: _muted)),
+        Text(label, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
       ],
     );
   }
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'published': return _success;
-      case 'closed': return _danger;
-      case 'draft': return _muted;
-      default: return _muted;
+      case 'published': return ApexColors.successDark;
+      case 'closed': return ApexColors.error;
+      case 'draft': return ApexColors.neutral500;
+      default: return ApexColors.neutral500;
     }
   }
 }
+

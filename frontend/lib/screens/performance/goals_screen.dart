@@ -2,17 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 final goalsListProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -38,10 +32,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     final goalsAsync = ref.watch(goalsListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Goals & OKRs', style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
@@ -49,7 +43,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
             onPressed: () => _showCreateGoalDialog(context),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('New Goal'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -58,18 +52,18 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: const BoxDecoration(color: _surface, border: Border(bottom: BorderSide(color: _border))),
+            decoration: BoxDecoration(color: ApexColors.neutral0, border: Border(bottom: BorderSide(color: ApexColors.neutral200))),
             child: Row(
               children: ['all', 'draft', 'approved', 'completed', 'overdue'].map((s) {
                 final isActive = _statusFilter == s;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: Text(s == 'all' ? 'All' : s[0].toUpperCase() + s.substring(1), style: TextStyle(fontSize: 12, color: isActive ? _primary : _muted)),
+                    label: Text(s == 'all' ? 'All' : s[0].toUpperCase() + s.substring(1), style: TextStyle(fontSize: 12, color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
                     selected: isActive,
                     onSelected: (_) => setState(() => _statusFilter = s),
-                    selectedColor: _primary.withOpacity(0.1),
-                    side: BorderSide(color: isActive ? _primary : _border),
+                    selectedColor: ApexColors.primary600.withOpacity(0.1),
+                    side: BorderSide(color: isActive ? ApexColors.primary600 : ApexColors.neutral200),
                   ),
                 );
               }).toList(),
@@ -84,11 +78,11 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.flag, size: 48, color: _muted.withOpacity(0.3)),
+                        Icon(Icons.flag, size: 48, color: ApexColors.neutral500.withOpacity(0.3)),
                         const SizedBox(height: 12),
-                        const Text('No Goals', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+                        const Text('No Goals', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                         const SizedBox(height: 4),
-                        const Text('Create goals to track performance', style: TextStyle(fontSize: 13, color: _muted)),
+                        const Text('Create goals to track performance', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
                       ],
                     ),
                   );
@@ -145,8 +139,8 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Due Date', style: TextStyle(fontSize: 13, color: _muted)),
-                  subtitle: Text(dueDate != null ? '${dueDate!.day}/${dueDate!.month}/${dueDate!.year}' : 'Select date', style: const TextStyle(fontSize: 14, color: _text)),
+                  title: const Text('Due Date', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                  subtitle: Text(dueDate != null ? '${dueDate!.day}/${dueDate!.month}/${dueDate!.year}' : 'Select date', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
                     final picked = await showDatePicker(context: ctx, initialDate: dueDate ?? DateTime.now().add(const Duration(days: 90)), firstDate: DateTime.now(), lastDate: DateTime(2030));
@@ -174,12 +168,12 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                   });
                   Navigator.pop(ctx);
                   ref.invalidate(goalsListProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Goal created'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Goal created'), backgroundColor: ApexColors.successDark));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
               child: const Text('Create'),
             ),
           ],
@@ -209,7 +203,7 @@ class _GoalDetailCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -224,8 +218,8 @@ class _GoalDetailCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
-                  if (description.isNotEmpty) Text(description, style: const TextStyle(fontSize: 12, color: _muted), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(title, style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
+                  if (description.isNotEmpty) Text(description, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500), maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -256,14 +250,14 @@ class _GoalDetailCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: LinearProgressIndicator(
                   value: progress / 100,
-                  backgroundColor: _border,
-                  color: progress >= 100 ? _success : _primary,
+                  backgroundColor: ApexColors.neutral200,
+                  color: progress >= 100 ? ApexColors.successDark : ApexColors.primary600,
                   minHeight: 10,
                 ),
               ),
             ),
             const SizedBox(width: 12),
-            Text('${progress.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text)),
+            Text('${progress.toStringAsFixed(0)}%', style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
           ]),
           if (status != 'completed') ...[
             const SizedBox(height: 12),
@@ -274,7 +268,7 @@ class _GoalDetailCard extends StatelessWidget {
                     onPressed: () => _updateProgress(context, progress),
                     icon: const Icon(Icons.edit, size: 14),
                     label: const Text('Update Progress'),
-                    style: OutlinedButton.styleFrom(foregroundColor: _primary),
+                    style: OutlinedButton.styleFrom(foregroundColor: ApexColors.primary600),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -284,7 +278,7 @@ class _GoalDetailCard extends StatelessWidget {
                       onPressed: () => _approveGoal(context),
                       icon: const Icon(Icons.check, size: 14),
                       label: const Text('Approve'),
-                      style: ElevatedButton.styleFrom(backgroundColor: _success, foregroundColor: Colors.white),
+                      style: ElevatedButton.styleFrom(backgroundColor: ApexColors.successDark, foregroundColor: Colors.white),
                     ),
                   ),
               ],
@@ -299,9 +293,9 @@ class _GoalDetailCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: _muted),
+        Icon(icon, size: 12, color: ApexColors.neutral500),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: _muted)),
+        Text(label, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
       ],
     );
   }
@@ -317,11 +311,11 @@ class _GoalDetailCard extends StatelessWidget {
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'approved': return _primary;
-      case 'completed': return _success;
-      case 'draft': return _muted;
-      case 'overdue': return _danger;
-      default: return _muted;
+      case 'approved': return ApexColors.primary600;
+      case 'completed': return ApexColors.successDark;
+      case 'draft': return ApexColors.neutral500;
+      case 'overdue': return ApexColors.error;
+      default: return ApexColors.neutral500;
     }
   }
 
@@ -347,12 +341,12 @@ class _GoalDetailCard extends StatelessWidget {
                 });
                 Navigator.pop(ctx);
                 ref.invalidate(goalsListProvider);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Progress updated'), backgroundColor: _success));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Progress updated'), backgroundColor: ApexColors.successDark));
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
             child: const Text('Update'),
           ),
         ],
@@ -365,9 +359,10 @@ class _GoalDetailCard extends StatelessWidget {
       final dio = ref.read(dioProvider);
       await dio.post('/performance/goals/${goal['id']}/approve');
       ref.invalidate(goalsListProvider);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Goal approved'), backgroundColor: _success));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Goal approved'), backgroundColor: ApexColors.successDark));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
     }
   }
 }
+

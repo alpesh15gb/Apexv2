@@ -3,17 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
 
 final essAttendanceProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -50,31 +45,31 @@ class _EssAttendanceCalendarScreenState extends ConsumerState<EssAttendanceCalen
     final dashAsync = ref.watch(essShiftProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('My Attendance', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('My Attendance', style: ApexTypography.cardTitle),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 8),
-            child: ElevatedButton.icon(
+            child: ApexButton(
+              label: 'Clock In',
               onPressed: _clockingIn ? null : () => _clockIn(context),
-              icon: _clockingIn
-                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.login, size: 16),
-              label: const Text('Clock In'),
-              style: ElevatedButton.styleFrom(backgroundColor: _success, foregroundColor: Colors.white),
+              type: ApexButtonType.success,
+              icon: Icons.login,
+              loading: _clockingIn,
             ),
           ),
           Container(
             margin: const EdgeInsets.only(right: 16),
-            child: ElevatedButton.icon(
+            child: ApexButton(
+              label: 'Clock Out',
               onPressed: () => _clockOut(context),
-              icon: const Icon(Icons.logout, size: 16),
-              label: const Text('Clock Out'),
-              style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
+              type: ApexButtonType.danger,
+              icon: Icons.logout,
             ),
           ),
         ],
@@ -94,17 +89,17 @@ class _EssAttendanceCalendarScreenState extends ConsumerState<EssAttendanceCalen
             const SizedBox(height: 8),
             _CalendarGrid(month: _selectedMonth, attAsync: attAsync),
             const SizedBox(height: 24),
-            const Text('Daily Logs', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
+            Text('Daily Logs', style: ApexTypography.titleLarge),
             const SizedBox(height: 8),
             attAsync.when(
               data: (records) {
-                if (records.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No attendance records this month', style: TextStyle(color: _muted))));
+                if (records.isEmpty) return Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No attendance records this month', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))));
                 return Column(
                   children: records.map((r) => _DailyLogCard(record: r)).toList(),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Error: $e', style: const TextStyle(color: _danger)),
+              error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
             ),
           ],
         ),
@@ -119,9 +114,9 @@ class _EssAttendanceCalendarScreenState extends ConsumerState<EssAttendanceCalen
       await dio.post('/ess/attendance/clock-in');
       ref.invalidate(essAttendanceProvider);
       ref.invalidate(essShiftProvider);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Clocked in successfully!'), backgroundColor: _success));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Clocked in successfully!'), backgroundColor: ApexColors.success));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: _danger));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: ApexColors.error));
     } finally {
       if (mounted) setState(() => _clockingIn = false);
     }
@@ -133,9 +128,9 @@ class _EssAttendanceCalendarScreenState extends ConsumerState<EssAttendanceCalen
       await dio.post('/ess/attendance/clock-out');
       ref.invalidate(essAttendanceProvider);
       ref.invalidate(essShiftProvider);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Clocked out successfully!'), backgroundColor: _success));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Clocked out successfully!'), backgroundColor: ApexColors.success));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: _danger));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: ApexColors.error));
     }
   }
 }
@@ -157,7 +152,7 @@ class _TodayCard extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [_primary, _primary.withOpacity(0.8)]),
+            gradient: LinearGradient(colors: [ApexColors.primary600, ApexColors.primary600.withValues(alpha: 0.8)]),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -165,9 +160,9 @@ class _TodayCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.access_time, color: Colors.white70, size: 20),
+                  Icon(Icons.access_time, color: Colors.white70, size: 20),
                   const SizedBox(width: 8),
-                  Text(DateFormat('EEEE, dd MMMM yyyy').format(DateTime.now()), style: const TextStyle(fontSize: 14, color: Colors.white70)),
+                  Text(DateFormat('EEEE, dd MMMM yyyy').format(DateTime.now()), style: ApexTypography.body.copyWith(color: Colors.white70)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -180,10 +175,10 @@ class _TodayCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(_statusText(status), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                    child: Text(_statusText(status), style: ApexTypography.titleMedium.copyWith(color: Colors.white)),
                   ),
                 ],
               ),
@@ -203,10 +198,10 @@ class _TodayCard extends StatelessWidget {
         Row(children: [
           Icon(icon, size: 14, color: Colors.white70),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+          Text(label, style: ApexTypography.captionSmall.copyWith(color: Colors.white70)),
         ]),
         const SizedBox(height: 4),
-        Text(time, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+        Text(time, style: ApexTypography.sectionTitle.copyWith(fontSize: 22, color: Colors.white)),
       ],
     );
   }
@@ -234,9 +229,9 @@ class _CalendarHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconButton(icon: const Icon(Icons.chevron_left), onPressed: onPrev),
-        Text(DateFormat('MMMM yyyy').format(month), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
-        IconButton(icon: const Icon(Icons.chevron_right), onPressed: onNext),
+        IconButton(icon: Icon(Icons.chevron_left, color: ApexColors.neutral700), onPressed: onPrev),
+        Text(DateFormat('MMMM yyyy').format(month), style: ApexTypography.cardTitle),
+        IconButton(icon: Icon(Icons.chevron_right, color: ApexColors.neutral700), onPressed: onNext),
       ],
     );
   }
@@ -265,16 +260,16 @@ class _CalendarGrid extends StatelessWidget {
           }
         }
 
-        return Container(
-          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+        return ApexCard(
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
               Row(
                 children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) =>
-                  Expanded(child: Center(child: Text(d, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted))))
+                  Expanded(child: Center(child: Text(d, style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral500))))
                 ).toList(),
               ),
-              const Divider(height: 1, color: _border),
+              Divider(height: 1, color: ApexColors.neutral200),
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -290,18 +285,17 @@ class _CalendarGrid extends StatelessWidget {
                   return Container(
                     margin: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: _dayColor(status).withOpacity(status != null ? 0.1 : 0),
+                      color: _dayColor(status).withValues(alpha: status != null ? 0.1 : 0),
                       borderRadius: BorderRadius.circular(6),
-                      border: isToday ? Border.all(color: _primary, width: 2) : null,
+                      border: isToday ? Border.all(color: ApexColors.primary600, width: 2) : null,
                     ),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('$day', style: TextStyle(
-                            fontSize: 13,
+                          Text('$day', style: ApexTypography.caption.copyWith(
                             fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
-                            color: isToday ? _primary : _text,
+                            color: isToday ? ApexColors.primary600 : ApexColors.neutral900,
                           )),
                           if (status != null)
                             Container(
@@ -320,18 +314,18 @@ class _CalendarGrid extends StatelessWidget {
         );
       },
       loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Error: $e'),
+      error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
     );
   }
 
   Color _dayColor(String? status) {
     switch (status) {
-      case 'present': return _success;
-      case 'absent': return _danger;
-      case 'late': return _warning;
-      case 'half_day': return const Color(0xFFF59E0B);
-      case 'on_leave': return _primary;
-      default: return _muted;
+      case 'present': return ApexColors.success;
+      case 'absent': return ApexColors.error;
+      case 'late': return ApexColors.warning;
+      case 'half_day': return ApexColors.warning;
+      case 'on_leave': return ApexColors.primary600;
+      default: return ApexColors.neutral500;
     }
   }
 }
@@ -350,49 +344,53 @@ class _DailyLogCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-      child: Row(children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: _statusColor(status).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(date.length >= 10 ? date.substring(8, 10) : '?', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _statusColor(status))),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(date, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
-              Text('${_formatTime(checkIn)} → ${_formatTime(checkOut)}', style: const TextStyle(fontSize: 12, color: _muted)),
-            ],
-          ),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: _statusColor(status).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
+      child: ApexCard(
+        padding: const EdgeInsets.all(14),
+        child: Row(children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: _statusColor(status).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            if (hours != null) ...[
-              const SizedBox(height: 4),
-              Text('${hours}h', style: const TextStyle(fontSize: 11, color: _muted)),
+            child: Center(
+              child: Text(date.length >= 10 ? date.substring(8, 10) : '?', style: ApexTypography.titleMedium.copyWith(color: _statusColor(status))),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(date, style: ApexTypography.titleMedium),
+                Text('${_formatTime(checkIn)} → ${_formatTime(checkOut)}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _statusBadge(status),
+              if (hours != null) ...[
+                const SizedBox(height: 4),
+                Text('${hours}h', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+              ],
             ],
-          ],
-        ),
-      ]),
+          ),
+        ]),
+      ),
     );
+  }
+
+  Widget _statusBadge(String status) {
+    final s = status.toLowerCase();
+    if (s == 'present') return ApexBadge.success(s.toUpperCase());
+    if (s == 'absent') return ApexBadge.danger(s.toUpperCase());
+    if (s == 'late') return ApexBadge.warning(s.toUpperCase());
+    if (s == 'half_day') return ApexBadge.warning(s.toUpperCase());
+    if (s == 'on_leave') return ApexBadge.info(s.toUpperCase());
+    return ApexBadge(label: s.toUpperCase(), type: ApexBadgeType.neutral);
   }
 
   String _formatTime(dynamic time) {
@@ -407,12 +405,12 @@ class _DailyLogCard extends StatelessWidget {
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'present': return _success;
-      case 'absent': return _danger;
-      case 'late': return _warning;
-      case 'half_day': return const Color(0xFFF59E0B);
-      case 'on_leave': return _primary;
-      default: return _muted;
+      case 'present': return ApexColors.success;
+      case 'absent': return ApexColors.error;
+      case 'late': return ApexColors.warning;
+      case 'half_day': return ApexColors.warning;
+      case 'on_leave': return ApexColors.primary600;
+      default: return ApexColors.neutral500;
     }
   }
 }

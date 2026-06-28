@@ -3,15 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 final adminPlansProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -27,10 +22,10 @@ class AdminPlanScreen extends ConsumerWidget {
     final plansAsync = ref.watch(adminPlansProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Subscription Plans', style: TextStyle(fontWeight: FontWeight.w600)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
@@ -39,7 +34,7 @@ class AdminPlanScreen extends ConsumerWidget {
             onPressed: () => _showPlanDialog(context, ref, null),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('New Plan'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -53,17 +48,17 @@ class AdminPlanScreen extends ConsumerWidget {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+              decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(p['name'] ?? '', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text)),
-                    Text(p['description'] ?? '', style: const TextStyle(fontSize: 12, color: _muted)),
+                    Text(p['name'] ?? '', style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
+                    Text(p['description'] ?? '', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                   ])),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: (p['is_active'] == true ? _success : _muted).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                    child: Text(p['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: p['is_active'] == true ? _success : _muted)),
+                    decoration: BoxDecoration(color: (p['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    child: Text(p['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: p['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500)),
                   ),
                 ]),
                 const SizedBox(height: 16),
@@ -102,17 +97,17 @@ class AdminPlanScreen extends ConsumerWidget {
 
   Widget _priceCol(String label, String price) {
     return Expanded(child: Column(children: [
-      Text(label, style: const TextStyle(fontSize: 11, color: _muted)),
+      Text(label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
       const SizedBox(height: 4),
-      Text(price, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text)),
+      Text(price, style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
     ]));
   }
 
   Widget _limitChip(IconData icon, String label) {
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 14, color: _muted),
+      Icon(icon, size: 14, color: ApexColors.neutral500),
       const SizedBox(width: 4),
-      Text(label, style: const TextStyle(fontSize: 12, color: _muted)),
+      Text(label, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
     ]);
   }
 

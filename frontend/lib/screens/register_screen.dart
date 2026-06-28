@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../providers/auth_provider.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../widgets/apex_button.dart';
+import '../widgets/apex_card.dart';
+import '../widgets/apex_text_field.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -62,13 +58,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ref.listen<AsyncValue<dynamic>>(authProvider, (previous, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error.toString()), backgroundColor: _danger),
+          SnackBar(content: Text(next.error.toString()), backgroundColor: ApexColors.error),
         );
       }
     });
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -85,61 +81,46 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 16),
-                Text('Create Account', style: ApexTypography.headingLarge.copyWith(color: _text)),
+                Text('Create Account', style: ApexTypography.headingLarge.copyWith(color: ApexColors.neutral900)),
                 const SizedBox(height: 4),
-                Text('Set up your company and admin account', style: ApexTypography.bodyMedium.copyWith(color: _muted)),
+                Text('Set up your company and admin account', style: ApexTypography.bodyMedium.copyWith(color: ApexColors.neutral500)),
                 const SizedBox(height: 32),
 
                 // Form
-                Container(
+                ApexCard(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _border),
-                  ),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Company
-                        Text('Company Name', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                        const SizedBox(height: 6),
-                        TextFormField(
+                        ApexTextField(
+                          label: 'Company Name',
                           controller: _companyController,
-                          decoration: _inputDecoration('Enter company name'),
-                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                          hint: 'Enter company name',
+                          required: true,
                         ),
                         const SizedBox(height: 14),
-
-                        // Slug
-                        Text('Company Slug', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                        const SizedBox(height: 6),
-                        TextFormField(
+                        ApexTextField(
+                          label: 'Company Slug',
                           controller: _slugController,
-                          decoration: _inputDecoration('e.g., my-company'),
-                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                          hint: 'e.g., my-company',
+                          required: true,
                         ),
                         const SizedBox(height: 14),
-
-                        // Admin Name
-                        Text('Admin Name', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                        const SizedBox(height: 6),
-                        TextFormField(
+                        ApexTextField(
+                          label: 'Admin Name',
                           controller: _nameController,
-                          decoration: _inputDecoration('Enter your full name'),
-                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                          hint: 'Enter your full name',
+                          required: true,
                         ),
                         const SizedBox(height: 14),
-
-                        // Email
-                        Text('Email', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                        const SizedBox(height: 6),
-                        TextFormField(
+                        ApexTextField(
+                          label: 'Email',
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: _inputDecoration('Enter your email'),
+                          hint: 'Enter your email',
+                          required: true,
                           validator: (v) {
                             if (v == null || v.isEmpty) return 'Required';
                             if (!v.contains('@')) return 'Enter a valid email';
@@ -147,18 +128,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
-
-                        // Password
-                        Text('Password', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                        const SizedBox(height: 6),
-                        TextFormField(
+                        ApexTextField(
+                          label: 'Password',
                           controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          decoration: _inputDecoration('Create a password').copyWith(
-                            suffixIcon: IconButton(
-                              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 18),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                            ),
+                          obscure: _obscurePassword,
+                          hint: 'Create a password',
+                          required: true,
+                          suffix: IconButton(
+                            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 18),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
                           validator: (v) {
                             if (v == null || v.isEmpty) return 'Required';
@@ -167,17 +145,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
-
-                        // Register button
-                        ElevatedButton(
+                        ApexButton(
+                          label: 'Create Account',
                           onPressed: _register,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: Text('Create Account', style: ApexTypography.buttonLarge),
+                          expanded: true,
                         ),
                       ],
                     ),
@@ -189,10 +160,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account? ', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+                    Text('Already have an account? ', style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
                     GestureDetector(
                       onTap: () => context.go('/login'),
-                      child: Text('Sign In', style: ApexTypography.bodySmall.copyWith(color: _primary, fontWeight: FontWeight.w600)),
+                      child: Text('Sign In', style: ApexTypography.bodySmall.copyWith(color: ApexColors.primary600, fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
@@ -201,25 +172,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: _border),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: _border),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: _primary, width: 1.5),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
 }

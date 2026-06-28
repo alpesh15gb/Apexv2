@@ -5,13 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants.dart';
 import '../../core/dio_client.dart';
 import '../../core/secure_storage.dart';
-
-const _bg = Color(0xFF0F172A);
-const _surface = Color(0xFF1E293B);
-const _border = Color(0xFF334155);
-const _primary = Color(0xFF3B82F6);
-const _text = Color(0xFFF1F5F9);
-const _muted = Color(0xFF94A3B8);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_text_field.dart';
 
 class AdminLoginScreen extends ConsumerStatefulWidget {
   const AdminLoginScreen({super.key});
@@ -48,15 +45,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.darkBackground,
       body: Center(
         child: Container(
           width: 400,
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: _surface,
+            color: ApexColors.darkSurface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _border),
+            border: Border.all(color: ApexColors.darkSurfaceVariant),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -68,43 +65,43 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 16),
-              const Text('Super Admin Portal', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: _text)),
+              Text('Super Admin Portal', style: ApexTypography.pageTitle.copyWith(color: ApexColors.darkOnSurface)),
               const SizedBox(height: 4),
-              const Text('Apex HRMS Platform Management', style: TextStyle(fontSize: 13, color: _muted)),
+              Text('Apex HRMS Platform Management', style: ApexTypography.caption.copyWith(color: ApexColors.darkOnSurfaceVariant)),
               const SizedBox(height: 32),
               TextField(
                 controller: _emailCtrl,
-                style: const TextStyle(color: _text),
+                style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurface),
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  labelStyle: const TextStyle(color: _muted),
-                  prefixIcon: const Icon(Icons.email, color: _muted, size: 18),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary)),
+                  labelStyle: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant),
+                  prefixIcon: Icon(Icons.email, color: ApexColors.darkOnSurfaceVariant, size: 18),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.primary500)),
                   filled: true,
-                  fillColor: const Color(0xFF0F172A),
+                  fillColor: ApexColors.darkBackground,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passCtrl,
                 obscureText: true,
-                style: const TextStyle(color: _text),
+                style: ApexTypography.body.copyWith(color: ApexColors.darkOnSurface),
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  labelStyle: const TextStyle(color: _muted),
-                  prefixIcon: const Icon(Icons.lock, color: _muted, size: 18),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary)),
+                  labelStyle: ApexTypography.body.copyWith(color: ApexColors.darkOnSurfaceVariant),
+                  prefixIcon: Icon(Icons.lock, color: ApexColors.darkOnSurfaceVariant, size: 18),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.darkSurfaceVariant)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.primary500)),
                   filled: true,
-                  fillColor: const Color(0xFF0F172A),
+                  fillColor: ApexColors.darkBackground,
                 ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+                Text(_error!, style: ApexTypography.caption.copyWith(color: ApexColors.error)),
               ],
               const SizedBox(height: 24),
               SizedBox(
@@ -113,13 +110,13 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                 child: ElevatedButton(
                   onPressed: _loading ? null : _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _primary,
+                    backgroundColor: ApexColors.primary500,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   child: _loading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Sign In', style: TextStyle(fontWeight: FontWeight.w600)),
+                      : Text('Sign In', style: ApexTypography.button),
                 ),
               ),
             ],
@@ -129,3 +126,4 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
     );
   }
 }
+

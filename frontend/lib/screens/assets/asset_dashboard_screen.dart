@@ -4,17 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 final assetStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -116,10 +110,10 @@ class AssetDashboardScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Asset Management', style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
@@ -127,7 +121,7 @@ class AssetDashboardScreen extends ConsumerWidget {
             onPressed: () => _showCreateAssetDialog(context, ref),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Add Asset'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -231,12 +225,12 @@ class AssetDashboardScreen extends ConsumerWidget {
                   Navigator.pop(ctx);
                   ref.invalidate(assetListProvider);
                   ref.invalidate(assetStatsProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Asset created'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Asset created'), backgroundColor: ApexColors.successDark));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
               child: const Text('Create'),
             ),
           ],
@@ -255,12 +249,12 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = [
-      _StatCard(title: 'Total Assets', value: '${stats['total_assets'] ?? 0}', icon: Icons.inventory_2, color: _primary),
-      _StatCard(title: 'Assigned', value: '${stats['assigned'] ?? 0}', icon: Icons.person, color: _success),
-      _StatCard(title: 'Available', value: '${stats['available'] ?? 0}', icon: Icons.check_circle, color: _primary),
-      _StatCard(title: 'Maintenance', value: '${stats['maintenance'] ?? 0}', icon: Icons.build, color: _warning),
-      _StatCard(title: 'Warranty Expiring', value: '${stats['warranty_expiring'] ?? 0}', icon: Icons.warning, color: _danger),
-      _StatCard(title: 'Total Value', value: '₹${_formatAmount(stats['total_value'] ?? 0)}', icon: Icons.account_balance_wallet, color: _success),
+      _StatCard(title: 'Total Assets', value: '${stats['total_assets'] ?? 0}', icon: Icons.inventory_2, color: ApexColors.primary600),
+      _StatCard(title: 'Assigned', value: '${stats['assigned'] ?? 0}', icon: Icons.person, color: ApexColors.successDark),
+      _StatCard(title: 'Available', value: '${stats['available'] ?? 0}', icon: Icons.check_circle, color: ApexColors.primary600),
+      _StatCard(title: 'Maintenance', value: '${stats['maintenance'] ?? 0}', icon: Icons.build, color: ApexColors.warning),
+      _StatCard(title: 'Warranty Expiring', value: '${stats['warranty_expiring'] ?? 0}', icon: Icons.warning, color: ApexColors.error),
+      _StatCard(title: 'Total Value', value: '₹${_formatAmount(stats['total_value'] ?? 0)}', icon: Icons.account_balance_wallet, color: ApexColors.successDark),
     ];
 
     return Wrap(
@@ -293,7 +287,7 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -307,7 +301,7 @@ class _StatCard extends StatelessWidget {
             Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
           ]),
           const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 12, color: _muted, fontWeight: FontWeight.w500)),
+          Text(title, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -324,7 +318,7 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
       child: Row(
         children: [
           _statusChip('All', null),
@@ -333,7 +327,7 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
           _statusChip('Maintenance', 'maintenance'),
           _statusChip('Retired', 'retired'),
           const Spacer(),
-          IconButton(icon: const Icon(Icons.download, size: 18, color: _muted), onPressed: () {}),
+          IconButton(icon: Icon(Icons.download, size: 18, color: ApexColors.neutral500), onPressed: () {}),
         ],
       ),
     );
@@ -345,11 +339,11 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label, style: TextStyle(fontSize: 12, color: isActive ? _primary : _muted)),
+        label: Text(label, style: TextStyle(fontSize: 12, color: isActive ? ApexColors.primary600 : ApexColors.neutral500)),
         selected: isActive,
         onSelected: (_) => ref.read(assetListProvider.notifier).setFilter(status: status),
-        selectedColor: _primary.withOpacity(0.1),
-        side: BorderSide(color: isActive ? _primary : _border),
+        selectedColor: ApexColors.primary600.withOpacity(0.1),
+        side: BorderSide(color: isActive ? ApexColors.primary600 : ApexColors.neutral200),
       ),
     );
   }
@@ -369,26 +363,26 @@ class _AssetTable extends StatelessWidget {
     if (state.assets.isEmpty) {
       return Container(
         height: 200,
-        decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-        child: const Center(child: Text('No assets found', style: TextStyle(color: _muted))),
+        decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+        child: const Center(child: Text('No assets found', style: TextStyle(color: ApexColors.neutral500))),
       );
     }
 
     return Container(
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
       child: Column(
         children: [
           if (!isMobile)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: _bg,
+              color: ApexColors.neutral50,
               child: Row(children: const [
-                SizedBox(width: 180, child: Text('ASSET', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('CODE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 100, child: Text('SERIAL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted))),
+                SizedBox(width: 180, child: Text('ASSET', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 100, child: Text('CODE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 100, child: Text('CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 100, child: Text('SERIAL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500))),
               ]),
             ),
           ...state.assets.asMap().entries.map((entry) {
@@ -398,7 +392,7 @@ class _AssetTable extends StatelessWidget {
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: i.isEven ? _surface : _bg,
+              color: i.isEven ? ApexColors.neutral0 : ApexColors.neutral50,
               child: Row(children: [
                 SizedBox(width: 180, child: Row(children: [
                   Container(
@@ -412,14 +406,14 @@ class _AssetTable extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(a['name'] ?? '—', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text), overflow: TextOverflow.ellipsis),
-                      Text(a['brand'] ?? '', style: const TextStyle(fontSize: 11, color: _muted)),
+                      Text(a['name'] ?? '—', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900), overflow: TextOverflow.ellipsis),
+                      Text(a['brand'] ?? '', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                     ],
                   )),
                 ])),
-                SizedBox(width: 100, child: Text(a['asset_code'] ?? '—', style: const TextStyle(fontSize: 13, color: _muted))),
-                SizedBox(width: 100, child: Text((a['category'] ?? '—').toString().toUpperCase(), style: const TextStyle(fontSize: 12, color: _text))),
-                SizedBox(width: 100, child: Text(a['serial_number'] ?? '—', style: const TextStyle(fontSize: 12, color: _muted))),
+                SizedBox(width: 100, child: Text(a['asset_code'] ?? '—', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500))),
+                SizedBox(width: 100, child: Text((a['category'] ?? '—').toString().toUpperCase(), style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral900))),
+                SizedBox(width: 100, child: Text(a['serial_number'] ?? '—', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500))),
                 SizedBox(
                   width: 80,
                   child: Container(
@@ -431,7 +425,7 @@ class _AssetTable extends StatelessWidget {
                 SizedBox(
                   width: 60,
                   child: PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, size: 16, color: _muted),
+                    icon: Icon(Icons.more_vert, size: 16, color: ApexColors.neutral500),
                     itemBuilder: (ctx) => [
                       const PopupMenuItem(value: 'view', child: Text('View')),
                       if (status == 'available') const PopupMenuItem(value: 'assign', child: Text('Assign')),
@@ -458,11 +452,11 @@ class _AssetTable extends StatelessWidget {
 
   Color _categoryColor(String? category) {
     switch (category) {
-      case 'laptop': return _primary;
+      case 'laptop': return ApexColors.primary600;
       case 'desktop': return const Color(0xFF6366F1);
-      case 'mobile': return _success;
-      case 'printer': return _warning;
-      default: return _muted;
+      case 'mobile': return ApexColors.successDark;
+      case 'printer': return ApexColors.warning;
+      default: return ApexColors.neutral500;
     }
   }
 
@@ -481,13 +475,14 @@ class _AssetTable extends StatelessWidget {
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'available': return _success;
-      case 'assigned': return _primary;
-      case 'maintenance': return _warning;
-      case 'retired': return _muted;
-      case 'lost': return _danger;
-      case 'damaged': return _danger;
-      default: return _muted;
+      case 'available': return ApexColors.successDark;
+      case 'assigned': return ApexColors.primary600;
+      case 'maintenance': return ApexColors.warning;
+      case 'retired': return ApexColors.neutral500;
+      case 'lost': return ApexColors.error;
+      case 'damaged': return ApexColors.error;
+      default: return ApexColors.neutral500;
     }
   }
 }
+

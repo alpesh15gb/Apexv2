@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_text_field.dart';
 
 final essLeavesProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -39,67 +35,61 @@ class _EssLeaveScreenState extends ConsumerState<EssLeaveScreen> {
     final balanceAsync = ref.watch(essBalanceProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('My Leaves', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text('My Leaves', style: ApexTypography.cardTitle),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showApplyDialog(context),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Apply'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-          ),
+          ApexButton(label: 'Apply', onPressed: () => _showApplyDialog(context), type: ApexButtonType.primary, icon: Icons.add),
           const SizedBox(width: 16),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Leave Balance', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+          Text('Leave Balance', style: ApexTypography.titleMedium),
           const SizedBox(height: 8),
           balanceAsync.when(
             data: (balances) => Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: balances.map((b) => Container(
+              children: balances.map((b) => SizedBox(
                 width: 140,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(b['type'] ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _text)),
-                  const SizedBox(height: 4),
-                  Text('${(b['available'] ?? 0).toInt()} days left', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _primary)),
-                  Text('${(b['used'] ?? 0).toInt()} used of ${(b['total'] ?? 0).toInt()}', style: const TextStyle(fontSize: 11, color: _muted)),
-                ]),
+                child: ApexCard(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(b['type'] ?? '', style: ApexTypography.titleMedium),
+                    const SizedBox(height: 4),
+                    Text('${(b['available'] ?? 0).toInt()} days left', style: ApexTypography.titleMedium.copyWith(fontSize: 16, fontWeight: FontWeight.w700, color: ApexColors.primary600)),
+                    Text('${(b['used'] ?? 0).toInt()} used of ${(b['total'] ?? 0).toInt()}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                  ]),
+                ),
               )).toList(),
             ),
             loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => Text('Error: $e', style: const TextStyle(color: _danger)),
+            error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
           ),
           const SizedBox(height: 24),
-          const Text('Leave History', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+          Text('Leave History', style: ApexTypography.titleMedium),
           const SizedBox(height: 8),
           leavesAsync.when(
             data: (leaves) {
-              if (leaves.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No leave requests', style: TextStyle(color: _muted))));
+              if (leaves.isEmpty) return Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No leave requests', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))));
               return Column(children: leaves.map((l) => Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-                child: Row(children: [
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('${l['start_date']} → ${l['end_date']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
-                    Text(l['reason'] ?? '', style: const TextStyle(fontSize: 12, color: _muted), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ])),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: _leaveStatusColor(l['status']).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                    child: Text((l['status'] ?? '').toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _leaveStatusColor(l['status']))),
-                  ),
-                ]),
+                child: ApexCard(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(children: [
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('${l['start_date']} → ${l['end_date']}', style: ApexTypography.titleMedium),
+                      Text(l['reason'] ?? '', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ])),
+                    _leaveStatusBadge(l['status']),
+                  ]),
+                ),
               )).toList());
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -110,13 +100,12 @@ class _EssLeaveScreenState extends ConsumerState<EssLeaveScreen> {
     );
   }
 
-  Color _leaveStatusColor(String? status) {
-    switch (status) {
-      case 'approved': return _success;
-      case 'rejected': return _danger;
-      case 'pending': return _warning;
-      default: return _muted;
-    }
+  Widget _leaveStatusBadge(String? status) {
+    final s = (status ?? '').toLowerCase();
+    if (s == 'approved') return ApexBadge.success(s.toUpperCase());
+    if (s == 'rejected') return ApexBadge.danger(s.toUpperCase());
+    if (s == 'pending') return ApexBadge.warning(s.toUpperCase());
+    return ApexBadge(label: (status ?? '').toUpperCase(), type: ApexBadgeType.neutral);
   }
 
   void _showApplyDialog(BuildContext context) {
@@ -128,32 +117,33 @@ class _EssLeaveScreenState extends ConsumerState<EssLeaveScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Apply Leave'),
+          title: Text('Apply Leave', style: ApexTypography.sectionTitle),
           content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
             ListTile(
-              title: const Text('Start Date'),
-              subtitle: Text('${startDate.toLocal()}'.split(' ')[0]),
-              trailing: const Icon(Icons.calendar_today, size: 18),
+              title: Text('Start Date', style: ApexTypography.body),
+              subtitle: Text('${startDate.toLocal()}'.split(' ')[0], style: ApexTypography.caption),
+              trailing: Icon(Icons.calendar_today, size: 18, color: ApexColors.neutral500),
               onTap: () async {
                 final picked = await showDatePicker(context: ctx, initialDate: startDate, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
                 if (picked != null) setDialogState(() => startDate = picked);
               },
             ),
             ListTile(
-              title: const Text('End Date'),
-              subtitle: Text('${endDate.toLocal()}'.split(' ')[0]),
-              trailing: const Icon(Icons.calendar_today, size: 18),
+              title: Text('End Date', style: ApexTypography.body),
+              subtitle: Text('${endDate.toLocal()}'.split(' ')[0], style: ApexTypography.caption),
+              trailing: Icon(Icons.calendar_today, size: 18, color: ApexColors.neutral500),
               onTap: () async {
                 final picked = await showDatePicker(context: ctx, initialDate: endDate, firstDate: startDate, lastDate: DateTime.now().add(const Duration(days: 365)));
                 if (picked != null) setDialogState(() => endDate = picked);
               },
             ),
             const SizedBox(height: 8),
-            TextField(controller: reasonCtrl, decoration: const InputDecoration(labelText: 'Reason'), maxLines: 2),
+            ApexTextField(label: 'Reason', controller: reasonCtrl, maxLines: 2),
           ])),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
+            ApexButton(label: 'Cancel', onPressed: () => Navigator.pop(ctx), type: ApexButtonType.outline),
+            ApexButton(
+              label: 'Submit',
               onPressed: () async {
                 try {
                   final dio = ref.read(dioProvider);
@@ -164,13 +154,12 @@ class _EssLeaveScreenState extends ConsumerState<EssLeaveScreen> {
                   });
                   Navigator.pop(ctx);
                   ref.invalidate(essLeavesProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Leave applied!'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Leave applied!'), backgroundColor: ApexColors.success));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: ApexColors.error));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-              child: const Text('Submit'),
+              type: ApexButtonType.primary,
             ),
           ],
         ),

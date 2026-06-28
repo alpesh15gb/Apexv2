@@ -4,17 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
 
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 enum ViewMode { grid, table }
 
@@ -144,7 +137,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'Employee Directory'),
       body: Column(
         children: [
@@ -154,7 +147,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
             child: dirState.loading && dirState.employees.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : dirState.error != null
-                    ? Center(child: Text('Error: ${dirState.error}', style: const TextStyle(color: _danger)))
+                    ? Center(child: Text('Error: ${dirState.error}', style: TextStyle(color: ApexColors.error)))
                     : dirState.employees.isEmpty
                         ? _buildEmptyState()
                         : dirState.viewMode == ViewMode.grid
@@ -168,7 +161,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
         onPressed: () => context.push('/employees/create'),
         icon: const Icon(Icons.add),
         label: const Text('Add Employee'),
-        backgroundColor: _primary,
+        backgroundColor: ApexColors.primary,
         foregroundColor: Colors.white,
       ),
     );
@@ -177,7 +170,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
   Widget _buildToolbar(EmployeeDirectoryState dirState, bool isMobile) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: const BoxDecoration(color: _surface, border: Border(bottom: BorderSide(color: _border))),
+      decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: ApexColors.neutral200))),
       child: Row(
         children: [
           Expanded(
@@ -190,7 +183,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(icon: const Icon(Icons.clear, size: 16), onPressed: () { _searchCtrl.clear(); ref.read(employeeDirectoryProvider.notifier).setSearch(''); })
                     : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 isDense: true,
               ),
@@ -207,14 +200,14 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
           ],
           const Spacer(),
           IconButton(
-            icon: Icon(Icons.grid_view, color: dirState.viewMode == ViewMode.grid ? _primary : _muted),
+            icon: Icon(Icons.grid_view, color: dirState.viewMode == ViewMode.grid ? ApexColors.primary : ApexColors.neutral500),
             onPressed: () => ref.read(employeeDirectoryProvider.notifier).setViewMode(ViewMode.grid),
           ),
           IconButton(
-            icon: Icon(Icons.view_list, color: dirState.viewMode == ViewMode.table ? _primary : _muted),
+            icon: Icon(Icons.view_list, color: dirState.viewMode == ViewMode.table ? ApexColors.primary : ApexColors.neutral500),
             onPressed: () => ref.read(employeeDirectoryProvider.notifier).setViewMode(ViewMode.table),
           ),
-          IconButton(icon: const Icon(Icons.download, color: _muted), onPressed: _exportEmployees),
+          IconButton(icon: Icon(Icons.download, color: ApexColors.neutral500), onPressed: _exportEmployees),
         ],
       ),
     );
@@ -224,11 +217,11 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
     return Padding(
       padding: const EdgeInsets.only(left: 8),
       child: FilterChip(
-        label: Text(value ?? label, style: TextStyle(fontSize: 12, color: value != null ? _primary : _muted)),
+        label: Text(value ?? label, style: TextStyle(fontSize: 12, color: value != null ? ApexColors.primary : ApexColors.neutral500)),
         onSelected: (_) => onTap(),
         selected: value != null,
-        selectedColor: _primary.withOpacity(0.1),
-        side: BorderSide(color: value != null ? _primary : _border),
+        selectedColor: ApexColors.primary.withOpacity(0.1),
+        side: BorderSide(color: value != null ? ApexColors.primary : ApexColors.neutral200),
       ),
     );
   }
@@ -236,9 +229,9 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
   Widget _buildBulkBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: _primary.withOpacity(0.05),
+      color: ApexColors.primary.withOpacity(0.05),
       child: Row(children: [
-        Text('${_selected.length} selected', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _primary)),
+        Text('${_selected.length} selected', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ApexColors.primary)),
         const Spacer(),
         TextButton.icon(onPressed: () {}, icon: const Icon(Icons.download, size: 16), label: const Text('Export Selected')),
         TextButton.icon(onPressed: () {}, icon: const Icon(Icons.email, size: 16), label: const Text('Send Email')),
@@ -252,11 +245,11 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.people_outline, size: 64, color: _muted.withOpacity(0.3)),
+          Icon(Icons.people_outline, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('No Employees Found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+          const Text('No Employees Found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          const Text('Add your first employee or adjust filters', style: TextStyle(fontSize: 13, color: _muted)),
+          const Text('Add your first employee or adjust filters', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -295,7 +288,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  color: _surface,
+                  color: Colors.white,
                   child: Row(children: [
                     SizedBox(
                       width: 40,
@@ -310,23 +303,23 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                     const SizedBox(width: 50),
                     SizedBox(
                       width: availableWidth * 0.18,
-                      child: const Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                      child: const Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     Expanded(
                       flex: 2,
-                      child: const Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                      child: const Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     Expanded(
                       flex: 2,
-                      child: const Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                      child: const Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     Expanded(
                       flex: 2,
-                      child: const Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                      child: const Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     SizedBox(
                       width: 80,
-                      child: const Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5)),
+                      child: const Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5)),
                     ),
                     const SizedBox(width: 60),
                   ]),
@@ -356,17 +349,17 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
   Widget _buildPagination(EmployeeDirectoryState dirState) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(color: _surface, border: Border(top: BorderSide(color: _border))),
+      decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ApexColors.neutral200))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('${dirState.total} employees', style: const TextStyle(fontSize: 13, color: _muted)),
+          Text('${dirState.total} employees', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
           const SizedBox(width: 24),
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: dirState.page > 1 ? () => ref.read(employeeDirectoryProvider.notifier).fetch(page: dirState.page - 1) : null,
           ),
-          Text('Page ${dirState.page} of ${dirState.totalPages}', style: const TextStyle(fontSize: 13, color: _text)),
+          Text('Page ${dirState.page} of ${dirState.totalPages}', style: TextStyle(fontSize: 13, color: ApexColors.neutral900)),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: dirState.page < dirState.totalPages ? () => ref.read(employeeDirectoryProvider.notifier).fetch(page: dirState.page + 1) : null,
@@ -436,9 +429,9 @@ class _EmployeeGridCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? _primary : _border, width: isSelected ? 2 : 1),
+          border: Border.all(color: isSelected ? ApexColors.primary : ApexColors.neutral200, width: isSelected ? 2 : 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,29 +440,29 @@ class _EmployeeGridCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: _primary.withOpacity(0.1),
-                  child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(color: _primary, fontWeight: FontWeight.w700, fontSize: 16)),
+                  backgroundColor: ApexColors.primary.withOpacity(0.1),
+                  child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: TextStyle(color: ApexColors.primary, fontWeight: FontWeight.w700, fontSize: 16)),
                 ),
                 const Spacer(),
                 Checkbox(value: isSelected, onChanged: (v) => onSelect(v ?? false), visualDensity: VisualDensity.compact),
               ],
             ),
             const SizedBox(height: 12),
-            Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(code, style: const TextStyle(fontSize: 12, color: _muted)),
+            Text(name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(code, style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
             const SizedBox(height: 8),
-            Text(dept, style: const TextStyle(fontSize: 12, color: _muted), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(desig, style: const TextStyle(fontSize: 12, color: _muted), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(dept, style: TextStyle(fontSize: 12, color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(desig, style: TextStyle(fontSize: 12, color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
             const Spacer(),
             Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: (status == 'active' ? _success : _muted).withOpacity(0.1),
+                    color: (status == 'active' ? ApexColors.success : ApexColors.neutral500).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: status == 'active' ? _success : _muted)),
+                  child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: status == 'active' ? ApexColors.success : ApexColors.neutral500)),
                 ),
               ],
             ),
@@ -501,13 +494,13 @@ class _EmployeeTableRow extends StatelessWidget {
       child: Container(
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        color: isSelected ? _primary.withOpacity(0.03) : (index.isEven ? _surface : _bg),
+        color: isSelected ? ApexColors.primary.withOpacity(0.03) : (index.isEven ? Colors.white : ApexColors.neutral50),
         child: Row(children: [
           SizedBox(width: 40, child: Checkbox(value: isSelected, onChanged: (v) => onSelect(v ?? false), visualDensity: VisualDensity.compact)),
           CircleAvatar(
             radius: 16,
-            backgroundColor: _primary.withOpacity(0.1),
-            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(color: _primary, fontWeight: FontWeight.w700, fontSize: 12)),
+            backgroundColor: ApexColors.primary.withOpacity(0.1),
+            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: TextStyle(color: ApexColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
           ),
           const SizedBox(width: 18),
           SizedBox(
@@ -516,29 +509,29 @@ class _EmployeeTableRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text), maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text(code, style: const TextStyle(fontSize: 11, color: _muted)),
+                Text(name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(code, style: TextStyle(fontSize: 11, color: ApexColors.neutral500)),
               ],
             ),
           ),
-          Expanded(flex: 2, child: Text(employee['department_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 2, child: Text(employee['designation_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 2, child: Text(employee['branch_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 2, child: Text(employee['department_name'] ?? '—', style: TextStyle(fontSize: 13, color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 2, child: Text(employee['designation_name'] ?? '—', style: TextStyle(fontSize: 13, color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 2, child: Text(employee['branch_name'] ?? '—', style: TextStyle(fontSize: 13, color: ApexColors.neutral900), overflow: TextOverflow.ellipsis)),
           SizedBox(
             width: 80,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: (status == 'active' ? _success : _muted).withOpacity(0.1),
+                color: (status == 'active' ? ApexColors.success : ApexColors.neutral500).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: status == 'active' ? _success : _muted)),
+              child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: status == 'active' ? ApexColors.success : ApexColors.neutral500)),
             ),
           ),
           SizedBox(
             width: 60,
             child: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, size: 16, color: _muted),
+              icon: Icon(Icons.more_vert, size: 16, color: ApexColors.neutral500),
               itemBuilder: (ctx) => [
                 const PopupMenuItem(value: 'view', child: Text('View Profile')),
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
@@ -602,3 +595,7 @@ class _FilterDialogState extends ConsumerState<_FilterDialog> {
     );
   }
 }
+
+
+
+

@@ -7,15 +7,8 @@ import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../design_system/typography.dart';
+import '../../design_system/colors.dart';
 
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 final salaryStructuresProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -35,13 +28,13 @@ class SalaryStructuresScreen extends ConsumerWidget {
     final structuresAsync = ref.watch(salaryStructuresProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: Text('Salary Structures', style: ApexTypography.sectionTitle),
         backgroundColor: Colors.white,
-        foregroundColor: _text,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/payroll')),
         actions: [
           ApexButton(
@@ -62,7 +55,7 @@ class SalaryStructuresScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: _danger))),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
     );
   }
@@ -72,11 +65,11 @@ class SalaryStructuresScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.account_balance, size: 64, color: _muted.withOpacity(0.3)),
+          Icon(Icons.account_balance, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('No Salary Structures', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+          const Text('No Salary Structures', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          Text('Create salary templates for your organization', style: ApexTypography.body.copyWith(color: _muted)),
+          Text('Create salary templates for your organization', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
           const SizedBox(height: 24),
           ApexButton(
             label: 'Create Structure',
@@ -107,7 +100,7 @@ class SalaryStructuresScreen extends ConsumerWidget {
             children: [
               TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Structure Name *', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              const Text('Earnings', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+              const Text('Earnings', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
               const SizedBox(height: 8),
               Row(children: [
                 Expanded(child: TextField(controller: basicCtrl, decoration: const InputDecoration(labelText: 'Basic', border: OutlineInputBorder()), keyboardType: TextInputType.number)),
@@ -148,9 +141,9 @@ class SalaryStructuresScreen extends ConsumerWidget {
                 });
                 Navigator.pop(ctx);
                 ref.invalidate(salaryStructuresProvider);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Salary structure created'), backgroundColor: _success));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Salary structure created'), backgroundColor: ApexColors.success));
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
               }
             },
           ),
@@ -184,15 +177,15 @@ class _StructureCard extends StatelessWidget {
           Row(children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.account_balance, size: 20, color: _primary),
+              decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+              child: Icon(Icons.account_balance, size: 20, color: ApexColors.primary),
             ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(name, style: ApexTypography.cardTitle.copyWith(fontSize: 15)),
               Text('Effective: ${structure['effective_from'] ?? '—'}', style: ApexTypography.captionSmall),
             ])),
-            Text('₹${total.toStringAsFixed(0)}', style: ApexTypography.sectionTitle.copyWith(color: _success)),
+            Text('₹${total.toStringAsFixed(0)}', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.success)),
           ]),
           const SizedBox(height: 14),
           Wrap(
@@ -216,8 +209,13 @@ class _StructureCard extends StatelessWidget {
   Widget _componentChip(String label, dynamic amount) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: _bg, borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(color: ApexColors.neutral50, borderRadius: BorderRadius.circular(6)),
       child: Text('$label: ₹${(amount as num).toStringAsFixed(0)}', style: ApexTypography.captionMedium),
     );
   }
 }
+
+
+
+
+

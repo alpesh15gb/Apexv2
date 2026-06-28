@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _warning = Color(0xFFF59E0B);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
 
 class AssetItem {
   final String id, name, assetCode, category, status;
@@ -61,31 +57,38 @@ class AssetScreen extends ConsumerWidget {
     final assetsAsync = ref.watch(assetListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: ApexAppBar(title: 'Company Assets', actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))]),
       body: assetsAsync.when(
         data: (assets) {
           if (assets.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.inventory_2_outlined, size: 48, color: _muted),
+            Icon(Icons.inventory_2_outlined, size: 48, color: ApexColors.neutral400),
             const SizedBox(height: 16),
-            Text('No Assets', style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text('No Assets', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text('Track company assets like laptops, phones, etc.', style: ApexTypography.body.copyWith(color: _muted)),
+            Text('Track company assets like laptops, phones, etc.', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
           ]));
           return ListView.builder(padding: const EdgeInsets.all(16), itemCount: assets.length, itemBuilder: (context, i) {
             final a = assets[i];
-            final statusColor = a.status == 'assigned' ? _primary : a.status == 'available' ? _success : _muted;
+            final statusColor = a.status == 'assigned' ? ApexColors.primary600 : a.status == 'available' ? ApexColors.success : ApexColors.neutral500;
+            final statusBadge = a.status == 'assigned' ? ApexBadgeType.info : a.status == 'available' ? ApexBadgeType.success : ApexBadgeType.neutral;
             final catIcons = {'laptop': Icons.laptop, 'phone': Icons.phone, 'vehicle': Icons.directions_car};
-            return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [
-              Container(width: 40, height: 40, decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(catIcons[a.category] ?? Icons.inventory_2, color: statusColor, size: 20)),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(a.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
-                Text('${a.assetCode} • ${a.category} • ${a.serialNumber ?? "No S/N"}', style: ApexTypography.caption.copyWith(color: _muted)),
-              ])),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(a.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: statusColor, fontWeight: FontWeight.w600))),
-              PopupMenuButton<String>(icon: const Icon(Icons.more_vert, size: 16), itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Edit')), const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: _danger)))], onSelected: (v) { if (v == 'edit') _showDialog(context, ref, asset: a); if (v == 'delete') ref.read(assetListProvider.notifier).delete(a.id); }),
-            ]));
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ApexCard(
+                padding: const EdgeInsets.all(14),
+                child: Row(children: [
+                  Container(width: 40, height: 40, decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(catIcons[a.category] ?? Icons.inventory_2, color: statusColor, size: 20)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(a.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                    Text('${a.assetCode} • ${a.category} • ${a.serialNumber ?? "No S/N"}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+                  ])),
+                  ApexBadge(label: a.status, type: statusBadge),
+                  PopupMenuButton<String>(icon: Icon(Icons.more_vert, size: 16), itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Edit')), PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error)))], onSelected: (v) { if (v == 'edit') _showDialog(context, ref, asset: a); if (v == 'delete') ref.read(assetListProvider.notifier).delete(a.id); }),
+                ]),
+              ),
+            );
           });
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -100,15 +103,15 @@ class AssetScreen extends ConsumerWidget {
     final serialCtrl = TextEditingController(text: asset?.serialNumber ?? '');
     String category = asset?.category ?? 'other';
     showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
-      title: Text(asset != null ? 'Edit Asset' : 'Add Asset'),
+      title: Text(asset != null ? 'Edit Asset' : 'Add Asset', style: ApexTypography.sectionTitle),
       content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder())),
+        ApexTextField(label: 'Name', controller: nameCtrl, required: true),
         const SizedBox(height: 12),
-        TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Asset Code *', border: OutlineInputBorder())),
+        ApexTextField(label: 'Asset Code', controller: codeCtrl, required: true),
         const SizedBox(height: 12),
-        TextField(controller: serialCtrl, decoration: const InputDecoration(labelText: 'Serial Number', border: OutlineInputBorder())),
+        ApexTextField(label: 'Serial Number', controller: serialCtrl),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(value: category, decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()), items: const [
+        ApexDropdown<String>(label: 'Category', value: category, items: const [
           DropdownMenuItem(value: 'laptop', child: Text('Laptop')),
           DropdownMenuItem(value: 'phone', child: Text('Phone')),
           DropdownMenuItem(value: 'vehicle', child: Text('Vehicle')),
@@ -116,14 +119,15 @@ class AssetScreen extends ConsumerWidget {
         ], onChanged: (v) => setS(() => category = v ?? 'other')),
       ])),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () async {
+        ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+        ApexButton(label: asset != null ? 'Update' : 'Add', onPressed: () async {
           final data = {'name': nameCtrl.text.trim(), 'asset_code': codeCtrl.text.trim(), 'serial_number': serialCtrl.text.trim(), 'category': category};
           final notifier = ref.read(assetListProvider.notifier);
           if (asset != null) { await notifier.update(asset.id, data); } else { await notifier.add(data); }
           if (ctx.mounted) Navigator.pop(ctx);
-        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: Text(asset != null ? 'Update' : 'Add')),
+        }),
       ],
     )));
   }
 }
+

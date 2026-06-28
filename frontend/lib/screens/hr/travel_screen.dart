@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _warning = Color(0xFFF59E0B);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
 
 class TravelItem {
   final String id, employeeId, destination, status;
@@ -50,6 +46,12 @@ class TravelListNotifier extends StateNotifier<AsyncValue<List<TravelItem>>> {
   }
 }
 
+ApexBadgeType _statusBadge(String status) {
+  if (status == 'approved') return ApexBadgeType.success;
+  if (status == 'rejected') return ApexBadgeType.danger;
+  return ApexBadgeType.warning;
+}
+
 class TravelScreen extends ConsumerWidget {
   const TravelScreen({Key? key}) : super(key: key);
 
@@ -58,31 +60,36 @@ class TravelScreen extends ConsumerWidget {
     final travelAsync = ref.watch(travelListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: ApexAppBar(title: 'Travel Requests', actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))]),
       body: travelAsync.when(
         data: (items) {
           if (items.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.flight, size: 48, color: _muted),
+            Icon(Icons.flight, size: 48, color: ApexColors.neutral400),
             const SizedBox(height: 16),
-            Text('No Travel Requests', style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text('No Travel Requests', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
           ]));
           return ListView.builder(padding: const EdgeInsets.all(16), itemCount: items.length, itemBuilder: (context, i) {
             final t = items[i];
-            final statusColor = t.status == 'approved' ? _success : t.status == 'rejected' ? _danger : _warning;
-            return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [
-              Container(width: 40, height: 40, decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.flight, color: _primary, size: 20)),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(t.destination, style: ApexTypography.titleSmall.copyWith(color: _text)),
-                Text('${DateFormat('MMM dd').format(t.fromDate)} - ${DateFormat('MMM dd, yyyy').format(t.toDate)}${t.purpose != null ? ' • ${t.purpose}' : ''}', style: ApexTypography.caption.copyWith(color: _muted)),
-              ])),
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text('₹${t.estimatedCost.toStringAsFixed(0)}', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(t.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: statusColor, fontWeight: FontWeight.w600))),
-              ]),
-              if (t.status == 'pending') IconButton(icon: const Icon(Icons.check, size: 18, color: _success), onPressed: () => ref.read(travelListProvider.notifier).approve(t.id)),
-            ]));
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ApexCard(
+                padding: const EdgeInsets.all(14),
+                child: Row(children: [
+                  Container(width: 40, height: 40, decoration: BoxDecoration(color: ApexColors.primary600.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.flight, color: ApexColors.primary600, size: 20)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(t.destination, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                    Text('${DateFormat('MMM dd').format(t.fromDate)} - ${DateFormat('MMM dd, yyyy').format(t.toDate)}${t.purpose != null ? ' • ${t.purpose}' : ''}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+                  ])),
+                  Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    Text('₹${t.estimatedCost.toStringAsFixed(0)}', style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                    ApexBadge(label: t.status, type: _statusBadge(t.status)),
+                  ]),
+                  if (t.status == 'pending') IconButton(icon: Icon(Icons.check, size: 18, color: ApexColors.success), onPressed: () => ref.read(travelListProvider.notifier).approve(t.id)),
+                ]),
+              ),
+            );
           });
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -99,27 +106,27 @@ class TravelScreen extends ConsumerWidget {
     DateTime toDate = DateTime.now().add(const Duration(days: 1));
 
     showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
-      title: const Text('New Travel Request'),
+      title: Text('New Travel Request', style: ApexTypography.sectionTitle),
       content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: destCtrl, decoration: const InputDecoration(labelText: 'Destination *', border: OutlineInputBorder())),
+        ApexTextField(label: 'Destination', controller: destCtrl, required: true),
         const SizedBox(height: 12),
-        TextField(controller: purposeCtrl, decoration: const InputDecoration(labelText: 'Purpose', border: OutlineInputBorder())),
+        ApexTextField(label: 'Purpose', controller: purposeCtrl),
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(child: InkWell(onTap: () async { final p = await showDatePicker(context: ctx, initialDate: fromDate, firstDate: DateTime(2020), lastDate: DateTime(2030)); if (p != null) setS(() => fromDate = p); }, child: InputDecorator(decoration: const InputDecoration(labelText: 'From', border: OutlineInputBorder()), child: Text(DateFormat('MMM dd').format(fromDate))))),
+          Expanded(child: ApexDatePicker(label: 'From', value: fromDate, onChanged: (p) { if (p != null) setS(() => fromDate = p); })),
           const SizedBox(width: 12),
-          Expanded(child: InkWell(onTap: () async { final p = await showDatePicker(context: ctx, initialDate: toDate, firstDate: DateTime(2020), lastDate: DateTime(2030)); if (p != null) setS(() => toDate = p); }, child: InputDecorator(decoration: const InputDecoration(labelText: 'To', border: OutlineInputBorder()), child: Text(DateFormat('MMM dd').format(toDate))))),
+          Expanded(child: ApexDatePicker(label: 'To', value: toDate, onChanged: (p) { if (p != null) setS(() => toDate = p); })),
         ]),
         const SizedBox(height: 12),
-        TextField(controller: costCtrl, decoration: const InputDecoration(labelText: 'Estimated Cost', border: OutlineInputBorder(), prefixText: '₹'), keyboardType: TextInputType.number),
+        ApexTextField(label: 'Estimated Cost', controller: costCtrl, keyboardType: TextInputType.number, prefixIcon: Icons.currency_rupee),
       ])),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () async {
+        ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+        ApexButton(label: 'Submit', onPressed: () async {
           if (destCtrl.text.trim().isEmpty) return;
           await ref.read(travelListProvider.notifier).add({'employee_id': '00000000-0000-0000-0000-000000000000', 'destination': destCtrl.text.trim(), 'purpose': purposeCtrl.text.trim(), 'from_date': fromDate.toIso8601String().substring(0, 10), 'to_date': toDate.toIso8601String().substring(0, 10), 'estimated_cost': double.tryParse(costCtrl.text) ?? 0});
           if (ctx.mounted) Navigator.pop(ctx);
-        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: const Text('Submit')),
+        }),
       ],
     )));
   }

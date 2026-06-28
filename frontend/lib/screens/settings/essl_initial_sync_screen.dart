@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../models/essl_server.dart';
 import '../../services/essl_service.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
 
 class EsslInitialSyncScreen extends ConsumerStatefulWidget {
   final String serverId;
@@ -25,40 +29,43 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Initial Attendance Sync')),
+      backgroundColor: ApexColors.neutral50,
+      appBar: AppBar(
+        title: const Text('Initial Attendance Sync'),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
+        elevation: 0,
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.info_outline, color: theme.colorScheme.primary),
-                        const SizedBox(width: 8),
-                        const Text('First-Time Import', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Import historical attendance data from your eSSL eBioserverNew server. '
-                      'This will download punch logs for the selected date range and create raw logs '
-                      'that will be processed into attendance records.',
-                    ),
-                  ],
-                ),
+            ApexCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: ApexColors.primary),
+                      const SizedBox(width: 8),
+                      Text('First-Time Import', style: ApexTypography.sectionTitle),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Import historical attendance data from your eSSL eBioserverNew server. '
+                    'This will download punch logs for the selected date range and create raw logs '
+                    'that will be processed into attendance records.',
+                    style: ApexTypography.body.copyWith(color: ApexColors.neutral600),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Select Date Range', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('Select Date Range', style: ApexTypography.cardTitle),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -82,6 +89,11 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
                           ? DateFormat('MMM dd, yyyy').format(_customFrom!)
                           : 'From Date'),
                       onPressed: () => _selectDate(true),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ApexColors.primary,
+                        side: BorderSide(color: ApexColors.primary),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -92,6 +104,11 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
                           ? DateFormat('MMM dd, yyyy').format(_customTo!)
                           : 'To Date'),
                       onPressed: () => _selectDate(false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ApexColors.primary,
+                        side: BorderSide(color: ApexColors.primary),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
                     ),
                   ),
                 ],
@@ -99,95 +116,94 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
             ],
             const SizedBox(height: 24),
             if (_progress != null) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(_statusText, style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: _statusColor,
-                          )),
-                          if (_progress!.isPaused)
-                            const Chip(label: Text('PAUSED'), backgroundColor: Colors.orange),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      LinearProgressIndicator(
-                        value: _progress!.progressPercent / 100,
-                        backgroundColor: Colors.grey.shade200,
-                        minHeight: 8,
-                      ),
-                      const SizedBox(height: 8),
-                      Text('${_progress!.progressPercent}% — Day ${_progress!.currentBatch} of ${_progress!.totalBatches}'),
-                      const SizedBox(height: 16),
-                      _buildStatRow('Records Created', '${_progress!.recordsCreated}'),
-                      _buildStatRow('Records Skipped', '${_progress!.recordsSkipped}'),
-                      _buildStatRow('Records Failed', '${_progress!.recordsFailed}'),
-                      if (_progress!.durationSeconds != null)
-                        _buildStatRow('Duration', '${_progress!.durationSeconds!.toStringAsFixed(1)}s'),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          if (_progress!.status == 'running' && !_progress!.isPaused)
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.pause),
-                              label: const Text('Pause'),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                              onPressed: _pauseSync,
+              ApexCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_statusText, style: ApexTypography.body.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: _statusColor,
+                        )),
+                        if (_progress!.isPaused)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: ApexColors.warning.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                          if (_progress!.isPaused)
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.play_arrow),
-                              label: const Text('Resume'),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                              onPressed: _resumeSync,
-                            ),
-                          if (_progress!.status == 'running' || _progress!.isPaused)
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.cancel),
-                              label: const Text('Cancel'),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                              onPressed: _cancelSync,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+                            child: Text('PAUSED', style: ApexTypography.captionSmall.copyWith(color: ApexColors.warning, fontWeight: FontWeight.w600)),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    LinearProgressIndicator(
+                      value: _progress!.progressPercent / 100,
+                      backgroundColor: ApexColors.neutral200,
+                      color: ApexColors.primary,
+                      minHeight: 8,
+                    ),
+                    const SizedBox(height: 8),
+                    Text('${_progress!.progressPercent}% — Day ${_progress!.currentBatch} of ${_progress!.totalBatches}', style: ApexTypography.body),
+                    const SizedBox(height: 16),
+                    _buildStatRow('Records Created', '${_progress!.recordsCreated}'),
+                    _buildStatRow('Records Skipped', '${_progress!.recordsSkipped}'),
+                    _buildStatRow('Records Failed', '${_progress!.recordsFailed}'),
+                    if (_progress!.durationSeconds != null)
+                      _buildStatRow('Duration', '${_progress!.durationSeconds!.toStringAsFixed(1)}s'),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (_progress!.status == 'running' && !_progress!.isPaused)
+                          ApexButton(
+                            label: 'Pause',
+                            onPressed: _pauseSync,
+                            type: ApexButtonType.secondary,
+                            icon: Icons.pause,
+                          ),
+                        if (_progress!.isPaused)
+                          ApexButton(
+                            label: 'Resume',
+                            onPressed: _resumeSync,
+                            type: ApexButtonType.success,
+                            icon: Icons.play_arrow,
+                          ),
+                        if (_progress!.status == 'running' || _progress!.isPaused)
+                          ApexButton(
+                            label: 'Cancel',
+                            onPressed: _cancelSync,
+                            type: ApexButtonType.danger,
+                            icon: Icons.cancel,
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
             if (_error != null) ...[
               const SizedBox(height: 16),
-              Card(
-                color: Colors.red.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red))),
-                    ],
-                  ),
+              ApexCard(
+                child: Row(
+                  children: [
+                    Icon(Icons.error, color: ApexColors.error),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(_error!, style: ApexTypography.body.copyWith(color: ApexColors.error))),
+                  ],
                 ),
               ),
             ],
             const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: _isSyncing
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.sync),
-                label: Text(_isSyncing ? 'Syncing...' : 'Start Import'),
-                onPressed: _isSyncing ? null : _startSync,
-              ),
+            ApexButton(
+              label: _isSyncing ? 'Syncing...' : 'Start Import',
+              onPressed: _isSyncing ? null : _startSync,
+              type: ApexButtonType.primary,
+              icon: Icons.sync,
+              loading: _isSyncing,
+              expanded: true,
             ),
           ],
         ),
@@ -199,6 +215,10 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
     return ChoiceChip(
       label: Text(label),
       selected: _selectedRange == value,
+      selectedColor: ApexColors.primary.withValues(alpha: 0.15),
+      labelStyle: ApexTypography.body.copyWith(
+        color: _selectedRange == value ? ApexColors.primary : ApexColors.neutral700,
+      ),
       onSelected: (selected) {
         if (selected) setState(() => _selectedRange = value);
       },
@@ -211,8 +231,8 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(label, style: ApexTypography.body),
+          Text(value, style: ApexTypography.body.copyWith(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -235,18 +255,18 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
   }
 
   Color get _statusColor {
-    if (_progress == null) return Colors.grey;
+    if (_progress == null) return ApexColors.neutral500;
     switch (_progress!.status) {
       case 'running':
-        return _progress!.isPaused ? Colors.orange : Colors.blue;
+        return _progress!.isPaused ? ApexColors.warning : ApexColors.primary;
       case 'completed':
-        return Colors.green;
+        return ApexColors.success;
       case 'failed':
-        return Colors.red;
+        return ApexColors.error;
       case 'cancelled':
-        return Colors.grey;
+        return ApexColors.neutral500;
       default:
-        return Colors.grey;
+        return ApexColors.neutral500;
     }
   }
 
@@ -279,6 +299,19 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
           : (_customTo ?? DateTime.now()),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: ApexColors.primary,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: ApexColors.neutral900,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -330,7 +363,6 @@ class _EsslInitialSyncScreenState extends ConsumerState<EsslInitialSyncScreen> {
         _isSyncing = false;
       });
 
-      // Start polling if still running
       if (result.status == 'running') {
         _pollProgress();
       }

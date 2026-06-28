@@ -4,17 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_text_field.dart';
 
 class AttendanceRegularizationScreen extends ConsumerStatefulWidget {
   const AttendanceRegularizationScreen({super.key});
@@ -34,26 +30,25 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Attendance Regularization', style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
-          ElevatedButton.icon(
+          ApexButton(
+            label: 'Apply',
+            icon: Icons.add,
             onPressed: () => _showApplyDialog(context),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Apply'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
         bottom: TabBar(
           controller: _tabCtrl,
-          labelColor: _primary,
-          unselectedLabelColor: _muted,
-          indicatorColor: _primary,
+          labelColor: ApexColors.primary,
+          unselectedLabelColor: ApexColors.neutral500,
+          indicatorColor: ApexColors.primary,
           tabs: const [
             Tab(text: 'My Requests'),
             Tab(text: 'Pending Approvals'),
@@ -87,9 +82,9 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButtonFormField<String>(
+                ApexDropdown<String>(
+                  label: 'Request Type',
                   value: requestType,
-                  decoration: const InputDecoration(labelText: 'Request Type', border: OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(value: 'missed_check_in', child: Text('Missed Check-In')),
                     DropdownMenuItem(value: 'missed_check_out', child: Text('Missed Check-Out')),
@@ -100,21 +95,18 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
                   onChanged: (v) => setDialogState(() => requestType = v!),
                 ),
                 const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Date', style: TextStyle(fontSize: 13, color: _muted)),
-                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 14, color: _text)),
-                  trailing: const Icon(Icons.calendar_today, size: 18),
-                  onTap: () async {
-                    final picked = await showDatePicker(context: ctx, initialDate: selectedDate, firstDate: DateTime.now().subtract(const Duration(days: 30)), lastDate: DateTime.now());
-                    if (picked != null) setDialogState(() => selectedDate = picked);
-                  },
+                ApexDatePicker(
+                  label: 'Date',
+                  value: selectedDate,
+                  firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                  lastDate: DateTime.now(),
+                  onChanged: (v) { if (v != null) setDialogState(() => selectedDate = v); },
                 ),
                 if (requestType == 'missed_check_in' || requestType == 'wrong_punch') ...[
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Check-In Time', style: TextStyle(fontSize: 13, color: _muted)),
-                    subtitle: Text(checkInTime != null ? checkInTime!.format(ctx) : 'Select time', style: const TextStyle(fontSize: 14, color: _text)),
+                    title: const Text('Check-In Time', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                    subtitle: Text(checkInTime != null ? checkInTime!.format(ctx) : 'Select time', style: TextStyle(fontSize: 14, color: ApexColors.neutral900)),
                     trailing: const Icon(Icons.access_time, size: 18),
                     onTap: () async {
                       final picked = await showTimePicker(context: ctx, initialTime: checkInTime ?? const TimeOfDay(hour: 9, minute: 0));
@@ -125,8 +117,8 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
                 if (requestType == 'missed_check_out' || requestType == 'wrong_punch') ...[
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Check-Out Time', style: TextStyle(fontSize: 13, color: _muted)),
-                    subtitle: Text(checkOutTime != null ? checkOutTime!.format(ctx) : 'Select time', style: const TextStyle(fontSize: 14, color: _text)),
+                    title: const Text('Check-Out Time', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                    subtitle: Text(checkOutTime != null ? checkOutTime!.format(ctx) : 'Select time', style: TextStyle(fontSize: 14, color: ApexColors.neutral900)),
                     trailing: const Icon(Icons.access_time, size: 18),
                     onTap: () async {
                       final picked = await showTimePicker(context: ctx, initialTime: checkOutTime ?? const TimeOfDay(hour: 18, minute: 0));
@@ -135,17 +127,22 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
                   ),
                 ],
                 const SizedBox(height: 8),
-                TextField(
+                ApexTextField(
+                  label: 'Reason',
                   controller: reasonCtrl,
-                  decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder()),
                   maxLines: 3,
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
+            ApexButton(
+              label: 'Cancel',
+              type: ApexButtonType.ghost,
+              onPressed: () => Navigator.pop(ctx),
+            ),
+            ApexButton(
+              label: 'Submit',
               onPressed: () async {
                 try {
                   final dio = ref.read(dioProvider);
@@ -157,13 +154,11 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
                     if (checkOutTime != null) 'check_out': '${checkOutTime!.hour.toString().padLeft(2, '0')}:${checkOutTime!.minute.toString().padLeft(2, '0')}',
                   });
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Regularization request submitted'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Regularization request submitted'), backgroundColor: ApexColors.success));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-              child: const Text('Submit'),
             ),
           ],
         ),
@@ -179,11 +174,11 @@ class _MyRequestsTab extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.edit_note, size: 48, color: _muted.withOpacity(0.3)),
+          Icon(Icons.edit_note, size: 48, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 12),
-          const Text('No regularization requests', style: TextStyle(fontSize: 15, color: _muted)),
+          const Text('No regularization requests', style: TextStyle(fontSize: 15, color: ApexColors.neutral500)),
           const SizedBox(height: 8),
-          const Text('Apply for missed punches or work from home', style: TextStyle(fontSize: 12, color: _muted)),
+          const Text('Apply for missed punches or work from home', style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -197,13 +192,14 @@ class _PendingApprovalsTab extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.approval, size: 48, color: _muted.withOpacity(0.3)),
+          Icon(Icons.approval, size: 48, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 12),
-          const Text('No pending approvals', style: TextStyle(fontSize: 15, color: _muted)),
+          const Text('No pending approvals', style: TextStyle(fontSize: 15, color: ApexColors.neutral500)),
           const SizedBox(height: 8),
-          const Text('Regularization requests from your team will appear here', style: TextStyle(fontSize: 12, color: _muted)),
+          const Text('Regularization requests from your team will appear here', style: TextStyle(fontSize: 12, color: ApexColors.neutral500)),
         ],
       ),
     );
   }
 }
+

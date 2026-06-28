@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../services/essl_service.dart';
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
 
 class Holiday {
   final String id;
@@ -116,6 +114,18 @@ class HolidayListNotifier extends StateNotifier<AsyncValue<List<Holiday>>> {
   }
 }
 
+ApexBadgeType _typeBadge(String type) {
+  if (type == 'national') return ApexBadgeType.info;
+  if (type == 'company') return ApexBadgeType.success;
+  return ApexBadgeType.neutral;
+}
+
+Color _typeColor(String type) {
+  if (type == 'national') return ApexColors.primary600;
+  if (type == 'company') return ApexColors.success;
+  return ApexColors.neutral500;
+}
+
 class HolidayCalendarScreen extends ConsumerWidget {
   const HolidayCalendarScreen({Key? key}) : super(key: key);
 
@@ -125,13 +135,13 @@ class HolidayCalendarScreen extends ConsumerWidget {
     final notifier = ref.read(holidayListProvider.notifier);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: ApexAppBar(title: 'Holidays', actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left, size: 20),
             onPressed: () => notifier.fetchHolidays(year: notifier.year - 1, isRefresh: true),
           ),
-          Center(child: Text('${notifier.year}', style: ApexTypography.titleMedium.copyWith(color: _text))),
+          Center(child: Text('${notifier.year}', style: ApexTypography.titleMedium.copyWith(color: ApexColors.neutral900))),
           IconButton(
             icon: const Icon(Icons.chevron_right, size: 20),
             onPressed: () => notifier.fetchHolidays(year: notifier.year + 1, isRefresh: true),
@@ -150,17 +160,16 @@ class HolidayCalendarScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.calendar_month_outlined, size: 48, color: _muted),
+                  Icon(Icons.calendar_month_outlined, size: 48, color: ApexColors.neutral400),
                   const SizedBox(height: 16),
-                  Text('No Holidays for ${notifier.year}', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  Text('No Holidays for ${notifier.year}', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
                   const SizedBox(height: 8),
-                  Text('Add holidays to auto-mark attendance', style: ApexTypography.body.copyWith(color: _muted)),
+                  Text('Add holidays to auto-mark attendance', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  ApexButton(
+                    label: 'Add Holiday',
+                    icon: Icons.add,
                     onPressed: () => _showHolidayDialog(context, ref),
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Add Holiday'),
-                    style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
                   ),
                 ],
               ),
@@ -212,31 +221,26 @@ class HolidayCalendarScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(holiday != null ? 'Edit Holiday' : 'Add Holiday'),
+          title: Text(holiday != null ? 'Edit Holiday' : 'Add Holiday', style: ApexTypography.sectionTitle),
           content: SizedBox(
             width: 400,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Holiday Name *', border: OutlineInputBorder()),
+                ApexTextField(label: 'Holiday Name', controller: nameController, required: true),
+                const SizedBox(height: 12),
+                ApexDatePicker(
+                  label: 'Date',
+                  value: selectedDate,
+                  required: true,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                  onChanged: (picked) { if (picked != null) setDialogState(() => selectedDate = picked); },
                 ),
                 const SizedBox(height: 12),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(context: ctx, initialDate: selectedDate, firstDate: DateTime(2020), lastDate: DateTime(2030));
-                    if (picked != null) setDialogState(() => selectedDate = picked);
-                  },
-                  child: InputDecorator(
-                    decoration: const InputDecoration(labelText: 'Date *', border: OutlineInputBorder()),
-                    child: Text(DateFormat('MMM dd, yyyy').format(selectedDate)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
+                ApexDropdown<String>(
+                  label: 'Type',
                   value: selectedType,
-                  decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(value: 'national', child: Text('National')),
                     DropdownMenuItem(value: 'company', child: Text('Company')),
@@ -245,17 +249,14 @@ class HolidayCalendarScreen extends ConsumerWidget {
                   onChanged: (v) => setDialogState(() => selectedType = v ?? 'company'),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
-                  maxLines: 2,
-                ),
+                ApexTextField(label: 'Description', controller: descController, maxLines: 2),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
+            ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+            ApexButton(
+              label: holiday != null ? 'Update' : 'Add',
               onPressed: () async {
                 final name = nameController.text.trim();
                 if (name.isEmpty) return;
@@ -273,8 +274,6 @@ class HolidayCalendarScreen extends ConsumerWidget {
                 }
                 if (ctx.mounted) Navigator.pop(ctx);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-              child: Text(holiday != null ? 'Update' : 'Add'),
             ),
           ],
         ),
@@ -286,17 +285,17 @@ class HolidayCalendarScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Holiday'),
+        title: Text('Delete Holiday', style: ApexTypography.sectionTitle),
         content: Text('Delete "${holiday.name}" on ${DateFormat('MMM dd, yyyy').format(holiday.date)}?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+          ApexButton(
+            label: 'Delete',
+            type: ApexButtonType.danger,
             onPressed: () async {
               await ref.read(holidayListProvider.notifier).deleteHoliday(holiday.id);
               if (ctx.mounted) Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
-            child: const Text('Delete'),
           ),
         ],
       ),
@@ -313,65 +312,55 @@ class _HolidayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = holiday.type == 'national' ? _primary : holiday.type == 'company' ? _success : _muted;
+    final typeColor = _typeColor(holiday.type);
     final dayName = DateFormat('EEE').format(holiday.date);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: ApexCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: typeColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('${holiday.date.day}', style: ApexTypography.titleMedium.copyWith(color: typeColor, fontWeight: FontWeight.w700)),
+                  Text(dayName, style: ApexTypography.captionSmall.copyWith(color: typeColor)),
+                ],
+              ),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('${holiday.date.day}', style: ApexTypography.titleMedium.copyWith(color: typeColor, fontWeight: FontWeight.w700)),
-                Text(dayName, style: ApexTypography.captionSmall.copyWith(color: typeColor)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(holiday.name, style: ApexTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                  if (holiday.description != null && holiday.description!.isNotEmpty)
+                    Text(holiday.description!, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            ApexBadge(label: holiday.type, type: _typeBadge(holiday.type)),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, size: 16),
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error))),
               ],
+              onSelected: (v) {
+                if (v == 'edit') onEdit();
+                if (v == 'delete') onDelete();
+              },
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(holiday.name, style: ApexTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: _text)),
-                if (holiday.description != null && holiday.description!.isNotEmpty)
-                  Text(holiday.description!, style: ApexTypography.caption.copyWith(color: _muted), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(holiday.type.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: typeColor, fontWeight: FontWeight.w600)),
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, size: 16),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'edit', child: Text('Edit')),
-              const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: _danger))),
-            ],
-            onSelected: (v) {
-              if (v == 'edit') onEdit();
-              if (v == 'delete') onDelete();
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

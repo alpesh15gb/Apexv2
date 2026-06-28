@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
 
 class ExpenseClaim {
   final String id;
@@ -45,6 +42,15 @@ final expenseListProvider = FutureProvider<List<ExpenseClaim>>((ref) async {
   return [];
 });
 
+ApexBadgeType _statusBadge(String status) {
+  switch (status) {
+    case 'approved': return ApexBadgeType.success;
+    case 'rejected': return ApexBadgeType.danger;
+    case 'submitted': return ApexBadgeType.warning;
+    default: return ApexBadgeType.neutral;
+  }
+}
+
 class ExpenseScreen extends ConsumerStatefulWidget {
   const ExpenseScreen({super.key});
 
@@ -58,7 +64,7 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
     final claimsAsync = ref.watch(expenseListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: ApexAppBar(
         title: 'Expenses',
         actions: [
@@ -72,11 +78,11 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: 48, color: _muted.withOpacity(0.4)),
+                  Icon(Icons.receipt_long_outlined, size: 48, color: ApexColors.neutral400),
                   const SizedBox(height: 12),
-                  const Text('No Expense Claims', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+                  Text('No Expense Claims', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                   const SizedBox(height: 4),
-                  const Text('Submit an expense claim to get started', style: TextStyle(fontSize: 13, color: _muted)),
+                  Text('Submit an expense claim to get started', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                 ],
               ),
             );
@@ -86,29 +92,29 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
             itemCount: items.length,
             itemBuilder: (context, i) {
               final claim = items[i];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _border),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  leading: Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.receipt, color: _primary, size: 20),
-                  ),
-                  title: Text(claim.categoryName ?? 'Expense', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-                  subtitle: Text('${claim.date}  •  ₹${claim.amount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: _muted)),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _statusColor(claim.status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(claim.status.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor(claim.status))),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ApexCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(color: ApexColors.primary600.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        child: Icon(Icons.receipt, color: ApexColors.primary600, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(claim.categoryName ?? 'Expense', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                            Text('${claim.date}  •  ₹${claim.amount.toStringAsFixed(0)}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                          ],
+                        ),
+                      ),
+                      ApexBadge(label: claim.status, type: _statusBadge(claim.status)),
+                    ],
                   ),
                 ),
               );
@@ -116,18 +122,9 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: ${e.toString()}', style: const TextStyle(color: _danger))),
+        error: (e, _) => Center(child: Text('Error: ${e.toString()}', style: TextStyle(color: ApexColors.error))),
       ),
     );
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'approved': return _success;
-      case 'rejected': return _danger;
-      case 'submitted': return _warning;
-      default: return _muted;
-    }
   }
 
   void _showCreateDialog(BuildContext context) {
@@ -138,38 +135,36 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('New Expense Claim', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        title: Text('New Expense Claim', style: ApexTypography.sectionTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButtonFormField<String>(
+            ApexDropdown<String>(
+              label: 'Category',
               value: selectedCategory,
-              decoration: InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              ),
               items: ['Travel', 'Food', 'Accommodation', 'Transport', 'Office Supplies', 'Other']
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                   .toList(),
               onChanged: (v) => selectedCategory = v ?? selectedCategory,
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            ApexTextField(
+              label: 'Amount (₹)',
               controller: amountCtrl,
-              decoration: InputDecoration(labelText: 'Amount (₹)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            ApexTextField(
+              label: 'Description',
               controller: descCtrl,
-              decoration: InputDecoration(labelText: 'Description', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
               maxLines: 2,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+          ApexButton(
+            label: 'Submit',
             onPressed: () async {
               try {
                 final dio = ref.read(dioProvider);
@@ -181,11 +176,9 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
                 Navigator.pop(ctx);
                 ref.invalidate(expenseListProvider);
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-            child: const Text('Submit'),
           ),
         ],
       ),

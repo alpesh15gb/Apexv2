@@ -14,6 +14,7 @@ class ApexBadge extends StatelessWidget {
   factory ApexBadge.warning(String label) => ApexBadge(label: label, type: ApexBadgeType.warning);
   factory ApexBadge.danger(String label) => ApexBadge(label: label, type: ApexBadgeType.danger);
   factory ApexBadge.info(String label) => ApexBadge(label: label, type: ApexBadgeType.info);
+  factory ApexBadge.neutral(String label) => ApexBadge(label: label, type: ApexBadgeType.neutral);
 
   @override
   Widget build(BuildContext context) {

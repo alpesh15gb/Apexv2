@@ -3,19 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../models/essl_server.dart';
 import '../../providers/essl_provider.dart';
 import '../../services/essl_service.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_section.dart';
+import '../../widgets/apex_text_field.dart';
 
 class EsslServerFormScreen extends ConsumerStatefulWidget {
   final String? serverId;
@@ -64,7 +59,7 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load server: $e'), backgroundColor: _danger),
+          SnackBar(content: Text('Failed to load server: $e'), backgroundColor: ApexColors.error),
         );
       }
     }
@@ -102,14 +97,14 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(widget.serverId != null ? 'Server updated' : 'Server created'), backgroundColor: _success),
+            SnackBar(content: Text(widget.serverId != null ? 'Server updated' : 'Server created'), backgroundColor: ApexColors.success),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: _danger),
+            SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: ApexColors.error),
           );
         }
       }
@@ -121,13 +116,13 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: Text(widget.serverId != null ? 'Edit Server' : 'Add Server'),
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
       ),
       body: Form(
         key: _formKey,
@@ -136,32 +131,32 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SectionCard(
+              ApexSection(
                 title: 'CONNECTION',
                 children: [
-                  _field('Server Name', _nameController, required: true),
-                  _field('Server URL', _urlController, required: true, hint: 'http://192.168.1.100:8080/Webservice.asmx'),
-                  _field('Username', _usernameController, required: true),
-                  _field('Password', _passwordController, required: true, obscure: true),
+                  ApexTextField(label: 'Server Name', controller: _nameController, required: true),
+                  const SizedBox(height: 14),
+                  ApexTextField(label: 'Server URL', controller: _urlController, required: true, hint: 'http://192.168.1.100:8080/Webservice.asmx'),
+                  const SizedBox(height: 14),
+                  ApexTextField(label: 'Username', controller: _usernameController, required: true),
+                  const SizedBox(height: 14),
+                  ApexTextField(label: 'Password', controller: _passwordController, required: true, obscure: true),
                   if (widget.serverId != null) ...[
                     const SizedBox(height: 4),
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
+                      child: ApexButton(
+                        label: 'Manage Locations',
                         onPressed: () => context.push('/settings/essl/${widget.serverId}/locations'),
-                        icon: const Icon(Icons.location_on_outlined, size: 16),
-                        label: const Text('Manage Locations'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
+                        type: ApexButtonType.outline,
+                        icon: Icons.location_on_outlined,
                       ),
                     ),
                   ],
                 ],
               ),
               const SizedBox(height: 16),
-              _SectionCard(
+              ApexSection(
                 title: 'SYNC SETTINGS',
                 children: [
                   SwitchListTile(
@@ -169,7 +164,7 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
                     subtitle: Text('Automatically sync at regular intervals', style: ApexTypography.caption),
                     value: _autoSync,
                     onChanged: (v) => setState(() => _autoSync = v),
-                    activeColor: _primary,
+                    activeColor: ApexColors.primary,
                     contentPadding: EdgeInsets.zero,
                   ),
                   _numberField('Attendance Sync (minutes)', _attendanceInterval, (v) => setState(() => _attendanceInterval = v)),
@@ -178,47 +173,15 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: Text(widget.serverId != null ? 'Update Server' : 'Create Server', style: ApexTypography.button),
-                ),
+              ApexButton(
+                label: widget.serverId != null ? 'Update Server' : 'Create Server',
+                onPressed: _save,
+                type: ApexButtonType.primary,
+                expanded: true,
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _field(String label, TextEditingController controller, {bool required = false, String? hint, bool obscure = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: ApexTypography.titleSmall.copyWith(color: _text)),
-          const SizedBox(height: 6),
-          TextFormField(
-            controller: controller,
-            obscureText: obscure,
-            decoration: InputDecoration(
-              hintText: hint,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary, width: 1.5)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            ),
-            validator: required ? (v) => v == null || v.isEmpty ? 'Required' : null : null,
-          ),
-        ],
       ),
     );
   }
@@ -237,39 +200,12 @@ class _EsslServerFormScreenState extends ConsumerState<EsslServerFormScreen> {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               ),
               onChanged: (v) => onChanged(int.tryParse(v) ?? value),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _SectionCard({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: ApexTypography.sectionHeader),
-          const SizedBox(height: 12),
-          ...children,
         ],
       ),
     );

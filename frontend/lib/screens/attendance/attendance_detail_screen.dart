@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/attendance_provider.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_section.dart';
 import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
-import '../../widgets/status_badge.dart';
 
 class AttendanceDetailScreen extends ConsumerWidget {
   final String employeeId;
@@ -31,21 +34,21 @@ class AttendanceDetailScreen extends ConsumerWidget {
       'toDate': toDateStr,
     }));
 
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Employee Attendance History'),
+        title: Text('Employee Attendance History', style: ApexTypography.titleLarge.copyWith(fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Month Range Header
             Text(
               'History Summary (${DateFormat('MMMM yyyy').format(now)})',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: ApexTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
@@ -59,10 +62,10 @@ class AttendanceDetailScreen extends ConsumerWidget {
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.8,
                 children: [
-                  _buildSummaryMiniCard('Present Days', '${summary.presentDays}/${summary.totalDays}', Colors.green),
-                  _buildSummaryMiniCard('Absent Days', '${summary.absentDays}', Colors.red),
-                  _buildSummaryMiniCard('Late Days', '${summary.lateDays}', Colors.orange),
-                  _buildSummaryMiniCard('Total Hours', '${summary.totalHours.toStringAsFixed(1)} hrs', Colors.blue),
+                  _buildSummaryMiniCard('Present Days', '${summary.presentDays}/${summary.totalDays}', ApexColors.success),
+                  _buildSummaryMiniCard('Absent Days', '${summary.absentDays}', ApexColors.error),
+                  _buildSummaryMiniCard('Late Days', '${summary.lateDays}', ApexColors.warning),
+                  _buildSummaryMiniCard('Total Hours', '${summary.totalHours.toStringAsFixed(1)} hrs', ApexColors.primary),
                 ],
               ),
               loading: () => const LoadingWidget(count: 1),
@@ -70,24 +73,22 @@ class AttendanceDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // Raw Punch Logs
             Text(
               'Raw Biometric Punch Logs',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: ApexTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
             punchLogsAsync.when(
               data: (logs) {
                 if (logs.isEmpty) {
-                  return const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: Center(child: Text('No biometric punch logs found.')),
-                    ),
+                  return ApexCard(
+                    padding: const EdgeInsets.all(24.0),
+                    child: const Center(child: Text('No biometric punch logs found.')),
                   );
                 }
-                return Card(
+                return ApexCard(
+                  padding: EdgeInsets.zero,
                   child: ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -97,11 +98,11 @@ class AttendanceDetailScreen extends ConsumerWidget {
                       final log = logs[idx];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: theme.colorScheme.primary.withOpacity(0.08),
-                          child: Icon(Icons.fingerprint, color: theme.colorScheme.primary),
+                          backgroundColor: ApexColors.primary.withOpacity(0.08),
+                          child: Icon(Icons.fingerprint, color: ApexColors.primary),
                         ),
-                        title: Text('Punched at: ${DateFormat('hh:mm a').format(log.timestamp)}'),
-                        subtitle: Text('Date: ${DateFormat('MMM dd, yyyy').format(log.timestamp)} • Source: ${log.source}'),
+                        title: Text('Punched at: ${DateFormat('hh:mm a').format(log.timestamp)}', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w500)),
+                        subtitle: Text('Date: ${DateFormat('MMM dd, yyyy').format(log.timestamp)} • Source: ${log.source}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                       );
                     },
                   ),
@@ -117,26 +118,25 @@ class AttendanceDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildSummaryMiniCard(String title, String value, Color color) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+    return ApexCard(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(title, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+

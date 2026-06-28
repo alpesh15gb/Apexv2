@@ -3,18 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/device_provider.dart';
 
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 class DeviceListScreen extends ConsumerWidget {
   const DeviceListScreen({Key? key}) : super(key: key);
@@ -26,13 +18,13 @@ class DeviceListScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        title: Text('Device Operations', style: ApexTypography.sectionTitle.copyWith(color: _text)),
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        title: Text('Device Operations', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.neutral900)),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh, size: 18), tooltip: 'Refresh', onPressed: () {
             ref.invalidate(deviceListProvider);
@@ -70,7 +62,7 @@ class DeviceListScreen extends ConsumerWidget {
               error: (e, _) => Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.error_outline, size: 40, color: _danger),
+                    Icon(Icons.error_outline, size: 40, color: ApexColors.error),
                     const SizedBox(height: 12),
                     Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
                     const SizedBox(height: 12),
@@ -100,10 +92,10 @@ class DeviceListScreen extends ConsumerWidget {
       mainAxisSpacing: 8,
       childAspectRatio: 2.0,
       children: [
-        _KpiCard(label: 'Total', value: '$total', color: _muted),
-        _KpiCard(label: 'Online', value: '${health.online}', color: _success, subtitle: '$onlinePct% uptime'),
-        _KpiCard(label: 'Offline', value: '${health.offline}', color: health.offline > 0 ? _danger : _success),
-        _KpiCard(label: 'Inactive', value: '${health.inactive}', color: _warning),
+        _KpiCard(label: 'Total', value: '$total', color: ApexColors.neutral500),
+        _KpiCard(label: 'Online', value: '${health.online}', color: ApexColors.success, subtitle: '$onlinePct% uptime'),
+        _KpiCard(label: 'Offline', value: '${health.offline}', color: health.offline > 0 ? ApexColors.error : ApexColors.success),
+        _KpiCard(label: 'Inactive', value: '${health.inactive}', color: ApexColors.warning),
       ],
     );
   }
@@ -122,9 +114,9 @@ class _KpiCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.neutral200),
       ),
       child: Row(
         children: [
@@ -135,7 +127,7 @@ class _KpiCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(value, style: ApexTypography.headingMedium.copyWith(color: _text)),
+                Text(value, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
                 Text(label, style: ApexTypography.kpiLabel),
                 if (subtitle != null)
                   Text(subtitle!, style: ApexTypography.captionSmall.copyWith(color: color)),
@@ -178,7 +170,7 @@ class _DeviceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOnline = device.status == 'online';
-    final color = isOnline ? _success : _danger;
+    final color = isOnline ? ApexColors.success : ApexColors.error;
 
     return InkWell(
       onTap: () => context.push('/devices/${device.id}'),
@@ -186,7 +178,7 @@ class _DeviceCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withOpacity(0.3)),
         ),
@@ -215,10 +207,10 @@ class _DeviceCard extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            Text(device.deviceName, style: ApexTypography.titleSmall.copyWith(color: _text), overflow: TextOverflow.ellipsis),
-            Text('S/N: ${device.serialNumber}', style: ApexTypography.captionSmall.copyWith(color: _muted), overflow: TextOverflow.ellipsis),
+            Text(device.deviceName, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900), overflow: TextOverflow.ellipsis),
+            Text('S/N: ${device.serialNumber}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
             if (device.location != null)
-              Text(device.location!, style: ApexTypography.captionSmall.copyWith(color: _muted), overflow: TextOverflow.ellipsis),
+              Text(device.location!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
           ],
         ),
       ),
@@ -241,14 +233,17 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: _muted),
+            Icon(icon, size: 48, color: ApexColors.neutral500),
             const SizedBox(height: 16),
-            Text(title, style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text(title, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text(description, style: ApexTypography.bodySmall.copyWith(color: _muted), textAlign: TextAlign.center),
+            Text(description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
           ],
         ),
       ),
     );
   }
 }
+
+
+

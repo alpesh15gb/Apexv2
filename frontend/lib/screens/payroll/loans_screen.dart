@@ -8,16 +8,8 @@ import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../design_system/typography.dart';
+import '../../design_system/colors.dart';
 
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 final loansProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -37,13 +29,13 @@ class LoansScreen extends ConsumerWidget {
     final loansAsync = ref.watch(loansProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: Text('Loans & Advances', style: ApexTypography.sectionTitle),
         backgroundColor: Colors.white,
-        foregroundColor: _text,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/payroll')),
         actions: [
           ApexButton(
@@ -64,7 +56,7 @@ class LoansScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: _danger))),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
     );
   }
@@ -74,11 +66,11 @@ class LoansScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.money, size: 64, color: _muted.withOpacity(0.3)),
+          Icon(Icons.money, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('No Loans or Advances', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+          const Text('No Loans or Advances', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          Text('Employee loans and salary advances will appear here', style: ApexTypography.body.copyWith(color: _muted)),
+          Text('Employee loans and salary advances will appear here', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
         ],
       ),
     );
@@ -136,9 +128,9 @@ class LoansScreen extends ConsumerWidget {
                   });
                   Navigator.pop(ctx);
                   ref.invalidate(loansProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Loan created'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Loan created'), backgroundColor: ApexColors.success));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
                 }
               },
             ),
@@ -173,8 +165,8 @@ class _LoanCard extends StatelessWidget {
           Row(children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: _warning.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.money, size: 20, color: _warning),
+              decoration: BoxDecoration(color: ApexColors.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+              child: Icon(Icons.money, size: 20, color: ApexColors.warning),
             ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -197,8 +189,8 @@ class _LoanCard extends StatelessWidget {
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: total > 0 ? paid / total : 0,
-            backgroundColor: _border,
-            color: _success,
+            backgroundColor: ApexColors.neutral200,
+            color: ApexColors.success,
             minHeight: 6,
           ),
         ],
@@ -240,3 +232,8 @@ class _LoanCard extends StatelessWidget {
   }
 
 }
+
+
+
+
+

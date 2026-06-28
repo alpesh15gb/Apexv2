@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_dropdown.dart';
 
 class DeptShiftItem {
   final String id, departmentId, shiftId;
@@ -83,33 +82,39 @@ class _DepartmentShiftScreenState extends ConsumerState<DepartmentShiftScreen> {
     final dsAsync = ref.watch(deptShiftListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: const Text('Department Shifts'),
-        backgroundColor: _surface, foregroundColor: _text, elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        backgroundColor: Colors.white, foregroundColor: ApexColors.neutral900, elevation: 0,
+        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showAddDialog())],
       ),
       body: dsAsync.when(
         data: (items) {
           if (items.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.swap_horiz, size: 48, color: _muted),
+            Icon(Icons.swap_horiz, size: 48, color: ApexColors.neutral500),
             const SizedBox(height: 16),
-            Text('No Department Shifts', style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text('No Department Shifts', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text('Assign default shifts to departments', style: ApexTypography.body.copyWith(color: _muted)),
+            Text('Assign default shifts to departments', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
           ]));
           return ListView.builder(padding: const EdgeInsets.all(16), itemCount: items.length, itemBuilder: (context, i) {
             final d = items[i];
-            return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [
-              Container(width: 40, height: 40, decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.swap_horiz, color: _primary, size: 20)),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ApexCard(
+              padding: const EdgeInsets.all(14),
+              child: Row(children: [
+              Container(width: 40, height: 40, decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.swap_horiz, color: ApexColors.primary, size: 20)),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(_deptName(d.departmentId), style: ApexTypography.titleSmall.copyWith(color: _text)),
-                Text('${_shiftName(d.shiftId)} | From ${DateFormat('MMM dd, yyyy').format(d.effectiveFrom)}${d.effectiveTo != null ? ' to ${DateFormat('MMM dd, yyyy').format(d.effectiveTo!)}' : ' (ongoing)'}', style: ApexTypography.caption.copyWith(color: _muted)),
+                Text(_deptName(d.departmentId), style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                Text('${_shiftName(d.shiftId)} | From ${DateFormat('MMM dd, yyyy').format(d.effectiveFrom)}${d.effectiveTo != null ? ' to ${DateFormat('MMM dd, yyyy').format(d.effectiveTo!)}' : ' (ongoing)'}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
               ])),
-              IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: _danger), onPressed: () => ref.read(deptShiftListProvider.notifier).delete(d.id)),
-            ]));
+              IconButton(icon: Icon(Icons.delete_outline, size: 18, color: ApexColors.error), onPressed: () => ref.read(deptShiftListProvider.notifier).delete(d.id)),
+            ]),
+            ),
+            );
           });
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -124,20 +129,21 @@ class _DepartmentShiftScreenState extends ConsumerState<DepartmentShiftScreen> {
     showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
       title: const Text('Assign Department Shift'),
       content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        DropdownButtonFormField<String>(value: deptId, decoration: const InputDecoration(labelText: 'Department *', border: OutlineInputBorder()), items: _depts.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))).toList(), onChanged: (v) => setS(() => deptId = v)),
+        ApexDropdown<String>(label: 'Department', value: deptId, required: true, items: _depts.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))).toList(), onChanged: (v) => setS(() => deptId = v)),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(value: shiftId, decoration: const InputDecoration(labelText: 'Shift *', border: OutlineInputBorder()), items: _shifts.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(), onChanged: (v) => setS(() => shiftId = v)),
+        ApexDropdown<String>(label: 'Shift', value: shiftId, required: true, items: _shifts.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(), onChanged: (v) => setS(() => shiftId = v)),
         const SizedBox(height: 12),
-        InkWell(onTap: () async { final p = await showDatePicker(context: ctx, initialDate: fromDate, firstDate: DateTime(2020), lastDate: DateTime(2030)); if (p != null) setS(() => fromDate = p); }, child: InputDecorator(decoration: const InputDecoration(labelText: 'Effective From', border: OutlineInputBorder()), child: Text(DateFormat('MMM dd, yyyy').format(fromDate)))),
+        ApexDatePicker(label: 'Effective From', value: fromDate, firstDate: DateTime(2020), lastDate: DateTime(2030), onChanged: (v) { if (v != null) setS(() => fromDate = v); }),
       ])),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () async {
+        ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(ctx)),
+        ApexButton(label: 'Assign', onPressed: () async {
           if (deptId == null || shiftId == null) return;
           await ref.read(deptShiftListProvider.notifier).add({'department_id': deptId, 'shift_id': shiftId, 'effective_from': fromDate.toIso8601String().substring(0, 10)});
           if (ctx.mounted) Navigator.pop(ctx);
-        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: const Text('Assign')),
+        }),
       ],
     )));
   }
 }
+

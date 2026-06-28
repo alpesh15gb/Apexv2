@@ -2,15 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_section.dart';
 
 final essProfileProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -44,29 +40,26 @@ class EssProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(essProfileProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'My Profile'),
       body: profileAsync.when(
         data: (profile) => SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+            ApexCard(
               child: Column(children: [
                 CircleAvatar(
                   radius: 36,
-                  backgroundColor: _primary.withOpacity(0.1),
-                  child: Text((profile['first_name'] ?? '?')[0].toUpperCase(), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: _primary)),
+                  backgroundColor: ApexColors.primary.withValues(alpha: 0.1),
+                  child: Text((profile['first_name'] ?? '?')[0].toUpperCase(), style: ApexTypography.displayMedium.copyWith(fontSize: 28, color: ApexColors.primary)),
                 ),
                 const SizedBox(height: 12),
-                Text('${profile['first_name'] ?? ''} ${profile['last_name'] ?? ''}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text)),
-                Text(profile['employee_code'] ?? '', style: const TextStyle(fontSize: 13, color: _muted)),
+                Text('${profile['first_name'] ?? ''} ${profile['last_name'] ?? ''}', style: ApexTypography.sectionTitle),
+                Text(profile['employee_code'] ?? '', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
               ]),
             ),
             const SizedBox(height: 16),
-            _section('Personal Information', [
+            ApexSection(title: 'Personal Information', children: [
               _row('Email', profile['email'] ?? '—'),
               _row('Phone', profile['phone'] ?? '—'),
               _row('Gender', profile['gender'] ?? '—'),
@@ -74,41 +67,28 @@ class EssProfileScreen extends ConsumerWidget {
               _row('Blood Group', profile['blood_group'] ?? '—'),
             ]),
             const SizedBox(height: 12),
-            _section('Employment', [
+            ApexSection(title: 'Employment', children: [
               _row('Employee Code', profile['employee_code'] ?? '—'),
               _row('Joining Date', profile['joining_date'] ?? '—'),
               _row('Status', profile['status'] ?? '—'),
             ]),
             const SizedBox(height: 12),
-            _section('Address', [
+            ApexSection(title: 'Address', children: [
               _row('Address', profile['address'] ?? '—'),
               _row('City', profile['city'] ?? '—'),
               _row('State', profile['state'] ?? '—'),
               _row('Pincode', profile['pincode'] ?? '—'),
             ]),
             const SizedBox(height: 12),
-            _section('Emergency Contact', [
+            ApexSection(title: 'Emergency Contact', children: [
               _row('Name', profile['emergency_contact_name'] ?? '—'),
               _row('Phone', profile['emergency_contact_phone'] ?? '—'),
             ]),
           ]),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
-    );
-  }
-
-  Widget _section(String title, List<Widget> children) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-        const SizedBox(height: 12),
-        ...children,
-      ]),
     );
   }
 
@@ -116,8 +96,8 @@ class EssProfileScreen extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(children: [
-        SizedBox(width: 130, child: Text(label, style: const TextStyle(fontSize: 13, color: _muted))),
-        Expanded(child: Text(value, style: const TextStyle(fontSize: 13, color: _text, fontWeight: FontWeight.w500))),
+        SizedBox(width: 130, child: Text(label, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500))),
+        Expanded(child: Text(value, style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w500))),
       ]),
     );
   }
@@ -131,11 +111,11 @@ class EssPayslipScreen extends ConsumerWidget {
     final payslipsAsync = ref.watch(essPayslipsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'My Payslips'),
       body: payslipsAsync.when(
         data: (payslips) {
-          if (payslips.isEmpty) return const Center(child: Text('No payslips', style: TextStyle(color: _muted)));
+          if (payslips.isEmpty) return Center(child: Text('No payslips', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: payslips.length,
@@ -143,27 +123,28 @@ class EssPayslipScreen extends ConsumerWidget {
               final p = payslips[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-                child: Row(children: [
-                  Container(
-                    width: 48, height: 48,
-                    decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.receipt_long, color: _primary, size: 24),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Month ${p['month']}/${p['year']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-                    Text('Gross: ₹${p['gross_earnings'] ?? 0} • Deductions: ₹${p['total_deductions'] ?? 0}', style: const TextStyle(fontSize: 12, color: _muted)),
-                  ])),
-                  Text('₹${p['net_pay'] ?? 0}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _success)),
-                ]),
+                child: ApexCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(children: [
+                    Container(
+                      width: 48, height: 48,
+                      decoration: BoxDecoration(color: ApexColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                      child: Icon(Icons.receipt_long, color: ApexColors.primary, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Month ${p['month']}/${p['year']}', style: ApexTypography.titleMedium),
+                      Text('Gross: ₹${p['gross_earnings'] ?? 0} • Deductions: ₹${p['total_deductions'] ?? 0}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                    ])),
+                    Text('₹${p['net_pay'] ?? 0}', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.success)),
+                  ]),
+                ),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
     );
   }
@@ -177,11 +158,11 @@ class EssDocumentScreen extends ConsumerWidget {
     final docsAsync = ref.watch(essDocumentsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'My Documents'),
       body: docsAsync.when(
         data: (docs) {
-          if (docs.isEmpty) return const Center(child: Text('No documents', style: TextStyle(color: _muted)));
+          if (docs.isEmpty) return Center(child: Text('No documents', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,
@@ -189,23 +170,24 @@ class EssDocumentScreen extends ConsumerWidget {
               final d = docs[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-                child: Row(children: [
-                  const Icon(Icons.description, color: _primary, size: 24),
-                  const SizedBox(width: 14),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(d['title'] ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
-                    Text('${d['doc_type'] ?? ''} • ${d['file_name'] ?? ''}', style: const TextStyle(fontSize: 11, color: _muted)),
-                  ])),
-                  IconButton(icon: const Icon(Icons.download, size: 18, color: _muted), onPressed: () {}),
-                ]),
+                child: ApexCard(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(children: [
+                    Icon(Icons.description, color: ApexColors.primary, size: 24),
+                    const SizedBox(width: 14),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(d['title'] ?? '', style: ApexTypography.titleMedium),
+                      Text('${d['doc_type'] ?? ''} • ${d['file_name'] ?? ''}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                    ])),
+                    IconButton(icon: Icon(Icons.download, size: 18, color: ApexColors.neutral500), onPressed: () {}),
+                  ]),
+                ),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
     );
   }
@@ -219,11 +201,11 @@ class EssNotificationScreen extends ConsumerWidget {
     final notifsAsync = ref.watch(essNotificationsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'Notifications'),
       body: notifsAsync.when(
         data: (notifs) {
-          if (notifs.isEmpty) return const Center(child: Text('No notifications', style: TextStyle(color: _muted)));
+          if (notifs.isEmpty) return Center(child: Text('No notifications', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: notifs.length,
@@ -231,26 +213,23 @@ class EssNotificationScreen extends ConsumerWidget {
               final n = notifs[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: n['is_read'] == true ? _surface : _primary.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _border),
+                child: ApexCard(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(children: [
+                    Icon(n['is_read'] == true ? Icons.notifications_none : Icons.notifications_active, size: 20, color: n['is_read'] == true ? ApexColors.neutral500 : ApexColors.primary),
+                    const SizedBox(width: 14),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(n['title'] ?? '', style: ApexTypography.titleMedium.copyWith(fontWeight: n['is_read'] == true ? FontWeight.w400 : FontWeight.w600)),
+                      Text(n['message'] ?? '', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ])),
+                  ]),
                 ),
-                child: Row(children: [
-                  Icon(n['is_read'] == true ? Icons.notifications_none : Icons.notifications_active, size: 20, color: n['is_read'] == true ? _muted : _primary),
-                  const SizedBox(width: 14),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(n['title'] ?? '', style: TextStyle(fontSize: 13, fontWeight: n['is_read'] == true ? FontWeight.w400 : FontWeight.w600, color: _text)),
-                    Text(n['message'] ?? '', style: const TextStyle(fontSize: 12, color: _muted), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ])),
-                ]),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
     );
   }

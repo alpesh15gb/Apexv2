@@ -71,7 +71,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       duration: const Duration(milliseconds: 200),
       width: _sidebarExpanded ? 240 : 64,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F1419) : const Color(0xFFFAFBFC),
+        color: isDark ? ApexColors.darkBackground : ApexColors.neutral50,
         border: Border(right: BorderSide(color: isDark ? ApexColors.neutral800 : ApexColors.neutral200)),
       ),
       child: Column(
@@ -266,7 +266,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [ApexColors.primary, Color(0xFF3B82F6)]),
+                gradient: LinearGradient(colors: [ApexColors.primary, ApexColors.primary500]),
                 borderRadius: ApexRadius.smAll,
               ),
               child: const Center(child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12))),

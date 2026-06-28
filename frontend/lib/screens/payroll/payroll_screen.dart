@@ -5,15 +5,8 @@ import 'package:intl/intl.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
+import '../../design_system/colors.dart';
 
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 class PayslipItem {
   final String id, employeeId, status;
@@ -72,10 +65,10 @@ class PayrollScreen extends ConsumerWidget {
     final slipsAsync = ref.watch(payslipListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'Payroll'),
       body: Column(children: [
-        Container(color: _surface, child: Row(children: [
+        Container(color: Colors.white, child: Row(children: [
           _tab('Payslips', 0, tab, ref),
           _tab('Generate', 1, tab, ref),
         ])),
@@ -90,8 +83,8 @@ class PayrollScreen extends ConsumerWidget {
       onTap: () => ref.read(payrollTabProvider.notifier).state = index,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: active ? _primary : _border, width: 2))),
-        child: Text(label, textAlign: TextAlign.center, style: ApexTypography.body.copyWith(color: active ? _primary : _muted, fontWeight: active ? FontWeight.w600 : FontWeight.w400)),
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: active ? ApexColors.primary : ApexColors.neutral200, width: 2))),
+        child: Text(label, textAlign: TextAlign.center, style: ApexTypography.body.copyWith(color: active ? ApexColors.primary : ApexColors.neutral500, fontWeight: active ? FontWeight.w600 : FontWeight.w400)),
       ),
     ));
   }
@@ -100,31 +93,31 @@ class PayrollScreen extends ConsumerWidget {
     return slipsAsync.when(
       data: (slips) {
         if (slips.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(Icons.receipt_long, size: 48, color: _muted),
+          Icon(Icons.receipt_long, size: 48, color: ApexColors.neutral500),
           const SizedBox(height: 16),
-          Text('No Payslips', style: ApexTypography.headingMedium.copyWith(color: _text)),
+          Text('No Payslips', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          Text('Generate payslips from the Generate tab', style: ApexTypography.body.copyWith(color: _muted)),
+          Text('Generate payslips from the Generate tab', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
         ]));
         return ListView.builder(padding: const EdgeInsets.all(16), itemCount: slips.length, itemBuilder: (context, i) {
           final p = slips[i];
-          final statusColor = p.status == 'frozen' ? _primary : p.status == 'paid' ? _success : _muted;
+          final statusColor = p.status == 'frozen' ? ApexColors.primary : p.status == 'paid' ? ApexColors.success : ApexColors.neutral500;
           final monthName = DateFormat('MMMM').format(DateTime(p.year, p.month));
-          return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [
-            Container(width: 48, height: 48, decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text('${p.month}', style: ApexTypography.titleSmall.copyWith(color: _primary)),
-              Text(p.year.toString().substring(2), style: ApexTypography.captionSmall.copyWith(color: _primary)),
+          return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)), child: Row(children: [
+            Container(width: 48, height: 48, decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('${p.month}', style: ApexTypography.titleSmall.copyWith(color: ApexColors.primary)),
+              Text(p.year.toString().substring(2), style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary)),
             ])),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(monthName, style: ApexTypography.titleSmall.copyWith(color: _text)),
-              Text('P: ${p.presentDays} | A: ${p.absentDays} | HD: ${p.leaveDays} | OT: ${p.otHours.toStringAsFixed(1)}h', style: ApexTypography.caption.copyWith(color: _muted)),
+              Text(monthName, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+              Text('P: ${p.presentDays} | A: ${p.absentDays} | HD: ${p.leaveDays} | OT: ${p.otHours.toStringAsFixed(1)}h', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
             ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('₹${p.netPay.toStringAsFixed(0)}', style: ApexTypography.titleSmall.copyWith(color: _success)),
+              Text('₹${p.netPay.toStringAsFixed(0)}', style: ApexTypography.titleSmall.copyWith(color: ApexColors.success)),
               Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(p.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: statusColor, fontWeight: FontWeight.w600))),
             ]),
-            if (p.status == 'calculated') IconButton(icon: const Icon(Icons.lock, size: 16, color: _primary), onPressed: () => ref.read(payslipListProvider.notifier).freeze(p.id)),
+            if (p.status == 'calculated') IconButton(icon: Icon(Icons.lock, size: 16, color: ApexColors.primary), onPressed: () => ref.read(payslipListProvider.notifier).freeze(p.id)),
           ]));
         });
       },
@@ -141,7 +134,7 @@ class PayrollScreen extends ConsumerWidget {
     return StatefulBuilder(builder: (context, setS) => Padding(padding: const EdgeInsets.all(24), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Generate Payslips', style: ApexTypography.sectionTitle),
       const SizedBox(height: 8),
-      Text('Select month and year to generate payslips for all active employees.', style: ApexTypography.body.copyWith(color: _muted)),
+      Text('Select month and year to generate payslips for all active employees.', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
       const SizedBox(height: 24),
       Row(children: [
         Expanded(child: DropdownButtonFormField<int>(value: selectedMonth, decoration: const InputDecoration(labelText: 'Month', border: OutlineInputBorder()), items: [for (int i = 1; i <= 12; i++) DropdownMenuItem(value: i, child: Text(months[i - 1]))], onChanged: (v) => setS(() => selectedMonth = v ?? selectedMonth))),
@@ -154,15 +147,20 @@ class PayrollScreen extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Generating payslips...')));
           try {
             final result = await ref.read(payslipListProvider.notifier).generate(selectedMonth, selectedYear);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Generated ${result['generated']} payslips'), backgroundColor: _success));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Generated ${result['generated']} payslips'), backgroundColor: ApexColors.success));
           } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: _danger));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: ApexColors.error));
           }
         },
         icon: const Icon(Icons.calculate, size: 18),
         label: const Text('Generate Payslips'),
-        style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+        style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
       )),
     ])));
   }
 }
+
+
+
+
+

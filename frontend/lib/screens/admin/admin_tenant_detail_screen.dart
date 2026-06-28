@@ -3,17 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_text_field.dart';
 
 class AdminTenantDetailScreen extends ConsumerStatefulWidget {
   final String tenantId;
@@ -51,34 +47,34 @@ class _AdminTenantDetailScreenState extends ConsumerState<AdminTenantDetailScree
     if (_tenant == null) return const Scaffold(body: Center(child: Text('Tenant not found')));
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: Text(_tenant!['name'] ?? 'Tenant', style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(_tenant!['name'] ?? 'Tenant', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/tenants')),
         actions: [
           if (_tenant!['subscription_status'] == 'suspended')
             TextButton.icon(
               onPressed: () => _activateTenant(),
-              icon: const Icon(Icons.check_circle, size: 16, color: _success),
-              label: const Text('Activate', style: TextStyle(color: _success)),
+              icon: Icon(Icons.check_circle, size: 16, color: ApexColors.successDark),
+              label: const Text('Activate', style: TextStyle(color: ApexColors.successDark)),
             )
           else
             TextButton.icon(
               onPressed: () => _suspendTenant(),
-              icon: const Icon(Icons.block, size: 16, color: _danger),
-              label: const Text('Suspend', style: TextStyle(color: _danger)),
+              icon: Icon(Icons.block, size: 16, color: ApexColors.errorDark),
+              label: const Text('Suspend', style: TextStyle(color: ApexColors.errorDark)),
             ),
           const SizedBox(width: 8),
         ],
         bottom: TabBar(
           controller: _tabCtrl,
           isScrollable: true,
-          labelColor: _primary,
-          unselectedLabelColor: _muted,
-          indicatorColor: _primary,
+          labelColor: ApexColors.primary600,
+          unselectedLabelColor: ApexColors.neutral500,
+          indicatorColor: ApexColors.primary600,
           tabs: const [
             Tab(text: 'Overview'),
             Tab(text: 'Subscription'),
@@ -111,7 +107,7 @@ class _AdminTenantDetailScreenState extends ConsumerState<AdminTenantDetailScree
         content: Text('Suspend ${_tenant!['name']}? All users will lose access.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: _danger), child: const Text('Suspend')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: ApexColors.errorDark), child: const Text('Suspend')),
         ],
       ),
     );
@@ -171,9 +167,9 @@ class _OverviewTab extends ConsumerWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
+        Text(title, style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         const SizedBox(height: 16),
         ...children,
       ]),
@@ -184,8 +180,8 @@ class _OverviewTab extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(children: [
-        SizedBox(width: 140, child: Text(label, style: const TextStyle(fontSize: 13, color: _muted))),
-        Expanded(child: Text(value, style: const TextStyle(fontSize: 13, color: _text, fontWeight: FontWeight.w500))),
+        SizedBox(width: 140, child: Text(label, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500))),
+        Expanded(child: Text(value, style: ApexTypography.caption.copyWith(color: ApexColors.neutral900))),
       ]),
     );
   }
@@ -229,9 +225,9 @@ class _SubscriptionTabState extends ConsumerState<_SubscriptionTab> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)),
+            decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(12), border: Border.all(color: ApexColors.neutral200)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Current Subscription', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
+              Text('Current Subscription', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
               const SizedBox(height: 12),
               _row('Status', _subscription!['status'] ?? '—'),
               _row('Plan', _subscription!['plan_id'] ?? '—'),
@@ -242,20 +238,20 @@ class _SubscriptionTabState extends ConsumerState<_SubscriptionTab> {
           ),
           const SizedBox(height: 16),
         ],
-        const Text('Available Plans', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
+        Text('Available Plans', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         const SizedBox(height: 12),
         ..._plans.map((p) => Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+          decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
           child: Row(children: [
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(p['name'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-              Text('₹${p['price_monthly']}/mo • ${p['max_employees']} employees', style: const TextStyle(fontSize: 12, color: _muted)),
+              Text(p['name'] ?? '', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+              Text('₹${p['price_monthly']}/mo • ${p['max_employees']} employees', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
             ])),
             ElevatedButton(
               onPressed: () => _assignPlan(p['id']),
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
               child: const Text('Assign'),
             ),
           ]),
@@ -266,8 +262,8 @@ class _SubscriptionTabState extends ConsumerState<_SubscriptionTab> {
 
   Widget _row(String label, String value) {
     return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
-      SizedBox(width: 120, child: Text(label, style: const TextStyle(fontSize: 13, color: _muted))),
-      Text(value, style: const TextStyle(fontSize: 13, color: _text, fontWeight: FontWeight.w500)),
+      SizedBox(width: 120, child: Text(label, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500))),
+      Text(value, style: ApexTypography.caption.copyWith(color: ApexColors.neutral900, fontWeight: FontWeight.w600)),
     ]));
   }
 
@@ -317,7 +313,7 @@ class _LimitsTabState extends ConsumerState<_LimitsTab> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Resource Limits', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _text)),
+        Text('Resource Limits', style: ApexTypography.titleLarge.copyWith(color: ApexColors.neutral900)),
         const SizedBox(height: 16),
         ...defaultLimits.map((lim) {
           final existing = _limits.where((l) => l['key'] == lim['key']).toList();
@@ -328,23 +324,23 @@ class _LimitsTabState extends ConsumerState<_LimitsTab> {
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: isWarning ? _warning : _border)),
+            decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: isWarning ? ApexColors.warning : ApexColors.neutral200)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                Expanded(child: Text(lim['label'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text))),
-                if (isWarning) const Icon(Icons.warning, size: 16, color: _warning),
+                Expanded(child: Text(lim['label'] as String, style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900))),
+                if (isWarning) Icon(Icons.warning, size: 16, color: ApexColors.warning),
                 const SizedBox(width: 8),
-                Text('$currentVal / $maxVal', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isWarning ? _warning : _text)),
+                Text('$currentVal / $maxVal', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isWarning ? ApexColors.warning : ApexColors.neutral900)),
                 IconButton(
-                  icon: const Icon(Icons.edit, size: 16, color: _muted),
+                  icon: Icon(Icons.edit, size: 16, color: ApexColors.neutral500),
                   onPressed: () => _editLimit(lim['key'] as String, maxVal as int),
                 ),
               ]),
               const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: pct / 100,
-                backgroundColor: _border,
-                color: isWarning ? _warning : _primary,
+                backgroundColor: ApexColors.neutral200,
+                color: isWarning ? ApexColors.warning : ApexColors.primary600,
                 minHeight: 6,
               ),
             ]),
@@ -419,7 +415,7 @@ class _FeaturesTabState extends ConsumerState<_FeaturesTab> {
         padding: const EdgeInsets.all(16),
         child: Row(children: [
           Expanded(child: TextField(
-            decoration: InputDecoration(hintText: 'Search features...', prefixIcon: const Icon(Icons.search, size: 18), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+            decoration: InputDecoration(hintText: 'Search features...', prefixIcon: Icon(Icons.search, size: 18), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
             onChanged: (v) => setState(() => _search = v),
           )),
           const SizedBox(width: 12),
@@ -439,15 +435,15 @@ class _FeaturesTabState extends ConsumerState<_FeaturesTab> {
             return Container(
               margin: const EdgeInsets.only(bottom: 4),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(6)),
               child: Row(children: [
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(f['name'] ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: _text)),
-                  Text('${f['category']} • ${f['code']}', style: const TextStyle(fontSize: 11, color: _muted)),
+                  Text(f['name'] ?? '', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w500, color: ApexColors.neutral900)),
+                  Text('${f['category']} • ${f['code']}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                 ])),
                 Switch(
                   value: f['is_enabled'] == true,
-                  activeColor: _primary,
+                  activeColor: ApexColors.primary600,
                   onChanged: (v) => _toggleFeature(f['code'], v),
                 ),
               ]),
@@ -504,18 +500,18 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
         return Container(
           margin: const EdgeInsets.only(bottom: 6),
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+          decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
           child: Row(children: [
-            CircleAvatar(radius: 16, backgroundColor: _primary.withOpacity(0.1), child: Text((u['first_name'] ?? '?')[0].toUpperCase(), style: const TextStyle(color: _primary, fontWeight: FontWeight.w700))),
+            CircleAvatar(radius: 16, backgroundColor: ApexColors.primary600.withOpacity(0.1), child: Text((u['first_name'] ?? '?')[0].toUpperCase(), style: ApexTypography.titleLarge.copyWith(color: ApexColors.primary600))),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${u['first_name'] ?? ''} ${u['last_name'] ?? ''}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
-              Text(u['employee_code'] ?? '', style: const TextStyle(fontSize: 11, color: _muted)),
+              Text('${u['first_name'] ?? ''} ${u['last_name'] ?? ''}', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+              Text(u['employee_code'] ?? '', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
             ])),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: (u['status'] == 'active' ? _success : _muted).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: Text((u['status'] ?? 'unknown').toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: u['status'] == 'active' ? _success : _muted)),
+              decoration: BoxDecoration(color: (u['status'] == 'active' ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              child: Text((u['status'] ?? 'unknown').toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: u['status'] == 'active' ? ApexColors.successDark : ApexColors.neutral500)),
             ),
           ]),
         );
@@ -557,15 +553,16 @@ class _AuditTabState extends ConsumerState<_AuditTab> {
         return Container(
           margin: const EdgeInsets.only(bottom: 4),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(6)),
+          decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(6)),
           child: Row(children: [
-            const Icon(Icons.history, size: 16, color: _muted),
+            Icon(Icons.history, size: 16, color: ApexColors.neutral500),
             const SizedBox(width: 12),
-            Expanded(child: Text(log['action'] ?? '', style: const TextStyle(fontSize: 13, color: _text))),
-            Text(log['timestamp']?.toString().substring(0, 16) ?? '', style: const TextStyle(fontSize: 11, color: _muted)),
+            Expanded(child: Text(log['action'] ?? '', style: ApexTypography.caption.copyWith(color: ApexColors.neutral900))),
+            Text(log['timestamp']?.toString().substring(0, 16) ?? '', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
           ]),
         );
       },
     );
   }
 }
+

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/secure_storage.dart';
+import '../design_system/colors.dart';
+import '../design_system/typography.dart';
 import '../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -42,7 +44,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: ApexColors.darkBackground,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -54,27 +56,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'APEX HRMS',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
+              style: ApexTypography.pageTitle.copyWith(
+                color: ApexColors.darkOnSurface,
                 letterSpacing: 3.0,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Enterprise HR Management Platform',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 14,
+              style: ApexTypography.body.copyWith(
+                color: ApexColors.darkOnSurfaceVariant,
                 letterSpacing: 1.0,
               ),
             ),
             const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              color: Color(0xFF3B82F6),
+            CircularProgressIndicator(
+              color: ApexColors.primary500,
               strokeWidth: 3,
             ),
           ],

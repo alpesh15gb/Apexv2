@@ -3,15 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
 
 final notificationsProvider = StateNotifierProvider<NotificationsNotifier, NotificationsState>((ref) {
   return NotificationsNotifier(ref.read(dioProvider));
@@ -80,20 +74,21 @@ class NotificationCenterScreen extends ConsumerWidget {
     final notifState = ref.watch(notificationsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         title: Row(
           children: [
-            const Text('Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text('Notifications', style: ApexTypography.cardTitle),
             if (notifState.unread > 0) ...[
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(10)),
-                child: Text('${notifState.unread}', style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600)),
+                decoration: BoxDecoration(color: ApexColors.primary, borderRadius: BorderRadius.circular(10)),
+                child: Text('${notifState.unread}', style: ApexTypography.badge.copyWith(color: Colors.white)),
               ),
             ],
           ],
@@ -102,7 +97,7 @@ class NotificationCenterScreen extends ConsumerWidget {
           if (notifState.unread > 0)
             TextButton(
               onPressed: () => ref.read(notificationsProvider.notifier).markAllRead(),
-              child: const Text('Mark All Read'),
+              child: Text('Mark All Read', style: ApexTypography.button.copyWith(color: ApexColors.primary)),
             ),
           const SizedBox(width: 16),
         ],
@@ -114,11 +109,11 @@ class NotificationCenterScreen extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.notifications_none, size: 64, color: _muted.withOpacity(0.3)),
+                      Icon(Icons.notifications_none, size: 64, color: ApexColors.neutral500.withValues(alpha: 0.3)),
                       const SizedBox(height: 16),
-                      const Text('No Notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+                      Text('No Notifications', style: ApexTypography.sectionTitle),
                       const SizedBox(height: 8),
-                      const Text('You\'re all caught up!', style: TextStyle(fontSize: 13, color: _muted)),
+                      Text('You\'re all caught up!', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                     ],
                   ),
                 )
@@ -131,9 +126,9 @@ class NotificationCenterScreen extends ConsumerWidget {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
-                        color: isRead ? _surface : _primary.withOpacity(0.03),
+                        color: isRead ? Colors.white : ApexColors.primary.withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: isRead ? _border : _primary.withOpacity(0.2)),
+                        border: Border.all(color: isRead ? ApexColors.neutral200 : ApexColors.primary.withValues(alpha: 0.2)),
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -141,38 +136,36 @@ class NotificationCenterScreen extends ConsumerWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: isRead ? _muted.withOpacity(0.1) : _primary.withOpacity(0.1),
+                            color: isRead ? ApexColors.neutral500.withValues(alpha: 0.1) : ApexColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
                             isRead ? Icons.notifications_none : Icons.notifications_active,
                             size: 20,
-                            color: isRead ? _muted : _primary,
+                            color: isRead ? ApexColors.neutral500 : ApexColors.primary,
                           ),
                         ),
                         title: Text(
                           n['title'] ?? '',
-                          style: TextStyle(
-                            fontSize: 13,
+                          style: ApexTypography.body.copyWith(
                             fontWeight: isRead ? FontWeight.w400 : FontWeight.w600,
-                            color: _text,
                           ),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (n['message'] != null)
-                              Text(n['message'], style: const TextStyle(fontSize: 12, color: _muted), maxLines: 2, overflow: TextOverflow.ellipsis),
+                              Text(n['message'], style: ApexTypography.captionSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
                             const SizedBox(height: 4),
                             Text(
                               _formatTime(n['created_at']),
-                              style: const TextStyle(fontSize: 11, color: _muted),
+                              style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500),
                             ),
                           ],
                         ),
                         trailing: !isRead
                             ? IconButton(
-                                icon: const Icon(Icons.check, size: 16, color: _primary),
+                                icon: Icon(Icons.check, size: 16, color: ApexColors.primary),
                                 onPressed: () => ref.read(notificationsProvider.notifier).markRead(n['id']),
                                 tooltip: 'Mark as read',
                               )

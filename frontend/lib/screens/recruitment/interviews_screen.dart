@@ -3,17 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 final interviewsProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -33,10 +27,10 @@ class InterviewsScreen extends ConsumerWidget {
     final interviewsAsync = ref.watch(interviewsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Interviews', style: TextStyle(fontWeight: FontWeight.w600)),
         actions: [
@@ -44,7 +38,7 @@ class InterviewsScreen extends ConsumerWidget {
             onPressed: () => _showScheduleDialog(context, ref),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Schedule'),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
           ),
           const SizedBox(width: 16),
         ],
@@ -56,11 +50,11 @@ class InterviewsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.event, size: 64, color: _muted.withOpacity(0.3)),
+                  Icon(Icons.event, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
                   const SizedBox(height: 16),
-                  const Text('No Interviews Scheduled', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+                  const Text('No Interviews Scheduled', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                   const SizedBox(height: 8),
-                  const Text('Schedule interviews for your candidates', style: TextStyle(fontSize: 13, color: _muted)),
+                  const Text('Schedule interviews for your candidates', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
                 ],
               ),
             );
@@ -72,7 +66,7 @@ class InterviewsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: _danger))),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
       ),
     );
   }
@@ -104,8 +98,8 @@ class InterviewsScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Date & Time', style: TextStyle(fontSize: 13, color: _muted)),
-                  subtitle: Text(DateFormat('dd MMM yyyy, HH:mm').format(scheduledAt), style: const TextStyle(fontSize: 14, color: _text)),
+                  title: const Text('Date & Time', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
+                  subtitle: Text(DateFormat('dd MMM yyyy, HH:mm').format(scheduledAt), style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
                     final date = await showDatePicker(context: ctx, initialDate: scheduledAt, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 90)));
@@ -138,12 +132,12 @@ class InterviewsScreen extends ConsumerWidget {
                   });
                   Navigator.pop(ctx);
                   ref.invalidate(interviewsProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interview scheduled'), backgroundColor: _success));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interview scheduled'), backgroundColor: ApexColors.successDark));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: _danger));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
               child: const Text('Schedule'),
             ),
           ],
@@ -168,7 +162,7 @@ class _InterviewCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
       child: Row(
         children: [
           Container(
@@ -186,25 +180,25 @@ class _InterviewCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Text(_typeName(type), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+                  Text(_typeName(type), style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                   const SizedBox(width: 8),
                   _statusBadge(status),
                   if (rating != null) ...[
                     const SizedBox(width: 8),
-                    Icon(Icons.star, size: 14, color: _warning),
-                    Text('$rating', style: const TextStyle(fontSize: 12, color: _warning, fontWeight: FontWeight.w600)),
+                    Icon(Icons.star, size: 14, color: ApexColors.warning),
+                    Text('$rating', style: ApexTypography.captionMedium.copyWith(color: ApexColors.warning, fontWeight: FontWeight.w600)),
                   ],
                 ]),
                 const SizedBox(height: 4),
                 Row(children: [
-                  Icon(Icons.access_time, size: 12, color: _muted),
+                  Icon(Icons.access_time, size: 12, color: ApexColors.neutral500),
                   const SizedBox(width: 4),
-                  Text(_formatDateTime(scheduledAt), style: const TextStyle(fontSize: 12, color: _muted)),
+                  Text(_formatDateTime(scheduledAt), style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                   if (location.isNotEmpty) ...[
                     const SizedBox(width: 12),
-                    Icon(Icons.location_on, size: 12, color: _muted),
+                    Icon(Icons.location_on, size: 12, color: ApexColors.neutral500),
                     const SizedBox(width: 4),
-                    Text(location, style: const TextStyle(fontSize: 12, color: _muted)),
+                    Text(location, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                   ],
                 ]),
               ],
@@ -212,7 +206,7 @@ class _InterviewCard extends StatelessWidget {
           ),
           if (status == 'scheduled')
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, size: 18, color: _muted),
+              icon: Icon(Icons.more_vert, size: 18, color: ApexColors.neutral500),
               itemBuilder: (ctx) => [
                 const PopupMenuItem(value: 'feedback', child: Text('Submit Feedback')),
                 const PopupMenuItem(value: 'cancel', child: Text('Cancel')),
@@ -248,11 +242,11 @@ class _InterviewCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Rating', style: TextStyle(fontSize: 13, color: _muted)),
+                const Text('Rating', style: TextStyle(fontSize: 13, color: ApexColors.neutral500)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (i) => IconButton(
-                    icon: Icon(i < rating ? Icons.star : Icons.star_border, color: _warning, size: 28),
+                    icon: Icon(i < rating ? Icons.star : Icons.star_border, color: ApexColors.warning, size: 28),
                     onPressed: () => setDialogState(() => rating = i + 1),
                   )),
                 ),
@@ -273,9 +267,9 @@ class _InterviewCard extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feedback submitted'), backgroundColor: _success));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feedback submitted'), backgroundColor: ApexColors.successDark));
               },
-              style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
               child: const Text('Submit'),
             ),
           ],
@@ -314,11 +308,12 @@ class _InterviewCard extends StatelessWidget {
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'scheduled': return _primary;
-      case 'completed': return _success;
-      case 'cancelled': return _danger;
-      case 'no_show': return _warning;
-      default: return _muted;
+      case 'scheduled': return ApexColors.primary600;
+      case 'completed': return ApexColors.successDark;
+      case 'cancelled': return ApexColors.error;
+      case 'no_show': return ApexColors.warning;
+      default: return ApexColors.neutral500;
     }
   }
 }
+

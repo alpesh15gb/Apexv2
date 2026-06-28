@@ -3,17 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_card.dart';
 
 final essDashboardProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -29,7 +22,7 @@ class EssDashboardScreen extends ConsumerWidget {
     final dashAsync = ref.watch(essDashboardProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'My Dashboard'),
       body: dashAsync.when(
         data: (dash) {
@@ -49,7 +42,7 @@ class EssDashboardScreen extends ConsumerWidget {
                 _QuickActions(),
                 const SizedBox(height: 16),
                 if (balances.isNotEmpty) ...[
-                  const Text('Leave Balance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+                  Text('Leave Balance', style: ApexTypography.cardTitle),
                   const SizedBox(height: 8),
                   ...balances.map((b) => _LeaveBalanceCard(balance: b)),
                 ],
@@ -58,7 +51,7 @@ class EssDashboardScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: _danger))),
+        error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: ApexColors.error))),
       ),
     );
   }
@@ -75,15 +68,15 @@ class _WelcomeCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [_primary, Color(0xFF1D4ED8)]),
+        gradient: LinearGradient(colors: [ApexColors.primary600, ApexColors.primary800]),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Welcome, $name', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+          Text('Welcome, $name', style: ApexTypography.sectionTitle.copyWith(color: Colors.white)),
           const SizedBox(height: 4),
-          Text('Employee Code: $code', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
+          Text('Employee Code: $code', style: ApexTypography.caption.copyWith(color: Colors.white.withValues(alpha: 0.8))),
         ],
       ),
     );
@@ -101,29 +94,23 @@ class _AttendanceCard extends StatelessWidget {
     final checkIn = hasAttendance ? attendance['check_in'] : null;
     final checkOut = hasAttendance ? attendance['check_out'] : null;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
-      ),
+    return ApexCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.access_time, size: 18, color: _primary),
+              Icon(Icons.access_time, size: 18, color: ApexColors.primary600),
               const SizedBox(width: 8),
-              const Text('Today\'s Attendance', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+              Text('Today\'s Attendance', style: ApexTypography.titleMedium),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _statusColor(status).withOpacity(0.1),
+                  color: _statusColor(status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(status.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor(status))),
+                child: Text(status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: _statusColor(status))),
               ),
             ],
           ),
@@ -143,19 +130,19 @@ class _AttendanceCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: _muted)),
+        Text(label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
         const SizedBox(height: 4),
-        Text(time, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+        Text(time, style: ApexTypography.titleMedium.copyWith(fontSize: 16)),
       ],
     );
   }
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'present': return _success;
-      case 'absent': return _danger;
-      case 'late': return _warning;
-      default: return _muted;
+      case 'present': return ApexColors.success;
+      case 'absent': return ApexColors.error;
+      case 'late': return ApexColors.warning;
+      default: return ApexColors.neutral500;
     }
   }
 }
@@ -163,25 +150,19 @@ class _AttendanceCard extends StatelessWidget {
 class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
-      ),
+    return ApexCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Quick Actions', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+          Text('Quick Actions', style: ApexTypography.titleMedium),
           const SizedBox(height: 12),
           Row(
             children: [
-              _actionBtn(Icons.login, 'Clock In', _success, () => _clockIn(context)),
+              _actionBtn(Icons.login, 'Clock In', ApexColors.success, () => _clockIn(context)),
               const SizedBox(width: 12),
-              _actionBtn(Icons.logout, 'Clock Out', _danger, () => _clockOut(context)),
+              _actionBtn(Icons.logout, 'Clock Out', ApexColors.error, () => _clockOut(context)),
               const SizedBox(width: 12),
-              _actionBtn(Icons.event_busy, 'Apply Leave', _primary, () => context.push('/leaves/apply')),
+              _actionBtn(Icons.event_busy, 'Apply Leave', ApexColors.primary600, () => context.push('/leaves/apply')),
             ],
           ),
         ],
@@ -197,14 +178,14 @@ class _QuickActions extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
             children: [
               Icon(icon, size: 20, color: color),
               const SizedBox(height: 4),
-              Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+              Text(label, style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: color)),
             ],
           ),
         ),
@@ -233,33 +214,30 @@ class _LeaveBalanceCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(balance['type'] ?? 'Leave', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
-                const SizedBox(height: 4),
-                Text('$used used of $total', style: const TextStyle(fontSize: 11, color: _muted)),
-              ],
+      child: ApexCard(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(balance['type'] ?? 'Leave', style: ApexTypography.titleMedium),
+                  const SizedBox(height: 4),
+                  Text('$used used of $total', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: ApexColors.primary600.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('${available.toInt()} left', style: ApexTypography.titleMedium.copyWith(fontSize: 14, fontWeight: FontWeight.w700, color: ApexColors.primary600)),
             ),
-            child: Text('${available.toInt()} left', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _primary)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

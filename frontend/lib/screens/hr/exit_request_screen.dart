@@ -2,19 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _warning = Color(0xFFF59E0B);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
 
 class ExitItem {
   final String id, employeeId, status, clearanceStatus;
@@ -50,6 +43,18 @@ class ExitListNotifier extends StateNotifier<AsyncValue<List<ExitItem>>> {
   }
 }
 
+ApexBadgeType _statusBadge(String status) {
+  if (status == 'approved') return ApexBadgeType.success;
+  if (status == 'rejected') return ApexBadgeType.danger;
+  return ApexBadgeType.warning;
+}
+
+Color _statusColor(String status) {
+  if (status == 'approved') return ApexColors.success;
+  if (status == 'rejected') return ApexColors.error;
+  return ApexColors.warning;
+}
+
 class ExitRequestScreen extends ConsumerWidget {
   const ExitRequestScreen({Key? key}) : super(key: key);
 
@@ -58,34 +63,40 @@ class ExitRequestScreen extends ConsumerWidget {
     final exitsAsync = ref.watch(exitListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'Exit Requests'),
       body: exitsAsync.when(
         data: (items) {
           if (items.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.exit_to_app, size: 48, color: _muted),
+            Icon(Icons.exit_to_app, size: 48, color: ApexColors.neutral400),
             const SizedBox(height: 16),
-            Text('No Exit Requests', style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text('No Exit Requests', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
           ]));
           return ListView.builder(padding: const EdgeInsets.all(16), itemCount: items.length, itemBuilder: (context, i) {
             final e = items[i];
-            final statusColor = e.status == 'approved' ? _success : e.status == 'rejected' ? _danger : _warning;
-            return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [
-              Container(width: 40, height: 40, decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.exit_to_app, color: statusColor, size: 20)),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Resigned: ${DateFormat('MMM dd, yyyy').format(e.resignationDate)}', style: ApexTypography.titleSmall.copyWith(color: _text)),
-                Text('Last Working: ${e.lastWorkingDate != null ? DateFormat('MMM dd, yyyy').format(e.lastWorkingDate!) : 'TBD'} • Clearance: ${e.clearanceStatus}', style: ApexTypography.caption.copyWith(color: _muted)),
-                if (e.reason != null && e.reason!.isNotEmpty) Text(e.reason!, style: ApexTypography.captionSmall.copyWith(color: _muted), maxLines: 2, overflow: TextOverflow.ellipsis),
-              ])),
-              Column(children: [
-                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(e.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: statusColor, fontWeight: FontWeight.w600))),
-                if (e.status == 'pending') Row(children: [
-                  IconButton(icon: const Icon(Icons.check, size: 18, color: _success), onPressed: () => ref.read(exitListProvider.notifier).approve(e.id)),
-                  IconButton(icon: const Icon(Icons.close, size: 18, color: _danger), onPressed: () => ref.read(exitListProvider.notifier).reject(e.id)),
+            final statusColor = _statusColor(e.status);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ApexCard(
+                padding: const EdgeInsets.all(14),
+                child: Row(children: [
+                  Container(width: 40, height: 40, decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.exit_to_app, color: statusColor, size: 20)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Resigned: ${DateFormat('MMM dd, yyyy').format(e.resignationDate)}', style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                    Text('Last Working: ${e.lastWorkingDate != null ? DateFormat('MMM dd, yyyy').format(e.lastWorkingDate!) : 'TBD'} • Clearance: ${e.clearanceStatus}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+                    if (e.reason != null && e.reason!.isNotEmpty) Text(e.reason!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ])),
+                  Column(children: [
+                    ApexBadge(label: e.status, type: _statusBadge(e.status)),
+                    if (e.status == 'pending') Row(children: [
+                      IconButton(icon: Icon(Icons.check, size: 18, color: ApexColors.success), onPressed: () => ref.read(exitListProvider.notifier).approve(e.id)),
+                      IconButton(icon: Icon(Icons.close, size: 18, color: ApexColors.error), onPressed: () => ref.read(exitListProvider.notifier).reject(e.id)),
+                    ]),
+                  ]),
                 ]),
-              ]),
-            ]));
+              ),
+            );
           });
         },
         loading: () => const Center(child: CircularProgressIndicator()),

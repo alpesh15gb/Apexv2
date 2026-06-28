@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../services/access_control_service.dart';
 import './zone_list_screen.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
 import '../../core/dio_client.dart';
 
 final doorsProvider = FutureProvider((ref) async {
@@ -38,25 +45,25 @@ class _DoorListScreenState extends ConsumerState<DoorListScreen> {
       builder: (context) {
         final zonesAsync = ref.watch(zonesProvider);
         return AlertDialog(
-          title: const Text('Add Access Door'),
+          title: Text('Add Access Door', style: ApexTypography.sectionTitle),
           content: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextFormField(
+                ApexTextField(
+                  label: 'Door Name',
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Door Name *'),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  required: true,
                 ),
                 const SizedBox(height: 12),
                 zonesAsync.maybeWhen(
-                  data: (list) => DropdownButtonFormField<String>(
+                  data: (list) => ApexDropdown<String>(
+                    label: 'Access Zone',
                     value: _selectedZoneId,
-                    decoration: const InputDecoration(labelText: 'Access Zone *'),
+                    required: true,
                     items: list.map((z) => DropdownMenuItem<String>(value: z['id'], child: Text(z['name']))).toList(),
                     onChanged: (v) => setState(() => _selectedZoneId = v),
-                    validator: (v) => v == null ? 'Required' : null,
                   ),
                   orElse: () => const SizedBox(),
                 ),
@@ -64,8 +71,9 @@ class _DoorListScreenState extends ConsumerState<DoorListScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-            TextButton(
+            ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(context)),
+            ApexButton(
+              label: 'Add',
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   try {
@@ -83,13 +91,12 @@ class _DoorListScreenState extends ConsumerState<DoorListScreen> {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
                       );
                     }
                   }
                 }
               },
-              child: const Text('Add'),
             ),
           ],
         );
@@ -102,7 +109,8 @@ class _DoorListScreenState extends ConsumerState<DoorListScreen> {
     final doorsAsync = ref.watch(doorsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Access Doors')),
+      backgroundColor: ApexColors.neutral50,
+      appBar: const ApexAppBar(title: 'Access Doors'),
       body: doorsAsync.when(
         data: (doors) {
           if (doors.isEmpty) {
@@ -118,37 +126,53 @@ class _DoorListScreenState extends ConsumerState<DoorListScreen> {
             itemCount: doors.length,
             itemBuilder: (context, idx) {
               final d = doors[idx];
-              return Card(
-                child: ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.sensor_door)),
-                  title: Text(d['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Status: ${d['is_active'] ? 'Active' : 'Inactive'}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.lock_open, color: Colors.green),
-                    tooltip: 'Remote Unlock',
-                    onPressed: () async {
-                      try {
-                        // Call remote unlock command
-                        final deviceId = d['device_id'];
-                        if (deviceId != null) {
-                          await ref.read(dioProvider).post('/commands/', data: {
-                            'device_id': deviceId,
-                            'command_type': 'unlock_door',
-                          });
-                          if (context.mounted) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ApexCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: ApexColors.primary100,
+                        child: Icon(Icons.sensor_door, color: ApexColors.primary600),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(d['name'], style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                            Text('Status: ${d['is_active'] ? 'Active' : 'Inactive'}', style: ApexTypography.captionSmall.copyWith(color: d['is_active'] ? ApexColors.success : ApexColors.neutral500)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.lock_open, color: ApexColors.success),
+                        tooltip: 'Remote Unlock',
+                        onPressed: () async {
+                          try {
+                            final deviceId = d['device_id'];
+                            if (deviceId != null) {
+                              await ref.read(dioProvider).post('/commands/', data: {
+                                'device_id': deviceId,
+                                'command_type': 'unlock_door',
+                              });
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Unlock command transmitted'), backgroundColor: ApexColors.success),
+                                );
+                              }
+                            } else {
+                              throw Exception('No device linked to this door.');
+                            }
+                          } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Unlock command transmitted'), backgroundColor: Colors.green),
+                              SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
                             );
                           }
-                        } else {
-                          throw Exception('No device linked to this door.');
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
-                        );
-                      }
-                    },
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -163,7 +187,8 @@ class _DoorListScreenState extends ConsumerState<DoorListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addDoor,
-        child: const Icon(Icons.add),
+        backgroundColor: ApexColors.primary600,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

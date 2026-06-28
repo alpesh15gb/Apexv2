@@ -3,18 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/shift_provider.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
 
 class ShiftListScreen extends ConsumerWidget {
   const ShiftListScreen({Key? key}) : super(key: key);
@@ -25,7 +19,7 @@ class ShiftListScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       body: Column(
         children: [
           // Header
@@ -50,13 +44,13 @@ class ShiftListScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 40, color: _danger),
+                    Icon(Icons.error_outline, size: 40, color: ApexColors.error),
                     const SizedBox(height: 12),
                     Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
                     const SizedBox(height: 12),
-                    ElevatedButton(
+                    ApexButton(
+                      label: 'Retry',
                       onPressed: () => ref.invalidate(shiftListProvider),
-                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -67,7 +61,7 @@ class ShiftListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/shifts/create'),
-        backgroundColor: _primary,
+        backgroundColor: ApexColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -83,12 +77,12 @@ class _Header extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(isMobile ? 16 : 20, 12, isMobile ? 16 : 20, 8),
       decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Row(
         children: [
-          Text('Shifts', style: ApexTypography.pageTitle.copyWith(color: _text)),
+          Text('Shifts', style: ApexTypography.pageTitle.copyWith(color: ApexColors.neutral900)),
           const Spacer(),
           if (!isMobile) ...[
             IconButton(icon: const Icon(Icons.assignment_ind_outlined, size: 18), tooltip: 'Assign Shifts', onPressed: () => context.push('/shifts/assign')),
@@ -127,57 +121,26 @@ class _ShiftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ApexCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: shift.isActive ? _border : _muted.withOpacity(0.3)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+              Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: shift.isNightShift ? _warning.withOpacity(0.1) : _primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  shift.isNightShift ? 'NIGHT' : 'DAY',
-                  style: ApexTypography.captionSmall.copyWith(
-                    color: shift.isNightShift ? _warning : _primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              shift.isNightShift ? ApexBadge.warning('NIGHT') : ApexBadge.info('DAY'),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: shift.isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  shift.isActive ? 'ACTIVE' : 'INACTIVE',
-                  style: ApexTypography.captionSmall.copyWith(
-                    color: shift.isActive ? _success : _muted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              shift.isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
             ],
           ),
           const SizedBox(height: 10),
-          Text(shift.name, style: ApexTypography.titleMedium.copyWith(color: _text)),
+          Text(shift.name, style: ApexTypography.titleMedium.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.access_time, size: 14, color: _muted),
+              Icon(Icons.access_time, size: 14, color: ApexColors.neutral500),
               const SizedBox(width: 6),
-              Text('${shift.startTime} - ${shift.endTime}', style: ApexTypography.bodySmall.copyWith(color: _muted)),
+              Text('${shift.startTime} - ${shift.endTime}', style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500)),
             ],
           ),
           const Spacer(),
@@ -206,9 +169,9 @@ class _Rule extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: ApexTypography.captionSmall.copyWith(color: _muted)),
+        Text(label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
         const SizedBox(width: 4),
-        Text(value, style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: _text)),
+        Text(value, style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
       ],
     );
   }
@@ -231,21 +194,16 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: _muted),
+            Icon(icon, size: 48, color: ApexColors.neutral500),
             const SizedBox(height: 16),
-            Text(title, style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text(title, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text(description, style: ApexTypography.bodySmall.copyWith(color: _muted), textAlign: TextAlign.center),
+            Text(description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
-              ElevatedButton(
+              ApexButton(
+                label: actionLabel!,
                 onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                ),
-                child: Text(actionLabel!),
               ),
             ],
           ],
@@ -254,3 +212,4 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+

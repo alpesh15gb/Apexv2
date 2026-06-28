@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/shift_provider.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_text_field.dart';
 
 class ShiftCreateScreen extends ConsumerStatefulWidget {
   const ShiftCreateScreen({Key? key}) : super(key: key);
@@ -67,14 +64,14 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
         await ref.read(shiftListProvider.notifier).addShift(data);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Shift created successfully'), backgroundColor: _success),
+            const SnackBar(content: Text('Shift created successfully'), backgroundColor: ApexColors.success),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: _danger),
+            SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
           );
         }
       }
@@ -84,36 +81,23 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: const ApexAppBar(title: 'Create Shift'),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Container(
+          child: ApexCard(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _border),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Shift Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+                Text('Shift Details', style: ApexTypography.titleMedium.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                 const SizedBox(height: 20),
-                TextFormField(
+                ApexTextField(
+                  label: 'Shift Name',
                   controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Shift Name *',
-                    labelStyle: const TextStyle(color: _muted),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary)),
-                    filled: true,
-                    fillColor: _surface,
-                  ),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  required: true,
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -127,11 +111,11 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
                         child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: 'Start Time',
-                            labelStyle: const TextStyle(color: _muted),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                            labelStyle: TextStyle(color: ApexColors.neutral500),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                           ),
-                          child: Text(_startTime.format(context), style: const TextStyle(color: _text)),
+                          child: Text(_startTime.format(context), style: TextStyle(color: ApexColors.neutral900)),
                         ),
                       ),
                     ),
@@ -145,11 +129,11 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
                         child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: 'End Time',
-                            labelStyle: const TextStyle(color: _muted),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                            labelStyle: TextStyle(color: ApexColors.neutral500),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                           ),
-                          child: Text(_endTime.format(context), style: const TextStyle(color: _text)),
+                          child: Text(_endTime.format(context), style: TextStyle(color: ApexColors.neutral900)),
                         ),
                       ),
                     ),
@@ -173,24 +157,17 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Night Shift', style: TextStyle(color: _text, fontWeight: FontWeight.w500)),
+                  title: const Text('Night Shift', style: TextStyle(color: ApexColors.neutral900, fontWeight: FontWeight.w500)),
                   value: _isNightShift,
-                  activeColor: _primary,
+                  activeColor: ApexColors.primary,
                   onChanged: (v) => setState(() => _isNightShift = v),
                   contentPadding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 24),
-                SizedBox(
-                  height: 44,
-                  child: ElevatedButton(
-                    onPressed: _save,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Create Shift', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
+                ApexButton(
+                  label: 'Create Shift',
+                  expanded: true,
+                  onPressed: _save,
                 ),
               ],
             ),
@@ -201,18 +178,11 @@ class _ShiftCreateScreenState extends ConsumerState<ShiftCreateScreen> {
   }
 
   Widget _numberField(TextEditingController controller, String label) {
-    return TextFormField(
+    return ApexTextField(
+      label: label,
       controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: _muted),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _primary)),
-        filled: true,
-        fillColor: _surface,
-      ),
       keyboardType: TextInputType.number,
     );
   }
 }
+

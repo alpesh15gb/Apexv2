@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
 
 class TenantSettings {
   final int attendanceYearStartMonth, attendanceYearStartDay, minPunchDifferenceMinutes, punchBeginBeforeMinutes;
@@ -43,6 +40,38 @@ class TenantSettingsNotifier extends StateNotifier<AsyncValue<TenantSettings?>> 
   }
 }
 
+class _NumberField extends StatefulWidget {
+  final String label;
+  final int initialValue;
+  final ValueChanged<int> onChanged;
+  const _NumberField({required this.label, required this.initialValue, required this.onChanged});
+  @override
+  State<_NumberField> createState() => _NumberFieldState();
+}
+
+class _NumberFieldState extends State<_NumberField> {
+  late final TextEditingController _ctrl;
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: '${widget.initialValue}');
+  }
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return ApexTextField(
+      label: widget.label,
+      controller: _ctrl,
+      keyboardType: TextInputType.number,
+      onChanged: (v) => widget.onChanged(int.tryParse(v) ?? widget.initialValue),
+    );
+  }
+}
+
 class TenantSettingsScreen extends ConsumerWidget {
   const TenantSettingsScreen({Key? key}) : super(key: key);
 
@@ -51,11 +80,17 @@ class TenantSettingsScreen extends ConsumerWidget {
     final settingsAsync = ref.watch(tenantSettingsProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
-      appBar: AppBar(title: const Text('Attendance Settings'), backgroundColor: _surface, foregroundColor: _text, elevation: 0, bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border))),
+      backgroundColor: ApexColors.neutral50,
+      appBar: AppBar(
+        title: const Text('Attendance Settings'),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
+        elevation: 0,
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
+      ),
       body: settingsAsync.when(
         data: (s) {
-          if (s == null) return const Center(child: Text('No settings found'));
+          if (s == null) return Center(child: Text('No settings found', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
           return SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             _section('ATTENDANCE YEAR', [
               _row('Start Month', _monthName(s.attendanceYearStartMonth)),
@@ -72,17 +107,23 @@ class TenantSettingsScreen extends ConsumerWidget {
               _row('Fixed Shift Mode', s.fixedShiftMode ? 'Yes' : 'No'),
             ]),
             const SizedBox(height: 24),
-            SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () => _showEditDialog(context, ref, s), icon: const Icon(Icons.edit, size: 16), label: const Text('Edit Settings'), style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)))),
+            ApexButton(
+              label: 'Edit Settings',
+              onPressed: () => _showEditDialog(context, ref, s),
+              type: ApexButtonType.primary,
+              icon: Icons.edit,
+              expanded: true,
+            ),
           ]));
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
       ),
     );
   }
 
   Widget _section(String title, List<Widget> children) => Container(
-    padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+    padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: ApexTypography.sectionHeader), const SizedBox(height: 12), ...children]),
   );
 
@@ -99,30 +140,40 @@ class TenantSettingsScreen extends ConsumerWidget {
     bool fixedShift = s.fixedShiftMode;
 
     showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
-      title: const Text('Edit Settings'),
+      title: Text('Edit Settings', style: ApexTypography.cardTitle),
       content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        DropdownButtonFormField<int>(value: startMonth, decoration: const InputDecoration(labelText: 'Attendance Year Start Month', border: OutlineInputBorder()), items: [for (int i = 1; i <= 12; i++) DropdownMenuItem(value: i, child: Text(_monthName(i)))], onChanged: (v) => setS(() => startMonth = v ?? 1)),
+        ApexDropdown<int>(
+          label: 'Attendance Year Start Month',
+          value: startMonth,
+          items: [for (int i = 1; i <= 12; i++) DropdownMenuItem(value: i, child: Text(_monthName(i)))],
+          onChanged: (v) => setS(() => startMonth = v ?? 1),
+        ),
         const SizedBox(height: 12),
-        TextField(decoration: const InputDecoration(labelText: 'Start Day', border: OutlineInputBorder()), keyboardType: TextInputType.number, controller: TextEditingController(text: '$startDay'), onChanged: (v) => startDay = int.tryParse(v) ?? 1),
+        _NumberField(label: 'Start Day', initialValue: startDay, onChanged: (v) => startDay = v),
         const SizedBox(height: 12),
-        TextField(decoration: const InputDecoration(labelText: 'Min Punch Difference (min)', border: OutlineInputBorder()), keyboardType: TextInputType.number, controller: TextEditingController(text: '$minPunch'), onChanged: (v) => minPunch = int.tryParse(v) ?? 1),
+        _NumberField(label: 'Min Punch Difference (min)', initialValue: minPunch, onChanged: (v) => minPunch = v),
         const SizedBox(height: 12),
-        TextField(decoration: const InputDecoration(labelText: 'Punch Begin Before (min)', border: OutlineInputBorder()), keyboardType: TextInputType.number, controller: TextEditingController(text: '$punchBegin'), onChanged: (v) => punchBegin = int.tryParse(v) ?? 60),
+        _NumberField(label: 'Punch Begin Before (min)', initialValue: punchBegin, onChanged: (v) => punchBegin = v),
         const SizedBox(height: 12),
-        SwitchListTile(title: const Text('Auto Shift if No Schedule'), value: autoShift, onChanged: (v) => setS(() => autoShift = v), activeColor: _primary, contentPadding: EdgeInsets.zero),
-        SwitchListTile(title: const Text('Fixed Shift Mode'), value: fixedShift, onChanged: (v) => setS(() => fixedShift = v), activeColor: _primary, contentPadding: EdgeInsets.zero),
+        SwitchListTile(title: Text('Auto Shift if No Schedule', style: ApexTypography.body), value: autoShift, onChanged: (v) => setS(() => autoShift = v), activeColor: ApexColors.primary, contentPadding: EdgeInsets.zero),
+        SwitchListTile(title: Text('Fixed Shift Mode', style: ApexTypography.body), value: fixedShift, onChanged: (v) => setS(() => fixedShift = v), activeColor: ApexColors.primary, contentPadding: EdgeInsets.zero),
       ])),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () async {
-          await ref.read(tenantSettingsProvider.notifier).update({
-            'attendance_year_start_month': startMonth, 'attendance_year_start_day': startDay,
-            'min_punch_difference_minutes': minPunch, 'punch_begin_before_minutes': punchBegin,
-            'auto_shift_if_no_schedule': autoShift, 'fixed_shift_mode': fixedShift,
-          });
-          if (ctx.mounted) Navigator.pop(ctx);
-        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: const Text('Save')),
+        ApexButton(label: 'Cancel', onPressed: () => Navigator.pop(ctx), type: ApexButtonType.outline),
+        ApexButton(
+          label: 'Save',
+          onPressed: () async {
+            await ref.read(tenantSettingsProvider.notifier).update({
+              'attendance_year_start_month': startMonth, 'attendance_year_start_day': startDay,
+              'min_punch_difference_minutes': minPunch, 'punch_begin_before_minutes': punchBegin,
+              'auto_shift_if_no_schedule': autoShift, 'fixed_shift_mode': fixedShift,
+            });
+            if (ctx.mounted) Navigator.pop(ctx);
+          },
+          type: ApexButtonType.primary,
+        ),
       ],
     )));
   }
 }
+

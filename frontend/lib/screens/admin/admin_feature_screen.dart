@@ -3,15 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_badge.dart';
 
 final adminFeaturesProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -36,10 +30,10 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
     final featuresAsync = ref.watch(adminFeaturesProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Feature Management', style: TextStyle(fontWeight: FontWeight.w600)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
@@ -47,13 +41,13 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
           if (_selected.isNotEmpty) ...[
             TextButton.icon(
               onPressed: () => _bulkToggle(true),
-              icon: const Icon(Icons.check, size: 16, color: _success),
-              label: Text('Enable (${_selected.length})', style: const TextStyle(color: _success)),
+              icon: Icon(Icons.check, size: 16, color: ApexColors.successDark),
+              label: Text('Enable (${_selected.length})', style: ApexTypography.body.copyWith(color: ApexColors.successDark)),
             ),
             TextButton.icon(
               onPressed: () => _bulkToggle(false),
-              icon: const Icon(Icons.close, size: 16, color: _danger),
-              label: Text('Disable (${_selected.length})', style: const TextStyle(color: _danger)),
+              icon: Icon(Icons.close, size: 16, color: ApexColors.errorDark),
+              label: Text('Disable (${_selected.length})', style: ApexTypography.body.copyWith(color: ApexColors.errorDark)),
             ),
           ],
           const SizedBox(width: 16),
@@ -76,7 +70,7 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search features...',
                     prefixIcon: const Icon(Icons.search, size: 18),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: _border)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ApexColors.neutral200)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                   onChanged: (v) => setState(() => _search = v),
@@ -84,14 +78,14 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                 const SizedBox(width: 12),
                 DropdownButton<String>(
                   value: _categoryFilter,
-                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
+                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: ApexTypography.caption))).toList(),
                   onChanged: (v) => setState(() => _categoryFilter = v ?? 'All'),
                 ),
               ]),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: _surface,
+              color: ApexColors.neutral0,
               child: Row(children: [
                 Checkbox(
                   value: _selected.length == filtered.length && filtered.isNotEmpty,
@@ -104,9 +98,9 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                   }),
                 ),
                 const SizedBox(width: 40),
-                const Expanded(flex: 2, child: Text('FEATURE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                const Expanded(child: Text('CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                const SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                const Expanded(flex: 2, child: Text('FEATURE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                const Expanded(child: Text('CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
+                const SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ApexColors.neutral500, letterSpacing: 0.5))),
                 const SizedBox(width: 60),
               ]),
             ),
@@ -118,7 +112,7 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                   final code = f['code'] as String;
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    color: i.isEven ? _surface : _bg,
+                    color: i.isEven ? ApexColors.neutral0 : ApexColors.neutral50,
                     child: Row(children: [
                       Checkbox(
                         value: _selected.contains(code),
@@ -129,26 +123,26 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(flex: 2, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(f['name'] ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: _text)),
-                        Text(code, style: const TextStyle(fontSize: 11, color: _muted)),
+                        Text(f['name'] ?? '', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w500, color: ApexColors.neutral900)),
+                        Text(code, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                       ])),
-                      Expanded(child: Text(f['category'] ?? '', style: const TextStyle(fontSize: 12, color: _muted))),
+                      Expanded(child: Text(f['category'] ?? '', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500))),
                       SizedBox(
                         width: 80,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: (f['is_active'] == true ? _success : _muted).withOpacity(0.1),
+                            color: (f['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(f['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: f['is_active'] == true ? _success : _muted)),
+                          child: Text(f['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: f['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500)),
                         ),
                       ),
                       SizedBox(
                         width: 60,
                         child: Switch(
                           value: f['is_active'] == true,
-                          activeColor: _primary,
+                          activeColor: ApexColors.primary600,
                           onChanged: (v) => _toggleFeature(code, v),
                         ),
                       ),
@@ -180,3 +174,4 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
     ref.invalidate(adminFeaturesProvider);
   }
 }
+

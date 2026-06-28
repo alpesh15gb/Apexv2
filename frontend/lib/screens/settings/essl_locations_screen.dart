@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../models/essl_server.dart';
 import '../../providers/essl_provider.dart';
 import '../../services/essl_service.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_text_field.dart';
 
 class EsslLocationsScreen extends ConsumerWidget {
   final String serverId;
@@ -24,13 +18,13 @@ class EsslLocationsScreen extends ConsumerWidget {
     final locationsAsync = ref.watch(esslLocationProvider(serverId));
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: const Text('Locations'),
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [
           IconButton(
             icon: const Icon(Icons.add, size: 18),
@@ -46,24 +40,21 @@ class EsslLocationsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 48, color: _muted),
+                  Icon(Icons.location_on_outlined, size: 48, color: ApexColors.neutral500),
                   const SizedBox(height: 16),
-                  Text('No Locations Configured', style: ApexTypography.headingMedium.copyWith(color: _text)),
+                  Text('No Locations Configured', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
                   const SizedBox(height: 8),
                   Text(
                     'Add locations from your eBioserverNew to sync devices and employees per location.',
-                    style: ApexTypography.body.copyWith(color: _muted),
+                    style: ApexTypography.body.copyWith(color: ApexColors.neutral500),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  ApexButton(
+                    label: 'Add Location',
                     onPressed: () => _showLocationDialog(context, ref),
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Add Location'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primary,
-                      foregroundColor: Colors.white,
-                    ),
+                    type: ApexButtonType.primary,
+                    icon: Icons.add,
                   ),
                 ],
               ),
@@ -85,7 +76,7 @@ class EsslLocationsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
       ),
     );
   }
@@ -98,44 +89,42 @@ class EsslLocationsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(location != null ? 'Edit Location' : 'Add Location'),
+        title: Text(location != null ? 'Edit Location' : 'Add Location', style: ApexTypography.cardTitle),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              ApexTextField(
+                label: 'Location Code',
+                hint: 'e.g. OFFICE, WAREHOUSE',
                 controller: codeController,
-                decoration: const InputDecoration(
-                  labelText: 'Location Code *',
-                  hintText: 'e.g. OFFICE, WAREHOUSE',
-                  border: OutlineInputBorder(),
-                ),
+                required: true,
               ),
               const SizedBox(height: 12),
-              TextField(
+              ApexTextField(
+                label: 'Display Name',
+                hint: 'e.g. Main Office',
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Display Name *',
-                  hintText: 'e.g. Main Office',
-                  border: OutlineInputBorder(),
-                ),
+                required: true,
               ),
               const SizedBox(height: 12),
-              TextField(
+              ApexTextField(
+                label: 'Description',
                 controller: descController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
                 maxLines: 2,
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(
+            label: 'Cancel',
+            onPressed: () => Navigator.pop(ctx),
+            type: ApexButtonType.outline,
+          ),
+          ApexButton(
+            label: location != null ? 'Update' : 'Add',
             onPressed: () async {
               final code = codeController.text.trim();
               final name = nameController.text.trim();
@@ -155,8 +144,7 @@ class EsslLocationsScreen extends ConsumerWidget {
               }
               if (ctx.mounted) Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white),
-            child: Text(location != null ? 'Update' : 'Add'),
+            type: ApexButtonType.primary,
           ),
         ],
       ),
@@ -167,17 +155,21 @@ class EsslLocationsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Location'),
-        content: Text('Delete "${location.name}" (${location.code})? This cannot be undone.'),
+        title: Text('Delete Location', style: ApexTypography.cardTitle),
+        content: Text('Delete "${location.name}" (${location.code})? This cannot be undone.', style: ApexTypography.body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
+          ApexButton(
+            label: 'Cancel',
+            onPressed: () => Navigator.pop(ctx),
+            type: ApexButtonType.outline,
+          ),
+          ApexButton(
+            label: 'Delete',
             onPressed: () async {
               await ref.read(esslLocationProvider(serverId).notifier).deleteLocation(location.id);
               if (ctx.mounted) Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
-            child: const Text('Delete'),
+            type: ApexButtonType.danger,
           ),
         ],
       ),
@@ -206,9 +198,9 @@ class _LocationCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.neutral200),
       ),
       child: Row(
         children: [
@@ -216,33 +208,33 @@ class _LocationCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: location.isActive ? _primary.withOpacity(0.1) : _muted.withOpacity(0.1),
+              color: location.isActive ? ApexColors.primary.withValues(alpha: 0.1) : ApexColors.neutral500.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.location_on, color: location.isActive ? _primary : _muted, size: 20),
+            child: Icon(Icons.location_on, color: location.isActive ? ApexColors.primary : ApexColors.neutral500, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(location.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
-                Text('Code: ${location.code}', style: ApexTypography.caption.copyWith(color: _muted)),
+                Text(location.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                Text('Code: ${location.code}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                 if (location.description != null && location.description!.isNotEmpty)
-                  Text(location.description!, style: ApexTypography.captionSmall.copyWith(color: _muted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(location.description!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
           Switch(
             value: location.isActive,
             onChanged: onToggle,
-            activeColor: _primary,
+            activeColor: ApexColors.primary,
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, size: 18),
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'edit', child: Text('Edit')),
-              const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: _danger))),
+              PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error))),
             ],
             onSelected: (v) {
               if (v == 'edit') onEdit();

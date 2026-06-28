@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/shift_provider.dart';
 import '../../providers/employee_provider.dart';
 import '../../services/shift_service.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_dropdown.dart';
 
 class ShiftAssignScreen extends ConsumerStatefulWidget {
   const ShiftAssignScreen({Key? key}) : super(key: key);
@@ -35,14 +40,14 @@ class _ShiftAssignScreenState extends ConsumerState<ShiftAssignScreen> {
         await service.assignShift(data);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Shift assigned successfully'), backgroundColor: Colors.green),
+            const SnackBar(content: Text('Shift assigned successfully'), backgroundColor: ApexColors.success),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
           );
         }
       }
@@ -57,6 +62,9 @@ class _ShiftAssignScreenState extends ConsumerState<ShiftAssignScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Assign Shift'),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
+        elevation: 0,
       ),
       body: Form(
         key: _formKey,
@@ -66,46 +74,39 @@ class _ShiftAssignScreenState extends ConsumerState<ShiftAssignScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               employeesAsync.employees.maybeWhen(
-                data: (list) => DropdownButtonFormField<String>(
+                data: (list) => ApexDropdown<String>(
+                  label: 'Employee',
                   value: _selectedEmployeeId,
-                  decoration: const InputDecoration(labelText: 'Employee *'),
+                  required: true,
                   items: list.map((e) => DropdownMenuItem(value: e.id, child: Text('${e.fullName} (${e.employeeCode})'))).toList(),
                   onChanged: (v) => setState(() => _selectedEmployeeId = v),
-                  validator: (v) => v == null ? 'Required' : null,
                 ),
                 orElse: () => const SizedBox(),
               ),
               const SizedBox(height: 16),
               shiftsAsync.maybeWhen(
-                data: (shifts) => DropdownButtonFormField<String>(
+                data: (shifts) => ApexDropdown<String>(
+                  label: 'Shift',
                   value: _selectedShiftId,
-                  decoration: const InputDecoration(labelText: 'Shift *'),
+                  required: true,
                   items: shifts.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
                   onChanged: (v) => setState(() => _selectedShiftId = v),
-                  validator: (v) => v == null ? 'Required' : null,
                 ),
                 orElse: () => const SizedBox(),
               ),
               const SizedBox(height: 16),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _effectiveFrom,
-                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  if (picked != null) setState(() => _effectiveFrom = picked);
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Effective From'),
-                  child: Text(DateFormat('MMM dd, yyyy').format(_effectiveFrom)),
-                ),
+              ApexDatePicker(
+                label: 'Effective From',
+                value: _effectiveFrom,
+                firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+                onChanged: (v) { if (v != null) setState(() => _effectiveFrom = v); },
               ),
               const SizedBox(height: 32),
-              ElevatedButton(
+              ApexButton(
+                label: 'Assign Shift',
+                expanded: true,
                 onPressed: _submit,
-                child: const Text('Assign Shift'),
               ),
             ],
           ),
@@ -114,3 +115,4 @@ class _ShiftAssignScreenState extends ConsumerState<ShiftAssignScreen> {
     );
   }
 }
+

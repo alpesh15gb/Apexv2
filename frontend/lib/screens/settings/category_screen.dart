@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
 
 class Category {
   final String id, name, code, otFormula, weeklyOff2Week;
@@ -64,6 +60,38 @@ class CategoryListNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   }
 }
 
+class _NumberField extends StatefulWidget {
+  final String label;
+  final int initialValue;
+  final ValueChanged<int> onChanged;
+  const _NumberField({required this.label, required this.initialValue, required this.onChanged});
+  @override
+  State<_NumberField> createState() => _NumberFieldState();
+}
+
+class _NumberFieldState extends State<_NumberField> {
+  late final TextEditingController _ctrl;
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: '${widget.initialValue}');
+  }
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return ApexTextField(
+      label: widget.label,
+      controller: _ctrl,
+      keyboardType: TextInputType.number,
+      onChanged: (v) => widget.onChanged(int.tryParse(v) ?? widget.initialValue),
+    );
+  }
+}
+
 class CategoryScreen extends ConsumerWidget {
   const CategoryScreen({Key? key}) : super(key: key);
 
@@ -72,24 +100,30 @@ class CategoryScreen extends ConsumerWidget {
     final catsAsync = ref.watch(categoryListProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
         title: const Text('Employee Categories'),
-        backgroundColor: _surface, foregroundColor: _text, elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: _border)),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
+        elevation: 0,
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => _showDialog(context, ref))],
       ),
       body: catsAsync.when(
         data: (cats) {
           if (cats.isEmpty) return Center(
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Icon(Icons.category_outlined, size: 48, color: _muted),
+              Icon(Icons.category_outlined, size: 48, color: ApexColors.neutral500),
               const SizedBox(height: 16),
-              Text('No Categories', style: ApexTypography.headingMedium.copyWith(color: _text)),
+              Text('No Categories', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
               const SizedBox(height: 8),
-              Text('Create categories to define attendance rules', style: ApexTypography.body.copyWith(color: _muted)),
+              Text('Create categories to define attendance rules', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: () => _showDialog(context, ref), style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: const Text('Add Category')),
+              ApexButton(
+                label: 'Add Category',
+                onPressed: () => _showDialog(context, ref),
+                type: ApexButtonType.primary,
+              ),
             ]),
           );
           return ListView.builder(
@@ -101,23 +135,23 @@ class CategoryScreen extends ConsumerWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
                 child: Row(children: [
-                  Container(width: 40, height: 40, decoration: BoxDecoration(color: _primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.category, color: _primary, size: 20)),
+                  Container(width: 40, height: 40, decoration: BoxDecoration(color: ApexColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(Icons.category, color: ApexColors.primary, size: 20)),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(c.name, style: ApexTypography.titleSmall.copyWith(color: _text)),
-                    Text('Code: ${c.code} | WO: ${days[c.weeklyOff1]}${c.weeklyOff2 != null ? ', ${days[c.weeklyOff2!]} (${c.weeklyOff2Week})' : ''} | Grace: ${c.graceMinutes}m | OT: ${c.otFormula}', style: ApexTypography.caption.copyWith(color: _muted)),
+                    Text(c.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                    Text('Code: ${c.code} | WO: ${days[c.weeklyOff1]}${c.weeklyOff2 != null ? ', ${days[c.weeklyOff2!]} (${c.weeklyOff2Week})' : ''} | Grace: ${c.graceMinutes}m | OT: ${c.otFormula}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                   ])),
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: c.isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(c.isActive ? 'ACTIVE' : 'INACTIVE', style: ApexTypography.captionSmall.copyWith(color: c.isActive ? _success : _muted, fontWeight: FontWeight.w600))),
-                  PopupMenuButton<String>(icon: const Icon(Icons.more_vert, size: 16), itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Edit')), const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: _danger)))], onSelected: (v) { if (v == 'edit') _showDialog(context, ref, category: c); if (v == 'delete') _confirmDelete(context, ref, c.id, c.name); }),
+                  c.isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
+                  PopupMenuButton<String>(icon: Icon(Icons.more_vert, size: 16), itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Edit')), PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: ApexColors.error)))], onSelected: (v) { if (v == 'edit') _showDialog(context, ref, category: c); if (v == 'delete') _confirmDelete(context, ref, c.id, c.name); }),
                 ]),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
       ),
     );
   }
@@ -133,43 +167,55 @@ class CategoryScreen extends ConsumerWidget {
     String wo2Week = category?.weeklyOff2Week ?? 'every';
 
     showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
-      title: Text(category != null ? 'Edit Category' : 'Add Category'),
+      title: Text(category != null ? 'Edit Category' : 'Add Category', style: ApexTypography.cardTitle),
       content: SizedBox(width: 450, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder())),
+        ApexTextField(label: 'Name', controller: nameCtrl, required: true),
         const SizedBox(height: 12),
-        TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code *', border: OutlineInputBorder(), hintText: 'e.g. STAFF, WORKER')),
+        ApexTextField(label: 'Code', controller: codeCtrl, required: true, hint: 'e.g. STAFF, WORKER'),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(value: otFormula, decoration: const InputDecoration(labelText: 'OT Formula', border: OutlineInputBorder()), items: const [DropdownMenuItem(value: 'out_punch', child: Text('Out Punch - Shift End')), DropdownMenuItem(value: 'total_duration', child: Text('Total Duration - Shift Duration')), DropdownMenuItem(value: 'early_late_sum', child: Text('Early Coming + Late Going'))], onChanged: (v) => setS(() => otFormula = v ?? 'out_punch')),
+        ApexDropdown<String>(label: 'OT Formula', value: otFormula, items: const [DropdownMenuItem(value: 'out_punch', child: Text('Out Punch - Shift End')), DropdownMenuItem(value: 'total_duration', child: Text('Total Duration - Shift Duration')), DropdownMenuItem(value: 'early_late_sum', child: Text('Early Coming + Late Going'))], onChanged: (v) => setS(() => otFormula = v ?? 'out_punch')),
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(child: DropdownButtonFormField<int>(value: wo1, decoration: const InputDecoration(labelText: 'Weekly Off 1', border: OutlineInputBorder()), items: [for (int i = 0; i < 7; i++) DropdownMenuItem(value: i, child: Text(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]))], onChanged: (v) => setS(() => wo1 = v ?? 6))),
+          Expanded(child: ApexDropdown<int>(label: 'Weekly Off 1', value: wo1, items: [for (int i = 0; i < 7; i++) DropdownMenuItem(value: i, child: Text(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]))], onChanged: (v) => setS(() => wo1 = v ?? 6))),
           const SizedBox(width: 12),
-          Expanded(child: DropdownButtonFormField<int>(value: wo2, decoration: const InputDecoration(labelText: 'Weekly Off 2', border: OutlineInputBorder()), items: [const DropdownMenuItem(value: null, child: Text('None')), for (int i = 0; i < 7; i++) DropdownMenuItem(value: i, child: Text(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]))], onChanged: (v) => setS(() => wo2 = v))),
+          Expanded(child: ApexDropdown<int>(label: 'Weekly Off 2', value: wo2, items: [const DropdownMenuItem(value: null, child: Text('None')), for (int i = 0; i < 7; i++) DropdownMenuItem(value: i, child: Text(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]))], onChanged: (v) => setS(() => wo2 = v))),
         ]),
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(child: TextField(decoration: const InputDecoration(labelText: 'Grace (min)', border: OutlineInputBorder()), keyboardType: TextInputType.number, controller: TextEditingController(text: '$grace'), onChanged: (v) => grace = int.tryParse(v) ?? 0)),
+          Expanded(child: _NumberField(label: 'Grace (min)', initialValue: grace, onChanged: (v) => grace = v)),
           const SizedBox(width: 12),
-          Expanded(child: TextField(decoration: const InputDecoration(labelText: 'Half Day (min)', border: OutlineInputBorder()), keyboardType: TextInputType.number, controller: TextEditingController(text: '$halfDay'), onChanged: (v) => halfDay = int.tryParse(v) ?? 240)),
+          Expanded(child: _NumberField(label: 'Half Day (min)', initialValue: halfDay, onChanged: (v) => halfDay = v)),
         ]),
       ]))),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () async {
-          final data = {'name': nameCtrl.text.trim(), 'code': codeCtrl.text.trim().toUpperCase(), 'ot_formula': otFormula, 'grace_minutes': grace, 'half_day_threshold_minutes': halfDay, 'weekly_off_1': wo1, 'weekly_off_2': wo2, 'weekly_off_2_week': wo2Week};
-          final notifier = ref.read(categoryListProvider.notifier);
-          if (category != null) { await notifier.update(category.id, data); } else { await notifier.add(data); }
-          if (ctx.mounted) Navigator.pop(ctx);
-        }, style: ElevatedButton.styleFrom(backgroundColor: _primary, foregroundColor: Colors.white), child: Text(category != null ? 'Update' : 'Add')),
+        ApexButton(label: 'Cancel', onPressed: () => Navigator.pop(ctx), type: ApexButtonType.outline),
+        ApexButton(
+          label: category != null ? 'Update' : 'Add',
+          onPressed: () async {
+            final data = {'name': nameCtrl.text.trim(), 'code': codeCtrl.text.trim().toUpperCase(), 'ot_formula': otFormula, 'grace_minutes': grace, 'half_day_threshold_minutes': halfDay, 'weekly_off_1': wo1, 'weekly_off_2': wo2, 'weekly_off_2_week': wo2Week};
+            final notifier = ref.read(categoryListProvider.notifier);
+            if (category != null) { await notifier.update(category.id, data); } else { await notifier.add(data); }
+            if (ctx.mounted) Navigator.pop(ctx);
+          },
+          type: ApexButtonType.primary,
+        ),
       ],
     )));
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String id, String name) {
     showDialog(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('Delete Category'),
-      content: Text('Delete "$name"?'),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), ElevatedButton(onPressed: () { ref.read(categoryListProvider.notifier).delete(id); Navigator.pop(ctx); }, style: ElevatedButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white), child: const Text('Delete'))],
+      title: Text('Delete Category', style: ApexTypography.cardTitle),
+      content: Text('Delete "$name"?', style: ApexTypography.body),
+      actions: [
+        ApexButton(label: 'Cancel', onPressed: () => Navigator.pop(ctx), type: ApexButtonType.outline),
+        ApexButton(
+          label: 'Delete',
+          onPressed: () { ref.read(categoryListProvider.notifier).delete(id); Navigator.pop(ctx); },
+          type: ApexButtonType.danger,
+        ),
+      ],
     ));
   }
 }
+

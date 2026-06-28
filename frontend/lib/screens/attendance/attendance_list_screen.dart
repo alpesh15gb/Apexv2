@@ -4,19 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/employee_provider.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_text_field.dart';
 
 class AttendanceListScreen extends ConsumerStatefulWidget {
   const AttendanceListScreen({Key? key}) : super(key: key);
@@ -42,7 +38,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen> {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       body: Column(
         children: [
           // Header
@@ -106,13 +102,13 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 40, color: _danger),
+                    Icon(Icons.error_outline, size: 40, color: ApexColors.error),
                     const SizedBox(height: 12),
                     Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
                     const SizedBox(height: 12),
-                    ElevatedButton(
+                    ApexButton(
+                      label: 'Retry',
                       onPressed: () => ref.read(attendanceListProvider.notifier).fetchRecords(isRefresh: true),
-                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -135,12 +131,12 @@ class _Header extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(isMobile ? 16 : 20, 12, isMobile ? 16 : 20, 8),
       decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Row(
         children: [
-          Text('Attendance', style: ApexTypography.pageTitle.copyWith(color: _text)),
+          Text('Attendance', style: ApexTypography.pageTitle.copyWith(color: ApexColors.neutral900)),
           const Spacer(),
           if (!isMobile) ...[
             IconButton(icon: const Icon(Icons.add_task, size: 18), tooltip: 'Manual Mark', onPressed: () => context.push('/attendance/mark')),
@@ -187,8 +183,8 @@ class _Toolbar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Wrap(
         spacing: 8,
@@ -203,7 +199,7 @@ class _Toolbar extends StatelessWidget {
                 hintText: 'Search employee...',
                 prefixIcon: const Icon(Icons.search, size: 18),
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: _border)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: ApexColors.neutral200)),
                 isDense: true,
               ),
               onChanged: onSearch,
@@ -303,13 +299,13 @@ class _DatePicker extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: _border),
+          border: Border.all(color: ApexColors.neutral200),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_today, size: 16, color: _muted),
+            Icon(Icons.calendar_today, size: 16, color: ApexColors.neutral500),
             const SizedBox(width: 6),
             Text(DateFormat('MMM dd, yyyy').format(date), style: ApexTypography.bodySmall),
           ],
@@ -334,16 +330,16 @@ class _Chip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: value != null ? _primary.withOpacity(0.1) : null,
-          border: Border.all(color: value != null ? _primary : _border),
+          color: value != null ? ApexColors.primary.withOpacity(0.1) : null,
+          border: Border.all(color: value != null ? ApexColors.primary : ApexColors.neutral200),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(value ?? label, style: ApexTypography.captionLarge.copyWith(color: value != null ? _primary : _muted)),
+            Text(value ?? label, style: ApexTypography.captionLarge.copyWith(color: value != null ? ApexColors.primary : ApexColors.neutral500)),
             const SizedBox(width: 4),
-            Icon(value != null ? Icons.close : Icons.arrow_drop_down, size: 14, color: value != null ? _primary : _muted),
+            Icon(value != null ? Icons.close : Icons.arrow_drop_down, size: 14, color: value != null ? ApexColors.primary : ApexColors.neutral500),
           ],
         ),
       ),
@@ -362,11 +358,11 @@ class _SummaryCards extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          _SummaryItem(label: 'Present', value: '${summary.present}', color: _success),
-          _SummaryItem(label: 'Absent', value: '${summary.absent}', color: _danger),
-          _SummaryItem(label: 'Late', value: '${summary.late}', color: _warning),
-          _SummaryItem(label: 'Half Day', value: '${summary.halfDay}', color: _warning),
-          _SummaryItem(label: 'Leave', value: '${summary.onLeave}', color: _primary),
+          _SummaryItem(label: 'Present', value: '${summary.present}', color: ApexColors.success),
+          _SummaryItem(label: 'Absent', value: '${summary.absent}', color: ApexColors.error),
+          _SummaryItem(label: 'Late', value: '${summary.late}', color: ApexColors.warning),
+          _SummaryItem(label: 'Half Day', value: '${summary.halfDay}', color: ApexColors.warning),
+          _SummaryItem(label: 'Leave', value: '${summary.onLeave}', color: ApexColors.primary),
         ],
       ),
     );
@@ -413,14 +409,14 @@ class _BulkBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      color: _primary.withOpacity(0.1),
+      color: ApexColors.primary.withOpacity(0.1),
       child: Row(
         children: [
-          Text('$count selected', style: ApexTypography.titleSmall.copyWith(color: _primary)),
+          Text('$count selected', style: ApexTypography.titleSmall.copyWith(color: ApexColors.primary)),
           const Spacer(),
-          TextButton.icon(onPressed: () {}, icon: const Icon(Icons.check, size: 16), label: const Text('Approve')),
-          TextButton.icon(onPressed: () {}, icon: const Icon(Icons.download, size: 16), label: const Text('Export')),
-          TextButton(onPressed: onClear, child: const Text('Clear')),
+          ApexButton(label: 'Approve', icon: Icons.check, type: ApexButtonType.ghost, onPressed: () {}),
+          ApexButton(label: 'Export', icon: Icons.download, type: ApexButtonType.ghost, onPressed: () {}),
+          ApexButton(label: 'Clear', type: ApexButtonType.ghost, onPressed: onClear),
         ],
       ),
     );
@@ -454,7 +450,7 @@ class _AttendanceTable extends StatelessWidget {
             // Header
             Container(
               height: 36,
-              color: _bg,
+              color: ApexColors.neutral50,
               child: Row(
                 children: [
                   _hdr(40, '', isCheckbox: true),
@@ -526,7 +522,7 @@ class _AttendanceRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 40,
-        color: isSelected ? _primary.withOpacity(0.05) : (index.isEven ? _surface : _bg),
+        color: isSelected ? ApexColors.primary.withOpacity(0.05) : (index.isEven ? Colors.white : ApexColors.neutral50),
         child: Row(
           children: [
             // Checkbox
@@ -548,11 +544,11 @@ class _AttendanceRow extends StatelessWidget {
             // Hours
             SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.totalHours != null ? '${r.totalHours!.toStringAsFixed(1)}h' : '—', style: ApexTypography.tableCell))),
             // OT
-            SizedBox(width: 60, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.overtimeHours != null && r.overtimeHours! > 0 ? '${r.overtimeHours!.toStringAsFixed(1)}h' : '—', style: ApexTypography.tableCell.copyWith(color: r.overtimeHours != null && r.overtimeHours! > 0 ? _success : _muted)))),
+            SizedBox(width: 60, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.overtimeHours != null && r.overtimeHours! > 0 ? '${r.overtimeHours!.toStringAsFixed(1)}h' : '—', style: ApexTypography.tableCell.copyWith(color: r.overtimeHours != null && r.overtimeHours! > 0 ? ApexColors.success : ApexColors.neutral500)))),
             // Late By
-            SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.isLate ? '${r.lateMinutes}m' : '—', style: ApexTypography.tableCell.copyWith(color: r.isLate ? _warning : _muted)))),
+            SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.isLate ? '${r.lateMinutes}m' : '—', style: ApexTypography.tableCell.copyWith(color: r.isLate ? ApexColors.warning : ApexColors.neutral500)))),
             // Early Out
-            SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.isEarlyOut ? '${r.earlyOutMinutes}m' : '—', style: ApexTypography.tableCell.copyWith(color: r.isEarlyOut ? _warning : _muted)))),
+            SizedBox(width: 70, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.isEarlyOut ? '${r.earlyOutMinutes}m' : '—', style: ApexTypography.tableCell.copyWith(color: r.isEarlyOut ? ApexColors.warning : ApexColors.neutral500)))),
             // Device
             SizedBox(width: 80, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(r.deviceId ?? 'Manual', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis))),
             // Status
@@ -597,12 +593,12 @@ class _StatusBadge extends StatelessWidget {
 
   (String, Color) _statusConfig(String s) {
     switch (s) {
-      case 'present': return ('Present', _success);
-      case 'absent': return ('Absent', _danger);
-      case 'late': return ('Late', _warning);
-      case 'half_day': return ('Half Day', _warning);
-      case 'on_leave': return ('Leave', _primary);
-      default: return (s, _muted);
+      case 'present': return ('Present', ApexColors.success);
+      case 'absent': return ('Absent', ApexColors.error);
+      case 'late': return ('Late', ApexColors.warning);
+      case 'half_day': return ('Half Day', ApexColors.warning);
+      case 'on_leave': return ('Leave', ApexColors.primary);
+      default: return (s, ApexColors.neutral500);
     }
   }
 }
@@ -625,21 +621,16 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: _muted),
+            Icon(icon, size: 48, color: ApexColors.neutral500),
             const SizedBox(height: 16),
-            Text(title, style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text(title, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text(description, style: ApexTypography.bodySmall.copyWith(color: _muted), textAlign: TextAlign.center),
+            Text(description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
-              ElevatedButton(
+              ApexButton(
+                label: actionLabel!,
                 onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                ),
-                child: Text(actionLabel!),
               ),
             ],
           ],
@@ -648,3 +639,4 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+

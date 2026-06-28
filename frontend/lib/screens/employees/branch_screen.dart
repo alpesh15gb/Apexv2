@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/employee_provider.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_text_field.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/empty_state.dart';
@@ -39,31 +45,33 @@ class _BranchScreenState extends ConsumerState<BranchScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextFormField(
+                ApexTextField(
+                  label: 'Name',
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  required: true,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                ApexTextField(
+                  label: 'Code',
                   controller: _codeController,
-                  decoration: const InputDecoration(labelText: 'Code'),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  required: true,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                ApexTextField(
+                  label: 'City',
                   controller: _cityController,
-                  decoration: const InputDecoration(labelText: 'City'),
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(
+            ApexButton(
+              label: 'Cancel',
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              type: ApexButtonType.outline,
             ),
-            TextButton(
+            ApexButton(
+              label: 'Add',
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   try {
@@ -84,13 +92,13 @@ class _BranchScreenState extends ConsumerState<BranchScreen> {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
                       );
                     }
                   }
                 }
               },
-              child: const Text('Add'),
+              type: ApexButtonType.primary,
             ),
           ],
         );
@@ -105,6 +113,10 @@ class _BranchScreenState extends ConsumerState<BranchScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Branches'),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
+        elevation: 0,
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
       ),
       body: branchesAsync.when(
         data: (branches) {
@@ -121,16 +133,26 @@ class _BranchScreenState extends ConsumerState<BranchScreen> {
             itemCount: branches.length,
             itemBuilder: (context, idx) {
               final b = branches[idx];
-              return Card(
-                child: ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.store)),
-                  title: Text(b.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Code: ${b.code} ${b.city != null ? '• ${b.city}' : ''}'),
-                  trailing: Icon(
-                    Icons.circle,
-                    color: b.isActive ? Colors.green : Colors.grey,
-                    size: 12,
-                  ),
+              return ApexCard(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: ApexColors.primary.withValues(alpha: 0.1),
+                      child: Icon(Icons.store, color: ApexColors.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(b.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                          Text('Code: ${b.code} ${b.city != null ? '• ${b.city}' : ''}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
+                        ],
+                      ),
+                    ),
+                    b.isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
+                  ],
                 ),
               );
             },
@@ -144,8 +166,9 @@ class _BranchScreenState extends ConsumerState<BranchScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addBranch,
+        backgroundColor: ApexColors.primary,
         tooltip: 'Add Branch',
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

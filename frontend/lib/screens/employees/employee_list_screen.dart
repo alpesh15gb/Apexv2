@@ -5,19 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
-import '../../design_system/border_radius.dart';
 import '../../providers/employee_provider.dart';
-
-// ── RULE 1: Exact colors ───────────────────────────────────
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
 
 class EmployeeListScreen extends ConsumerStatefulWidget {
   const EmployeeListScreen({Key? key}) : super(key: key);
@@ -39,12 +29,10 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       body: Column(
         children: [
-          // ── RULE 4: Header ──────────────────────────────
           _Header(isMobile: isMobile),
-          // ── RULE 5: Search + Filters always visible ─────
           _Toolbar(
             search: _search,
             onSearch: (v) {
@@ -67,9 +55,7 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
             },
             deptsAsync: deptsAsync,
           ),
-          // ── RULE 5: Bulk actions always visible ─────────
           if (_selected.isNotEmpty) _BulkBar(count: _selected.length, onClear: () => setState(() => _selected.clear())),
-          // ── RULE 10: Table — 40px rows ──────────────────
           Expanded(
             child: listState.employees.when(
               data: (employees) {
@@ -85,17 +71,17 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                 return Column(children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: const BoxDecoration(
-                      color: _surface,
-                      border: Border(bottom: BorderSide(color: _border, width: 1)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(bottom: BorderSide(color: ApexColors.neutral200, width: 1)),
                     ),
                     child: Row(children: [
                       const SizedBox(width: 50),
-                      const Expanded(flex: 3, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      const Expanded(flex: 2, child: Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      const Expanded(flex: 2, child: Text('DESIGNATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      const Expanded(child: Text('BRANCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                      const SizedBox(width: 70, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                      Expanded(flex: 3, child: Text('EMPLOYEE', style: ApexTypography.tableHeader)),
+                      Expanded(flex: 2, child: Text('DEPARTMENT', style: ApexTypography.tableHeader)),
+                      Expanded(flex: 2, child: Text('DESIGNATION', style: ApexTypography.tableHeader)),
+                      Expanded(child: Text('BRANCH', style: ApexTypography.tableHeader)),
+                      SizedBox(width: 70, child: Text('STATUS', style: ApexTypography.tableHeader)),
                       const SizedBox(width: 40),
                     ]),
                   ),
@@ -108,7 +94,7 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 4),
                           decoration: BoxDecoration(
-                            color: i.isEven ? _surface : _bg,
+                            color: i.isEven ? Colors.white : ApexColors.neutral50,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: InkWell(
@@ -119,38 +105,28 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                               child: Row(children: [
                                 CircleAvatar(
                                   radius: 18,
-                                  backgroundColor: _primary.withOpacity(0.1),
+                                  backgroundColor: ApexColors.primary.withValues(alpha: 0.1),
                                   child: Text(
                                     emp.firstName.isNotEmpty ? emp.firstName[0].toUpperCase() : '?',
-                                    style: TextStyle(color: _primary, fontWeight: FontWeight.w700, fontSize: 14),
+                                    style: TextStyle(color: ApexColors.primary, fontWeight: FontWeight.w700, fontSize: 14),
                                   ),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(flex: 3, child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(emp.fullName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
+                                    Text(emp.fullName, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
                                     const SizedBox(height: 2),
-                                    Text(emp.employeeCode, style: const TextStyle(fontSize: 12, color: _muted)),
+                                    Text(emp.employeeCode, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                                   ],
                                 )),
-                                Expanded(flex: 2, child: Text(emp.departmentName ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Text(emp.designationName ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
-                                Expanded(child: Text(emp.branchName ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: emp.status == 'active' ? _success.withOpacity(0.1) : _muted.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    emp.status.toUpperCase(),
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: emp.status == 'active' ? _success : _muted),
-                                  ),
-                                ),
+                                Expanded(flex: 2, child: Text(emp.departmentName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis)),
+                                Expanded(flex: 2, child: Text(emp.designationName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis)),
+                                Expanded(child: Text(emp.branchName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis)),
+                                emp.status == 'active' ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  icon: const Icon(Icons.arrow_forward_ios, size: 14, color: _muted),
+                                  icon: Icon(Icons.arrow_forward_ios, size: 14, color: ApexColors.neutral500),
                                   onPressed: () => context.push('/employees/${emp.id}'),
                                 ),
                               ]),
@@ -168,13 +144,14 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 40, color: _danger),
+                        Icon(Icons.error_outline, size: 40, color: ApexColors.error),
                         const SizedBox(height: 12),
                         Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
                         const SizedBox(height: 12),
-                        ElevatedButton(
+                        ApexButton(
+                          label: 'Retry',
                           onPressed: () => ref.read(employeeListProvider.notifier).fetchEmployees(isRefresh: true),
-                          child: const Text('Retry'),
+                          type: ApexButtonType.primary,
                         ),
                       ],
                     ),
@@ -185,14 +162,13 @@ class _EmployeeListScreenState extends ConsumerState<EmployeeListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/employees/create'),
-        backgroundColor: _primary,
+        backgroundColor: ApexColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 }
 
-// ── RULE 4: Header ─────────────────────────────────────────
 class _Header extends StatelessWidget {
   final bool isMobile;
   const _Header({required this.isMobile});
@@ -201,13 +177,13 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(isMobile ? 16 : 20, 12, isMobile ? 16 : 20, 8),
-      decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Row(
         children: [
-          Text('Employees', style: ApexTypography.pageTitle.copyWith(color: _text)),
+          Text('Employees', style: ApexTypography.pageTitle.copyWith(color: ApexColors.neutral900)),
           const Spacer(),
           if (!isMobile) ...[
             IconButton(icon: const Icon(Icons.download, size: 18), tooltip: 'Export', onPressed: () {}),
@@ -220,7 +196,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ── RULE 5: Toolbar — search + filters always visible ───────
 class _Toolbar extends StatelessWidget {
   final String search;
   final ValueChanged<String> onSearch;
@@ -246,23 +221,22 @@ class _Toolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(bottom: BorderSide(color: _border)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
       ),
       child: Row(
         children: [
-          // Search
           Expanded(
             flex: 3,
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search by name, code, email...',
-                prefixIcon: const Icon(Icons.search, size: 18),
+                prefixIcon: Icon(Icons.search, size: 18, color: ApexColors.neutral400),
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
-                  borderSide: const BorderSide(color: _border),
+                  borderSide: BorderSide(color: ApexColors.neutral200),
                 ),
                 isDense: true,
               ),
@@ -270,7 +244,6 @@ class _Toolbar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // Department filter
           deptsAsync.maybeWhen(
             data: (deps) => _FilterChip(
               label: 'Department',
@@ -282,7 +255,6 @@ class _Toolbar extends StatelessWidget {
             orElse: () => const SizedBox(),
           ),
           const SizedBox(width: 8),
-          // Status filter
           _FilterChip(
             label: 'Status',
             value: statusFilter,
@@ -292,8 +264,8 @@ class _Toolbar extends StatelessWidget {
             const SizedBox(width: 8),
             TextButton.icon(
               onPressed: onClear,
-              icon: const Icon(Icons.clear, size: 14),
-              label: const Text('Clear'),
+              icon: Icon(Icons.clear, size: 14, color: ApexColors.neutral500),
+              label: Text('Clear', style: TextStyle(color: ApexColors.neutral500)),
               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
             ),
           ],
@@ -362,19 +334,19 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: value != null ? _primary.withOpacity(0.1) : null,
-          border: Border.all(color: value != null ? _primary : _border),
+          color: value != null ? ApexColors.primary.withValues(alpha: 0.1) : null,
+          border: Border.all(color: value != null ? ApexColors.primary : ApexColors.neutral200),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(value ?? label, style: ApexTypography.captionLarge.copyWith(
-              color: value != null ? _primary : _muted,
+              color: value != null ? ApexColors.primary : ApexColors.neutral500,
             )),
             const SizedBox(width: 4),
             Icon(value != null ? Icons.close : Icons.arrow_drop_down, size: 14,
-              color: value != null ? _primary : _muted),
+              color: value != null ? ApexColors.primary : ApexColors.neutral500),
           ],
         ),
       ),
@@ -382,7 +354,6 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-// ── RULE 5: Bulk actions always visible ─────────────────────
 class _BulkBar extends StatelessWidget {
   final int count;
   final VoidCallback onClear;
@@ -393,10 +364,10 @@ class _BulkBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      color: _primary.withOpacity(0.1),
+      color: ApexColors.primary.withValues(alpha: 0.1),
       child: Row(
         children: [
-          Text('$count selected', style: ApexTypography.titleSmall.copyWith(color: _primary)),
+          Text('$count selected', style: ApexTypography.titleSmall.copyWith(color: ApexColors.primary)),
           const Spacer(),
           TextButton.icon(onPressed: () {}, icon: const Icon(Icons.download, size: 16), label: const Text('Export')),
           TextButton.icon(onPressed: () {}, icon: const Icon(Icons.person_off, size: 16), label: const Text('Deactivate')),
@@ -407,7 +378,6 @@ class _BulkBar extends StatelessWidget {
   }
 }
 
-// ── RULE 10: Table — 40px rows, sticky header ──────────────
 class _EmployeeTable extends StatelessWidget {
   final List<dynamic> employees;
   final Set<String> selected;
@@ -431,10 +401,9 @@ class _EmployeeTable extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: 1000),
         child: Column(
           children: [
-            // Header
             Container(
               height: 36,
-              color: _bg,
+              color: ApexColors.neutral50,
               child: Row(
                 children: [
                   _hdr(40, '', isCheckbox: true),
@@ -448,7 +417,6 @@ class _EmployeeTable extends StatelessWidget {
                 ],
               ),
             ),
-            // Rows
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -509,10 +477,9 @@ class _EmployeeRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 40,
-        color: isSelected ? _primary.withOpacity(0.05) : (index.isEven ? _surface : _bg),
+        color: isSelected ? ApexColors.primary.withValues(alpha: 0.05) : (index.isEven ? Colors.white : ApexColors.neutral50),
         child: Row(
           children: [
-            // Checkbox
             SizedBox(
               width: 40,
               child: Checkbox(
@@ -521,7 +488,6 @@ class _EmployeeRow extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
             ),
-            // Employee
             SizedBox(
               width: 180,
               child: Padding(
@@ -543,20 +509,14 @@ class _EmployeeRow extends StatelessWidget {
                 ),
               ),
             ),
-            // Code
             SizedBox(width: 90, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(emp.employeeCode, style: ApexTypography.tableCell))),
-            // Department
             SizedBox(width: 120, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(emp.departmentName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis))),
-            // Designation
             SizedBox(width: 120, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(emp.designationName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis))),
-            // Branch
             SizedBox(width: 100, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(emp.branchName ?? '—', style: ApexTypography.tableCell, overflow: TextOverflow.ellipsis))),
-            // Status
             SizedBox(
               width: 80,
               child: _StatusBadge(status: emp.status),
             ),
-            // Actions
             SizedBox(
               width: 60,
               child: PopupMenuButton<String>(
@@ -585,24 +545,10 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = status == 'active';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: isActive ? _success.withOpacity(0.1) : _muted.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: ApexTypography.captionSmall.copyWith(
-          color: isActive ? _success : _muted,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
+    return isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE');
   }
 }
 
-// ── RULE 9: Empty state — onboarding, not fake data ────────
 class _EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -626,21 +572,17 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: _muted),
+            Icon(icon, size: 48, color: ApexColors.neutral500),
             const SizedBox(height: 16),
-            Text(title, style: ApexTypography.headingMedium.copyWith(color: _text)),
+            Text(title, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
             const SizedBox(height: 8),
-            Text(description, style: ApexTypography.bodySmall.copyWith(color: _muted), textAlign: TextAlign.center),
+            Text(description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
-              ElevatedButton(
+              ApexButton(
+                label: actionLabel!,
                 onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                ),
-                child: Text(actionLabel!),
+                type: ApexButtonType.primary,
               ),
             ],
           ],

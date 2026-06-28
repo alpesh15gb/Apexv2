@@ -4,16 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 
 final customerSuccessProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -56,10 +48,10 @@ class AdminAnalyticsScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        backgroundColor: ApexColors.neutral0,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
         title: const Text('Platform Analytics', style: TextStyle(fontWeight: FontWeight.w600)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/admin/dashboard')),
@@ -69,17 +61,17 @@ class AdminAnalyticsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Customer Success', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+            const Text('Customer Success', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
             csAsync.when(
               data: (cs) => _StatsRow(
                 stats: [
-                  _StatData('Active Customers', '${cs['active_customers'] ?? 0}', Icons.check_circle, _success),
-                  _StatData('Trial Customers', '${cs['trial_customers'] ?? 0}', Icons.access_time, _warning),
-                  _StatData('Expiring Soon', '${cs['expiring_soon'] ?? 0}', Icons.warning, _danger),
-                  _StatData('Churn Risk', '${cs['churn_risk'] ?? 0}', Icons.trending_down, _danger),
-                  _StatData('Total Employees', '${cs['total_employees'] ?? 0}', Icons.people, _primary),
-                  _StatData('Total Users', '${cs['total_users'] ?? 0}', Icons.person, _primary),
+                  _StatData('Active Customers', '${cs['active_customers'] ?? 0}', Icons.check_circle, ApexColors.successDark),
+                  _StatData('Trial Customers', '${cs['trial_customers'] ?? 0}', Icons.access_time, ApexColors.warning),
+                  _StatData('Expiring Soon', '${cs['expiring_soon'] ?? 0}', Icons.warning, ApexColors.errorDark),
+                  _StatData('Churn Risk', '${cs['churn_risk'] ?? 0}', Icons.trending_down, ApexColors.errorDark),
+                  _StatData('Total Employees', '${cs['total_employees'] ?? 0}', Icons.people, ApexColors.primary600),
+                  _StatData('Total Users', '${cs['total_users'] ?? 0}', Icons.person, ApexColors.primary600),
                 ],
                 isMobile: isMobile,
               ),
@@ -87,7 +79,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
               error: (e, _) => Text('Error: $e'),
             ),
             const SizedBox(height: 24),
-            const Text('Platform Growth', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+            const Text('Platform Growth', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
             analyticsAsync.when(
               data: (analytics) {
@@ -96,11 +88,11 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                 final users = analytics['users'] ?? {};
                 return _StatsRow(
                   stats: [
-                    _StatData('Total Tenants', '${tenants['total'] ?? 0}', Icons.business, _primary),
-                    _StatData('New (30d)', '${tenants['new_30d'] ?? 0}', Icons.add_business, _success),
-                    _StatData('Total Employees', '${employees['total'] ?? 0}', Icons.people, _primary),
-                    _StatData('New (30d)', '${employees['new_30d'] ?? 0}', Icons.person_add, _success),
-                    _StatData('Active Users (30d)', '${users['active_30d'] ?? 0}', Icons.verified_user, _warning),
+                    _StatData('Total Tenants', '${tenants['total'] ?? 0}', Icons.business, ApexColors.primary600),
+                    _StatData('New (30d)', '${tenants['new_30d'] ?? 0}', Icons.add_business, ApexColors.successDark),
+                    _StatData('Total Employees', '${employees['total'] ?? 0}', Icons.people, ApexColors.primary600),
+                    _StatData('New (30d)', '${employees['new_30d'] ?? 0}', Icons.person_add, ApexColors.successDark),
+                    _StatData('Active Users (30d)', '${users['active_30d'] ?? 0}', Icons.verified_user, ApexColors.warning),
                   ],
                   isMobile: isMobile,
                 );
@@ -109,20 +101,20 @@ class AdminAnalyticsScreen extends ConsumerWidget {
               error: (e, _) => Text('Error: $e'),
             ),
             const SizedBox(height: 24),
-            const Text('Active Subscriptions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text)),
+            const Text('Active Subscriptions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
             const SizedBox(height: 8),
             subsAsync.when(
               data: (subs) {
-                if (subs.isEmpty) return const Text('No active subscriptions', style: TextStyle(color: _muted));
+                if (subs.isEmpty) return const Text('No active subscriptions', style: TextStyle(color: ApexColors.neutral500));
                 return Column(
                   children: subs.map((s) => Container(
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+                    decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
                     child: Row(children: [
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(s['tenant_name'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text)),
-                        Text('${s['plan_name'] ?? ''} • ${s['billing_cycle'] ?? ''}', style: const TextStyle(fontSize: 12, color: _muted)),
+                        Text(s['tenant_name'] ?? '', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                        Text('${s['plan_name'] ?? ''} • ${s['billing_cycle'] ?? ''}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
                       ])),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -147,11 +139,11 @@ class AdminAnalyticsScreen extends ConsumerWidget {
 
   Color _statusColor(String? status) {
     switch (status) {
-      case 'active': return _success;
-      case 'trial': return _warning;
-      case 'suspended': return _danger;
-      case 'expired': return _danger;
-      default: return _muted;
+      case 'active': return ApexColors.successDark;
+      case 'trial': return ApexColors.warning;
+      case 'suspended': return ApexColors.errorDark;
+      case 'expired': return ApexColors.errorDark;
+      default: return ApexColors.neutral500;
     }
   }
 }
@@ -171,7 +163,7 @@ class _StatsRow extends StatelessWidget {
         width: isMobile ? double.infinity : (MediaQuery.of(context).size.width - 80) / stats.length,
         child: Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
+          decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -185,7 +177,7 @@ class _StatsRow extends StatelessWidget {
                 Text(s.value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: s.color)),
               ]),
               const SizedBox(height: 6),
-              Text(s.label, style: const TextStyle(fontSize: 11, color: _muted)),
+              Text(s.label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
             ],
           ),
         ),
@@ -202,3 +194,4 @@ class _StatData {
 
   _StatData(this.label, this.value, this.icon, this.color);
 }
+

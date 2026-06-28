@@ -5,17 +5,17 @@ import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../widgets/apex_app_bar.dart';
-
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../design_system/typography.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_date_picker.dart';
 
 final attendanceStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -125,22 +125,25 @@ class AttendanceDashboardScreen extends ConsumerWidget {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       appBar: AppBar(
-        backgroundColor: _surface,
-        foregroundColor: _text,
+        title: Text('Attendance', style: ApexTypography.sectionTitle),
+        backgroundColor: Colors.white,
+        foregroundColor: ApexColors.neutral900,
         elevation: 0,
-        title: const Text('Attendance', style: TextStyle(fontWeight: FontWeight.w600)),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
         actions: [
-          TextButton.icon(
+          ApexButton(
+            label: 'Regularization',
+            icon: Icons.edit_note,
+            type: ApexButtonType.ghost,
             onPressed: () => context.push('/attendance/regularization'),
-            icon: const Icon(Icons.edit_note, size: 16),
-            label: const Text('Regularization'),
           ),
-          TextButton.icon(
+          ApexButton(
+            label: 'Shifts',
+            icon: Icons.schedule,
+            type: ApexButtonType.ghost,
             onPressed: () => context.push('/shifts'),
-            icon: const Icon(Icons.schedule, size: 16),
-            label: const Text('Shifts'),
           ),
           const SizedBox(width: 16),
         ],
@@ -153,7 +156,7 @@ class AttendanceDashboardScreen extends ConsumerWidget {
             statsAsync.when(
               data: (stats) => _StatsRow(stats: stats),
               loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text('Error: $e', style: const TextStyle(color: _danger)),
+              error: (e, _) => Text('Error: $e', style: TextStyle(color: ApexColors.error)),
             ),
             const SizedBox(height: 16),
             _FiltersBar(),
@@ -175,12 +178,12 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
     final cards = [
-      _StatCard(title: 'Present', value: '${stats['present'] ?? 0}', icon: Icons.check_circle, color: _success),
-      _StatCard(title: 'Absent', value: '${stats['absent'] ?? 0}', icon: Icons.cancel, color: _danger),
-      _StatCard(title: 'Late', value: '${stats['late'] ?? 0}', icon: Icons.access_time, color: _warning),
-      _StatCard(title: 'On Leave', value: '${stats['on_leave'] ?? 0}', icon: Icons.event_busy, color: _primary),
-      _StatCard(title: 'Half Day', value: '${stats['half_day'] ?? 0}', icon: Icons.schedule, color: _muted),
-      _StatCard(title: 'Total', value: '${stats['total_employees'] ?? 0}', icon: Icons.people, color: _text),
+      _StatCard(title: 'Present', value: '${stats['present'] ?? 0}', icon: Icons.check_circle, color: ApexColors.success),
+      _StatCard(title: 'Absent', value: '${stats['absent'] ?? 0}', icon: Icons.cancel, color: ApexColors.error),
+      _StatCard(title: 'Late', value: '${stats['late'] ?? 0}', icon: Icons.access_time, color: ApexColors.warning),
+      _StatCard(title: 'On Leave', value: '${stats['on_leave'] ?? 0}', icon: Icons.event_busy, color: ApexColors.primary),
+      _StatCard(title: 'Half Day', value: '${stats['half_day'] ?? 0}', icon: Icons.schedule, color: ApexColors.neutral500),
+      _StatCard(title: 'Total', value: '${stats['total_employees'] ?? 0}', icon: Icons.people, color: ApexColors.neutral900),
     ];
 
     return Wrap(
@@ -204,13 +207,8 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ApexCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -226,7 +224,7 @@ class _StatCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 12, color: _muted, fontWeight: FontWeight.w500)),
+          Text(title, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -245,7 +243,7 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
       child: Row(
         children: [
           IconButton(
@@ -265,11 +263,11 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: _primary.withOpacity(0.05), borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(6)),
               child: Row(children: [
-                const Icon(Icons.calendar_today, size: 14, color: _primary),
+                Icon(Icons.calendar_today, size: 14, color: ApexColors.primary),
                 const SizedBox(width: 6),
-                Text(DateFormat('dd MMM yyyy').format(_selectedDate), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _primary)),
+                Text(DateFormat('dd MMM yyyy').format(_selectedDate), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ApexColors.primary)),
               ]),
             ),
           ),
@@ -281,15 +279,16 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
             },
           ),
           const SizedBox(width: 8),
-          TextButton(
+          ApexButton(
+            label: 'Today',
+            type: ApexButtonType.ghost,
             onPressed: () {
               setState(() => _selectedDate = DateTime.now());
               ref.read(attendanceListProvider.notifier).setDate(DateFormat('yyyy-MM-dd').format(DateTime.now()));
             },
-            child: const Text('Today'),
           ),
           const Spacer(),
-          IconButton(icon: const Icon(Icons.download, size: 18, color: _muted), onPressed: () {}),
+          IconButton(icon: Icon(Icons.download, size: 18, color: ApexColors.neutral500), onPressed: () {}),
         ],
       ),
     );
@@ -307,12 +306,12 @@ class _AttendanceTable extends StatelessWidget {
     if (loading) return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
     if (records.isEmpty) return Container(
       height: 200,
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
-      child: const Center(child: Text('No attendance records for this date', style: TextStyle(color: _muted))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+      child: const Center(child: Text('No attendance records for this date', style: TextStyle(color: ApexColors.neutral500))),
     );
 
     return Container(
-      decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: ConstrainedBox(
@@ -321,15 +320,15 @@ class _AttendanceTable extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                color: _bg,
-                child: Row(children: const [
-                  SizedBox(width: 180, child: Text('EMPLOYEE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                  SizedBox(width: 100, child: Text('CODE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                  SizedBox(width: 100, child: Text('CHECK IN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                  SizedBox(width: 100, child: Text('CHECK OUT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                  SizedBox(width: 80, child: Text('HOURS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                  SizedBox(width: 80, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
-                  SizedBox(width: 80, child: Text('SOURCE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _muted, letterSpacing: 0.5))),
+                color: ApexColors.neutral50,
+                child: Row(children: [
+                  SizedBox(width: 180, child: Text('EMPLOYEE', style: ApexTypography.tableHeader)),
+                  SizedBox(width: 100, child: Text('CODE', style: ApexTypography.tableHeader)),
+                  SizedBox(width: 100, child: Text('CHECK IN', style: ApexTypography.tableHeader)),
+                  SizedBox(width: 100, child: Text('CHECK OUT', style: ApexTypography.tableHeader)),
+                  SizedBox(width: 80, child: Text('HOURS', style: ApexTypography.tableHeader)),
+                  SizedBox(width: 80, child: Text('STATUS', style: ApexTypography.tableHeader)),
+                  SizedBox(width: 80, child: Text('SOURCE', style: ApexTypography.tableHeader)),
                 ]),
               ),
               ...records.asMap().entries.map((entry) {
@@ -338,33 +337,26 @@ class _AttendanceTable extends StatelessWidget {
                 final status = r['status'] ?? 'unknown';
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: i.isEven ? _surface : _bg,
+                  color: i.isEven ? Colors.white : ApexColors.neutral50,
                   child: Row(children: [
                     SizedBox(width: 180, child: Row(children: [
                       CircleAvatar(
                         radius: 14,
-                        backgroundColor: _primary.withOpacity(0.1),
-                        child: Text((r['employee_name'] ?? '?')[0].toUpperCase(), style: const TextStyle(fontSize: 11, color: _primary, fontWeight: FontWeight.w700)),
+                        backgroundColor: ApexColors.primary.withOpacity(0.1),
+                        child: Text((r['employee_name'] ?? '?')[0].toUpperCase(), style: TextStyle(fontSize: 11, color: ApexColors.primary, fontWeight: FontWeight.w700)),
                       ),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(r['employee_name'] ?? '—', style: const TextStyle(fontSize: 13, color: _text), overflow: TextOverflow.ellipsis)),
+                      Expanded(child: Text(r['employee_name'] ?? '—', style: ApexTypography.table, overflow: TextOverflow.ellipsis)),
                     ])),
-                    SizedBox(width: 100, child: Text(r['employee_code'] ?? '—', style: const TextStyle(fontSize: 13, color: _muted))),
-                    SizedBox(width: 100, child: Text(_formatTime(r['check_in']), style: const TextStyle(fontSize: 13, color: _text))),
-                    SizedBox(width: 100, child: Text(_formatTime(r['check_out']), style: const TextStyle(fontSize: 13, color: _text))),
-                    SizedBox(width: 80, child: Text('${r['working_hours'] ?? '—'}h', style: const TextStyle(fontSize: 13, color: _text))),
+                    SizedBox(width: 100, child: Text(r['employee_code'] ?? '—', style: ApexTypography.table.copyWith(color: ApexColors.neutral500))),
+                    SizedBox(width: 100, child: Text(_formatTime(r['check_in']), style: ApexTypography.table)),
+                    SizedBox(width: 100, child: Text(_formatTime(r['check_out']), style: ApexTypography.table)),
+                    SizedBox(width: 80, child: Text('${r['working_hours'] ?? '—'}h', style: ApexTypography.table)),
                     SizedBox(
                       width: 80,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: _statusColor(status).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor(status))),
-                      ),
+                      child: _statusBadge(status),
                     ),
-                    SizedBox(width: 80, child: Text(r['source'] ?? 'biometric', style: const TextStyle(fontSize: 12, color: _muted))),
+                    SizedBox(width: 80, child: Text(r['source'] ?? 'biometric', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500))),
                   ]),
                 );
               }),
@@ -385,15 +377,17 @@ class _AttendanceTable extends StatelessWidget {
     }
   }
 
-  Color _statusColor(String status) {
+  Widget _statusBadge(String status) {
+    ApexBadgeType type;
     switch (status) {
-      case 'present': return _success;
-      case 'absent': return _danger;
-      case 'late': return _warning;
-      case 'half_day': return const Color(0xFFF59E0B);
-      case 'on_leave': return _primary;
-      default: return _muted;
+      case 'present': type = ApexBadgeType.success; break;
+      case 'absent': type = ApexBadgeType.danger; break;
+      case 'late': type = ApexBadgeType.warning; break;
+      case 'half_day': type = ApexBadgeType.warning; break;
+      case 'on_leave': type = ApexBadgeType.info; break;
+      default: type = ApexBadgeType.neutral;
     }
+    return ApexBadge(label: status, type: type);
   }
 }
 
@@ -405,17 +399,17 @@ class _Pagination extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(color: _surface, border: Border(top: BorderSide(color: _border))),
+      decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ApexColors.neutral200))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('${state.total} records', style: const TextStyle(fontSize: 13, color: _muted)),
+          Text('${state.total} records', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
           const SizedBox(width: 24),
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: state.page > 1 ? () => ref.read(attendanceListProvider.notifier).fetch(page: state.page - 1) : null,
           ),
-          Text('Page ${state.page} of ${state.totalPages}', style: const TextStyle(fontSize: 13, color: _text)),
+          Text('Page ${state.page} of ${state.totalPages}', style: ApexTypography.caption),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: state.page < state.totalPages ? () => ref.read(attendanceListProvider.notifier).fetch(page: state.page + 1) : null,
@@ -425,3 +419,4 @@ class _Pagination extends ConsumerWidget {
     );
   }
 }
+

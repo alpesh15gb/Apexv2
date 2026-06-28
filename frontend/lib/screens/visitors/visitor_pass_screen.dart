@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../models/visitor.dart';
 import '../../providers/visitor_provider.dart';
 import '../../services/visitor_service.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/status_badge.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_button.dart';
 
 final visitorPassDetailProvider = FutureProvider.family<VisitorPass, String>((ref, id) async {
   final service = ref.read(visitorServiceProvider);
@@ -22,38 +27,34 @@ class VisitorPassScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final detailAsync = ref.watch(visitorPassDetailProvider(passId));
-    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Visitor Access Pass'),
-      ),
+      backgroundColor: ApexColors.neutral50,
+      appBar: const ApexAppBar(title: 'Visitor Access Pass'),
       body: detailAsync.when(
         data: (pass) => Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: 400,
+              child: ApexCard(
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.badge, size: 64, color: Colors.blue),
+                    Icon(Icons.badge, size: 64, color: ApexColors.primary600),
                     const SizedBox(height: 16),
                     Text(
                       'VISITOR PASS',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: ApexTypography.titleMedium.copyWith(
                         letterSpacing: 2,
-                        color: Colors.blue,
+                        color: ApexColors.primary600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       pass.passNumber,
-                      style: theme.textTheme.headlineMedium?.copyWith(
+                      style: ApexTypography.headingMedium.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -68,24 +69,26 @@ class VisitorPassScreen extends ConsumerWidget {
                     _buildRow('Check-out', pass.checkOutTime != null ? DateFormat('hh:mm a').format(pass.checkOutTime!) : '--:--'),
                     const SizedBox(height: 32),
                     if (pass.status == 'scheduled')
-                      ElevatedButton.icon(
+                      ApexButton(
+                        label: 'Check In',
+                        icon: Icons.login,
+                        type: ApexButtonType.success,
+                        expanded: true,
                         onPressed: () async {
                           await ref.read(visitorPassesProvider.notifier).checkIn(pass.id);
                           ref.invalidate(visitorPassDetailProvider(passId));
                         },
-                        icon: const Icon(Icons.login),
-                        label: const Text('Check In'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                       )
                     else if (pass.status == 'checked_in')
-                      ElevatedButton.icon(
+                      ApexButton(
+                        label: 'Check Out',
+                        icon: Icons.logout,
+                        type: ApexButtonType.danger,
+                        expanded: true,
                         onPressed: () async {
                           await ref.read(visitorPassesProvider.notifier).checkOut(pass.id);
                           ref.invalidate(visitorPassDetailProvider(passId));
                         },
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Check Out'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
                       ),
                   ],
                 ),
@@ -104,12 +107,12 @@ class VisitorPassScreen extends ConsumerWidget {
 
   Widget _buildRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(label, style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
+          Text(value, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );

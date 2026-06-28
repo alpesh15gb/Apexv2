@@ -10,17 +10,8 @@ import '../../design_system/typography.dart';
 import '../../design_system/border_radius.dart';
 import '../../models/dashboard.dart';
 import '../../providers/dashboard_provider.dart';
-
-// ── RULE 1: Exact colors ───────────────────────────────────
-const _bg = Color(0xFFF8FAFC);
-const _surface = Color(0xFFFFFFFF);
-const _border = Color(0xFFE5E7EB);
-const _primary = Color(0xFF2563EB);
-const _success = Color(0xFF16A34A);
-const _warning = Color(0xFFF59E0B);
-const _danger = Color(0xFFDC2626);
-const _text = Color(0xFF111827);
-const _muted = Color(0xFF6B7280);
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -34,7 +25,7 @@ class DashboardScreen extends ConsumerWidget {
     final syncAsync = ref.watch(syncHealthProvider);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: ApexColors.neutral50,
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(dashboardStatsProvider);
@@ -171,10 +162,10 @@ class _Header extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Dashboard', style: ApexTypography.pageTitle.copyWith(color: _text)),
+            Text('Dashboard', style: ApexTypography.pageTitle.copyWith(color: ApexColors.neutral900)),
             Text(
               DateFormat('EEEE, MMMM dd, yyyy').format(DateTime.now()),
-              style: ApexTypography.bodySmall.copyWith(color: _muted),
+              style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500),
             ),
           ],
         ),
@@ -185,7 +176,7 @@ class _Header extends StatelessWidget {
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Mark Attendance'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _primary,
+              backgroundColor: ApexColors.primary600,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -214,13 +205,13 @@ class _KpiRow extends StatelessWidget {
       mainAxisSpacing: 8,
       childAspectRatio: isMobile ? 1.6 : 2.0,
       children: [
-        _KpiCard(label: 'Attendance', value: '${pct.toStringAsFixed(0)}%', color: pct >= 90 ? _success : _warning, onTap: () => context.push('/attendance')),
-        _KpiCard(label: 'Present', value: '${stats.employeesPresent}', color: _success, onTap: () => context.push('/attendance')),
-        _KpiCard(label: 'Absent', value: '${stats.employeesAbsent}', color: _danger, onTap: () => context.push('/attendance')),
-        _KpiCard(label: 'Late', value: '${stats.lateToday}', color: _warning, onTap: () => context.push('/attendance')),
-        _KpiCard(label: 'Leave', value: '${stats.pendingLeaves}', color: _primary, onTap: () => context.push('/leaves/requests')),
-        _KpiCard(label: 'Devices', value: '${stats.onlineDevices}', color: stats.offlineDevices > 0 ? _warning : _success, onTap: () => context.push('/devices')),
-        _KpiCard(label: 'Visitors', value: '${stats.visitorsInside}', color: _primary, onTap: () => context.push('/visitors/active')),
+        _KpiCard(label: 'Attendance', value: '${pct.toStringAsFixed(0)}%', color: pct >= 90 ? ApexColors.successDark : ApexColors.warning, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Present', value: '${stats.employeesPresent}', color: ApexColors.successDark, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Absent', value: '${stats.employeesAbsent}', color: ApexColors.error, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Late', value: '${stats.lateToday}', color: ApexColors.warning, onTap: () => context.push('/attendance')),
+        _KpiCard(label: 'Leave', value: '${stats.pendingLeaves}', color: ApexColors.primary600, onTap: () => context.push('/leaves/requests')),
+        _KpiCard(label: 'Devices', value: '${stats.onlineDevices}', color: stats.offlineDevices > 0 ? ApexColors.warning : ApexColors.successDark, onTap: () => context.push('/devices')),
+        _KpiCard(label: 'Visitors', value: '${stats.visitorsInside}', color: ApexColors.primary600, onTap: () => context.push('/visitors/active')),
       ],
     );
   }
@@ -253,9 +244,9 @@ class _KpiCardState extends State<_KpiCard> {
           height: 80,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: _surface,
+            color: ApexColors.neutral0,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _hovered ? widget.color.withOpacity(0.4) : _border),
+            border: Border.all(color: _hovered ? widget.color.withOpacity(0.4) : ApexColors.neutral200),
           ),
           child: Row(
             children: [
@@ -266,7 +257,7 @@ class _KpiCardState extends State<_KpiCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(widget.value, style: ApexTypography.kpiValue.copyWith(color: _text)),
+                    Text(widget.value, style: ApexTypography.kpiValue.copyWith(color: ApexColors.neutral900)),
                     Text(widget.label, style: ApexTypography.kpiLabel),
                   ],
                 ),
@@ -298,7 +289,7 @@ class _TrendChart extends StatelessWidget {
                     show: true,
                     drawVerticalLine: false,
                     horizontalInterval: 1,
-                    getDrawingHorizontalLine: (v) => FlLine(color: _border, strokeWidth: 0.5),
+                    getDrawingHorizontalLine: (v) => FlLine(color: ApexColors.neutral200, strokeWidth: 0.5),
                   ),
                   titlesData: FlTitlesData(
                     show: true,
@@ -306,7 +297,7 @@ class _TrendChart extends StatelessWidget {
                       final i = v.toInt();
                       if (i >= 0 && i < data.length) return Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(DateFormat('E').format(data[i].date), style: ApexTypography.captionSmall.copyWith(color: _muted)),
+                        child: Text(DateFormat('E').format(data[i].date), style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                       );
                       return const SizedBox();
                     })),
@@ -318,13 +309,13 @@ class _TrendChart extends StatelessWidget {
                   lineBarsData: [
                     LineChartBarData(
                       spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.present.toDouble())).toList(),
-                      isCurved: true, color: _primary, barWidth: 2,
+                      isCurved: true, color: ApexColors.primary600, barWidth: 2,
                       dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(show: true, color: _primary.withOpacity(0.08)),
+                      belowBarData: BarAreaData(show: true, color: ApexColors.primary600.withOpacity(0.08)),
                     ),
                     LineChartBarData(
                       spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.absent.toDouble())).toList(),
-                      isCurved: true, color: _danger, barWidth: 1.5,
+                      isCurved: true, color: ApexColors.error, barWidth: 1.5,
                       dotData: const FlDotData(show: false),
                     ),
                   ],
@@ -358,7 +349,7 @@ class _DeptDistribution extends StatelessWidget {
                       Expanded(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(value: pct, backgroundColor: _border, color: _primary, minHeight: 6),
+                          child: LinearProgressIndicator(value: pct, backgroundColor: ApexColors.neutral200, color: ApexColors.primary600, minHeight: 6),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -382,13 +373,13 @@ class _PendingWork extends StatelessWidget {
       title: 'Pending Work',
       child: Column(
         children: [
-          _PendingItem(icon: Icons.warning_amber, label: 'Missing Punches', count: '${stats.missingPunches} employees', color: _warning, onTap: () => context.push('/attendance')),
-          const Divider(height: 1, color: _border),
-          _PendingItem(icon: Icons.access_time, label: 'Late Today', count: '${stats.lateToday} employees', color: _warning, onTap: () => context.push('/attendance')),
-          const Divider(height: 1, color: _border),
-          _PendingItem(icon: Icons.event_busy, label: 'Pending Approvals', count: '${stats.pendingLeaves} requests', color: _primary, onTap: () => context.push('/leaves/requests')),
-          const Divider(height: 1, color: _border),
-          _PendingItem(icon: Icons.cloud_off, label: 'Offline Devices', count: '${stats.offlineDevices} devices', color: _danger, onTap: () => context.push('/devices')),
+          _PendingItem(icon: Icons.warning_amber, label: 'Missing Punches', count: '${stats.missingPunches} employees', color: ApexColors.warning, onTap: () => context.push('/attendance')),
+          const Divider(height: 1, color: ApexColors.neutral200),
+          _PendingItem(icon: Icons.access_time, label: 'Late Today', count: '${stats.lateToday} employees', color: ApexColors.warning, onTap: () => context.push('/attendance')),
+          const Divider(height: 1, color: ApexColors.neutral200),
+          _PendingItem(icon: Icons.event_busy, label: 'Pending Approvals', count: '${stats.pendingLeaves} requests', color: ApexColors.primary600, onTap: () => context.push('/leaves/requests')),
+          const Divider(height: 1, color: ApexColors.neutral200),
+          _PendingItem(icon: Icons.cloud_off, label: 'Offline Devices', count: '${stats.offlineDevices} devices', color: ApexColors.error, onTap: () => context.push('/devices')),
         ],
       ),
     );
@@ -415,7 +406,7 @@ class _PendingItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(count, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: color)),
-          const Icon(Icons.chevron_right, size: 16, color: _muted),
+          Icon(Icons.chevron_right, size: 16, color: ApexColors.neutral500),
         ],
       ),
       onTap: onTap,
@@ -438,7 +429,7 @@ class _RecentPunchLogs extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: data.length > 8 ? 8 : data.length,
-              separatorBuilder: (_, __) => const Divider(height: 1, color: _border),
+              separatorBuilder: (_, __) => const Divider(height: 1, color: ApexColors.neutral200),
               itemBuilder: (context, i) {
                 final log = data[i];
                 final empName = log['employee_name'] ?? log['employee_code'] ?? 'Unknown';
@@ -450,13 +441,13 @@ class _RecentPunchLogs extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
                     radius: 14,
-                    backgroundColor: isIn ? _success.withOpacity(0.1) : _danger.withOpacity(0.1),
-                    child: Icon(Icons.fingerprint, size: 14, color: isIn ? _success : _danger),
+                    backgroundColor: isIn ? ApexColors.successDark.withOpacity(0.1) : ApexColors.error.withOpacity(0.1),
+                    child: Icon(Icons.fingerprint, size: 14, color: isIn ? ApexColors.successDark : ApexColors.error),
                   ),
-                  title: Text('$empName', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: _text), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text('$empName', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w500, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
                   subtitle: Text(
                     '${punchType.toString().toUpperCase()}  •  ${_formatTime(punchTime)}',
-                    style: const TextStyle(fontSize: 11, color: _muted),
+                    style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500),
                   ),
                 );
               },
@@ -511,12 +502,12 @@ class _ActionBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: _border),
+          border: Border.all(color: ApexColors.neutral200),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 20, color: _primary),
+            Icon(icon, size: 20, color: ApexColors.primary600),
             const SizedBox(height: 4),
             Text(label, style: ApexTypography.captionSmall, textAlign: TextAlign.center),
           ],
@@ -538,9 +529,9 @@ class _SyncHealth extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _SyncStat(label: 'Servers', value: '${data.totalServers}', color: _muted),
-          _SyncStat(label: 'Connected', value: '${data.connected}', color: _success),
-          _SyncStat(label: 'Error', value: '${data.error}', color: data.error > 0 ? _danger : _success),
+          _SyncStat(label: 'Servers', value: '${data.totalServers}', color: ApexColors.neutral500),
+          _SyncStat(label: 'Connected', value: '${data.connected}', color: ApexColors.successDark),
+          _SyncStat(label: 'Error', value: '${data.error}', color: data.error > 0 ? ApexColors.error : ApexColors.successDark),
         ],
       ),
     );
@@ -575,9 +566,9 @@ class _SectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _surface,
+        color: ApexColors.neutral0,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -599,7 +590,7 @@ class _EmptyBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Center(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: _muted))),
+      child: Center(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500))),
     );
   }
 }
@@ -613,14 +604,14 @@ class _ErrorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _surface,
+        color: ApexColors.neutral0,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.neutral200),
       ),
       child: Row(children: [
-        const Icon(Icons.error_outline, color: _danger, size: 18),
+        Icon(Icons.error_outline, color: ApexColors.error, size: 18),
         const SizedBox(width: 8),
-        Expanded(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: _danger))),
+        Expanded(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: ApexColors.error))),
       ]),
     );
   }
@@ -635,11 +626,12 @@ class _LoadingCard extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: _surface,
+        color: ApexColors.neutral0,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
+        border: Border.all(color: ApexColors.neutral200),
       ),
       child: const Center(child: CircularProgressIndicator()),
     );
   }
 }
+

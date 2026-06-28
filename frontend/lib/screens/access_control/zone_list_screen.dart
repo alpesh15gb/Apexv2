@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/employee_provider.dart';
 import '../../services/access_control_service.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_text_field.dart';
+import '../../widgets/apex_dropdown.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/apex_badge.dart';
 
 final zonesProvider = FutureProvider((ref) async {
   final service = ref.read(accessControlServiceProvider);
@@ -39,30 +47,30 @@ class _ZoneListScreenState extends ConsumerState<ZoneListScreen> {
       builder: (context) {
         final branchesAsync = ref.watch(branchesProvider);
         return AlertDialog(
-          title: const Text('Add Access Zone'),
+          title: Text('Add Access Zone', style: ApexTypography.sectionTitle),
           content: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextFormField(
+                ApexTextField(
+                  label: 'Zone Name',
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Zone Name *'),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  required: true,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                ApexTextField(
+                  label: 'Description',
                   controller: _descController,
-                  decoration: const InputDecoration(labelText: 'Description'),
                 ),
                 const SizedBox(height: 12),
                 branchesAsync.maybeWhen(
-                  data: (list) => DropdownButtonFormField<String>(
+                  data: (list) => ApexDropdown<String>(
+                    label: 'Branch',
                     value: _selectedBranchId,
-                    decoration: const InputDecoration(labelText: 'Branch *'),
+                    required: true,
                     items: list.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                     onChanged: (v) => setState(() => _selectedBranchId = v),
-                    validator: (v) => v == null ? 'Required' : null,
                   ),
                   orElse: () => const SizedBox(),
                 ),
@@ -70,8 +78,9 @@ class _ZoneListScreenState extends ConsumerState<ZoneListScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-            TextButton(
+            ApexButton(label: 'Cancel', type: ApexButtonType.ghost, onPressed: () => Navigator.pop(context)),
+            ApexButton(
+              label: 'Add',
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   try {
@@ -92,13 +101,12 @@ class _ZoneListScreenState extends ConsumerState<ZoneListScreen> {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
                       );
                     }
                   }
                 }
               },
-              child: const Text('Add'),
             ),
           ],
         );
@@ -111,7 +119,8 @@ class _ZoneListScreenState extends ConsumerState<ZoneListScreen> {
     final zonesAsync = ref.watch(zonesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Security Access Zones')),
+      backgroundColor: ApexColors.neutral50,
+      appBar: const ApexAppBar(title: 'Security Access Zones'),
       body: zonesAsync.when(
         data: (zones) {
           if (zones.isEmpty) {
@@ -127,13 +136,28 @@ class _ZoneListScreenState extends ConsumerState<ZoneListScreen> {
             itemCount: zones.length,
             itemBuilder: (context, idx) {
               final z = zones[idx];
-              return Card(
-                child: ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.security)),
-                  title: Text(z['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(z['description'] ?? 'No description'),
-                  trailing: Chip(
-                    label: Text('Level ${z['access_level_required'] ?? 1}'),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ApexCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: ApexColors.primary100,
+                        child: Icon(Icons.security, color: ApexColors.primary600),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(z['name'], style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                            Text(z['description'] ?? 'No description', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                          ],
+                        ),
+                      ),
+                      ApexBadge(label: 'Level ${z['access_level_required'] ?? 1}', type: ApexBadgeType.info),
+                    ],
                   ),
                 ),
               );
@@ -148,7 +172,8 @@ class _ZoneListScreenState extends ConsumerState<ZoneListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addZone,
-        child: const Icon(Icons.add),
+        backgroundColor: ApexColors.primary600,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
