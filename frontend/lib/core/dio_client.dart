@@ -12,6 +12,33 @@ String _getBaseUrl() {
   return ApiConstants.desktopBaseUrl;
 }
 
+String _extractErrorMessage(DioException error) {
+  // Extract from response body
+  if (error.response?.statusCode != null && error.response?.data != null) {
+    final data = error.response!.data;
+    if (data is Map) {
+      return data['detail'] ?? data['message'] ?? data['error'] ?? 'Request failed (${error.response!.statusCode})';
+    } else if (data is String && data.isNotEmpty) {
+      return data.length > 200 ? 'Server error (${error.response!.statusCode})' : data;
+    }
+    return 'Request failed (${error.response!.statusCode})';
+  }
+
+  // Network errors
+  switch (error.type) {
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+      return 'Connection timed out. Please check your internet and try again.';
+    case DioExceptionType.connectionError:
+      return 'Cannot connect to server. Please check if the service is running.';
+    case DioExceptionType.cancel:
+      return 'Request was cancelled.';
+    default:
+      return 'An unexpected error occurred. Please try again.';
+  }
+}
+
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
@@ -35,64 +62,14 @@ final dioProvider = Provider<Dio>((ref) {
         return handler.next(options);
       },
       onError: (DioException error, handler) async {
-        // Extract meaningful error message from response body
-        if (error.response?.statusCode != null && error.response?.data != null) {
-          final data = error.response!.data;
-          String message;
-          if (data is Map) {
-            message = data['detail'] ?? data['message'] ?? data['error'] ?? 'Request failed (${error.response!.statusCode})';
-          } else if (data is String && data.isNotEmpty) {
-            message = data.length > 200 ? 'Server error (${error.response!.statusCode})' : data;
-          } else {
-            message = 'Request failed (${error.response!.statusCode})';
-          }
-          return handler.reject(DioException(
-            requestOptions: error.requestOptions,
-            response: error.response,
-            type: error.type,
-            message: message,
-            error: message,
-          ));
-        }
-
-        // Network and timeout errors
-        String message;
-        switch (error.type) {
-          case DioExceptionType.connectionTimeout:
-          case DioExceptionType.sendTimeout:
-          case DioExceptionType.receiveTimeout:
-            message = 'Connection timed out. Please check your internet and try again.';
-            break;
-          case DioExceptionType.connectionError:
-            message = 'Cannot connect to server. Please check if the service is running.';
-            break;
-          case DioExceptionType.cancel:
-            message = 'Request was cancelled.';
-            break;
-          default:
-            if (error.type == DioExceptionType.unknown && 
-                error.error != null && 
-                error.error.toString().contains('SystemLiteral')) {
-              message = 'Server returned an invalid response. Check if the API server is running.';
-            } else {
-              message = 'An unexpected error occurred. Please try again.';
-            }
-        }
-        return handler.reject(DioException(
-          requestOptions: error.requestOptions,
-          response: error.response,
-          type: error.type,
-          message: message,
-          error: message,
-        ));
-      },
+        // Auto-refresh on 401
+        if (error.response?.statusCode == 401 &&
             error.requestOptions.path != ApiConstants.login &&
             error.requestOptions.path != ApiConstants.refresh) {
-          
+
           final refreshToken = await secureStorage.read(StorageKeys.refreshToken);
           if (refreshToken != null && refreshToken.isNotEmpty) {
             try {
-              // Try to refresh token
               final refreshResponse = await Dio(
                 BaseOptions(
                   baseUrl: _getBaseUrl(),
@@ -112,22 +89,29 @@ final dioProvider = Provider<Dio>((ref) {
                   await secureStorage.write(StorageKeys.accessToken, newAccessToken);
                   await secureStorage.write(StorageKeys.refreshToken, newRefreshToken);
 
-                  // Retry the original request
                   final originalOptions = error.requestOptions;
                   originalOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-                  
+
                   final response = await dio.fetch(originalOptions);
                   return handler.resolve(response);
                 }
               }
             } catch (e) {
-              // Refresh failed, clean up and let the error propagate (should trigger logout)
               await secureStorage.delete(StorageKeys.accessToken);
               await secureStorage.delete(StorageKeys.refreshToken);
             }
           }
         }
-        return handler.next(error);
+
+        // Return user-friendly error message
+        final message = _extractErrorMessage(error);
+        return handler.reject(DioException(
+          requestOptions: error.requestOptions,
+          response: error.response,
+          type: error.type,
+          message: message,
+          error: message,
+        ));
       },
     ),
   );
