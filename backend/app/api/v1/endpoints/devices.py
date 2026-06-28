@@ -46,7 +46,7 @@ async def list_devices(
 async def create_device(
     data: DeviceCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("device.manage")),
 ):
     service = DeviceService(db)
     return await service.create_device(current_user.tenant_id, data)
@@ -70,7 +70,7 @@ async def update_device(
     device_id: uuid.UUID,
     data: DeviceUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("device.manage")),
 ):
     service = DeviceService(db)
     return await service.update_device(device_id, current_user.tenant_id, data)
@@ -80,7 +80,7 @@ async def update_device(
 async def delete_device(
     device_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("device.manage")),
 ):
     service = DeviceService(db)
     await service.delete_device(device_id, current_user.tenant_id)
@@ -105,7 +105,7 @@ async def get_device_logs(
 async def sync_device(
     device_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("device.manage")),
 ):
     from app.tasks.sync_tasks import sync_all_tenants_devices
     sync_all_tenants_devices.delay()

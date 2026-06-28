@@ -35,7 +35,7 @@ async def list_leave_types(
 async def create_leave_type(
     data: LeaveTypeCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("leave.approve")),
 ):
     service = LeaveService(db)
     return await service.create_leave_type(current_user.tenant_id, data)
@@ -61,7 +61,7 @@ async def get_leave_balance(
 async def apply_leave(
     data: LeaveRequestCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("leave.approve")),
 ):
     service = LeaveService(db)
     # Find employee record for current user
@@ -103,7 +103,7 @@ async def list_leave_requests(
 async def approve_leave(
     request_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("leave.approve")),
 ):
     service = LeaveService(db)
     return await service.approve_leave(request_id, current_user.tenant_id, current_user.id)
@@ -114,7 +114,7 @@ async def reject_leave(
     request_id: uuid.UUID,
     data: LeaveRejectRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("leave.approve")),
 ):
     service = LeaveService(db)
     return await service.reject_leave(request_id, current_user.tenant_id, current_user.id, data.rejection_reason)
@@ -124,7 +124,7 @@ async def reject_leave(
 async def cancel_leave(
     request_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("leave.approve")),
 ):
     service = LeaveService(db)
     return await service.cancel_leave(request_id, current_user.tenant_id, current_user.id)

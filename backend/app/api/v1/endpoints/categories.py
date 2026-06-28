@@ -31,7 +31,7 @@ async def list_categories(
 async def create_category(
     data: CategoryCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("category.manage")),
 ):
     existing = select(EmployeeCategory).where(
         EmployeeCategory.tenant_id == current_user.tenant_id,
@@ -52,7 +52,7 @@ async def update_category(
     category_id: uuid.UUID,
     data: CategoryUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("category.manage")),
 ):
     stmt = select(EmployeeCategory).where(
         EmployeeCategory.id == category_id,
@@ -85,7 +85,7 @@ async def update_category(
 async def delete_category(
     category_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("category.manage")),
 ):
     stmt = select(EmployeeCategory).where(
         EmployeeCategory.id == category_id,

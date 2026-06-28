@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
 from app.core.security import verify_password, create_access_token, create_refresh_token
+from app.middleware.rate_limit import rate_limit
 from app.models.user import User
 
 router = APIRouter()
@@ -19,6 +20,7 @@ class AdminLoginRequest(BaseModel):
 
 
 @router.post("/login")
+@rate_limit(limit=5, period=60)
 async def admin_login(
     data: AdminLoginRequest,
     db: AsyncSession = Depends(get_db),

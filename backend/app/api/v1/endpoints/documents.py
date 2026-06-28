@@ -31,7 +31,7 @@ async def list_documents(
 
 
 @router.post("/", response_model=DocumentResponse, status_code=201)
-async def create_document(data: DocumentCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def create_document(data: DocumentCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permissions("document.manage"))):
     doc = Document(tenant_id=current_user.tenant_id, uploaded_by=current_user.id, **data.model_dump())
     db.add(doc)
     await db.commit()
@@ -40,7 +40,7 @@ async def create_document(data: DocumentCreate, db: AsyncSession = Depends(get_d
 
 
 @router.put("/{doc_id}", response_model=DocumentResponse)
-async def update_document(doc_id: uuid.UUID, data: DocumentUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def update_document(doc_id: uuid.UUID, data: DocumentUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permissions("document.manage"))):
     stmt = select(Document).where(Document.id == doc_id, Document.tenant_id == current_user.tenant_id)
     doc = (await db.execute(stmt)).scalar_one_or_none()
     if not doc:
@@ -53,7 +53,7 @@ async def update_document(doc_id: uuid.UUID, data: DocumentUpdate, db: AsyncSess
 
 
 @router.delete("/{doc_id}", response_model=ResponseBase)
-async def delete_document(doc_id: uuid.UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def delete_document(doc_id: uuid.UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permissions("document.manage"))):
     stmt = select(Document).where(Document.id == doc_id, Document.tenant_id == current_user.tenant_id)
     doc = (await db.execute(stmt)).scalar_one_or_none()
     if not doc:

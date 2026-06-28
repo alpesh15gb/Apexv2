@@ -101,7 +101,7 @@ async def list_requisitions(
 async def create_requisition(
     data: RequisitionCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("recruitment.manage")),
 ):
     req = JobRequisition(
         tenant_id=current_user.tenant_id,

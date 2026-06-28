@@ -140,7 +140,7 @@ async def record_payment(
     student_fee = student_fee.scalar_one_or_none()
     if student_fee:
         total_paid = (await db.execute(
-            select(func.coalesce(func.sum(FeePayment.amount), 0)).where(FeePayment.student_fee_id == data.student_fee_id)
+            select(func.coalesce(func.sum(FeePayment.amount), 0)).where(FeePayment.student_fee_id == data.student_fee_id, FeePayment.tenant_id == current_user.tenant_id)
         )).scalar()
         if total_paid + data.amount >= float(student_fee.final_amount):
             student_fee.status = "paid"

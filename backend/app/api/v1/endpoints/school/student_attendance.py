@@ -47,6 +47,7 @@ async def mark_attendance(
         StudentAttendance.student_id == data.student_id,
         StudentAttendance.date == data.date,
         StudentAttendance.attendance_type == data.attendance_type,
+        StudentAttendance.tenant_id == current_user.tenant_id,
     )
     if data.period_definition_id:
         stmt = stmt.where(StudentAttendance.period_definition_id == data.period_definition_id)
@@ -96,6 +97,7 @@ async def bulk_mark_attendance(
             StudentAttendance.student_id == student_id,
             StudentAttendance.date == data.date,
             StudentAttendance.attendance_type == data.attendance_type,
+            StudentAttendance.tenant_id == current_user.tenant_id,
         )
         result = await db.execute(stmt)
         existing = result.scalar_one_or_none()

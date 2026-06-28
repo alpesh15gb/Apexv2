@@ -41,7 +41,7 @@ async def list_visitors(
 async def register_visitor(
     data: VisitorCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("visitor.manage")),
 ):
     service = VisitorService(db)
     return await service.register_visitor(current_user.tenant_id, data)
@@ -51,7 +51,7 @@ async def register_visitor(
 async def create_visitor_pass(
     data: VisitorPassCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("visitor.manage")),
 ):
     service = VisitorService(db)
     return await service.create_visitor_pass(current_user.tenant_id, data)
@@ -61,7 +61,7 @@ async def create_visitor_pass(
 async def check_in_visitor(
     pass_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("visitor.manage")),
 ):
     service = VisitorService(db)
     return await service.check_in_visitor(pass_id, current_user.tenant_id)
@@ -71,7 +71,7 @@ async def check_in_visitor(
 async def check_out_visitor(
     pass_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("visitor.manage")),
 ):
     service = VisitorService(db)
     return await service.check_out_visitor(pass_id, current_user.tenant_id)

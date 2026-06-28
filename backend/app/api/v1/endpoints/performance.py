@@ -70,7 +70,7 @@ async def list_cycles(
 async def create_cycle(
     data: CycleCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("performance.manage")),
 ):
     cycle = ReviewCycle(
         tenant_id=current_user.tenant_id,

@@ -36,7 +36,7 @@ async def list_departments(
 async def create_department(
     data: DepartmentCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.create")),
 ):
     service = DepartmentService(db)
     return await service.create_department(current_user.tenant_id, data)
@@ -47,7 +47,7 @@ async def update_department(
     department_id: uuid.UUID,
     data: DepartmentUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.update")),
 ):
     service = DepartmentService(db)
     return await service.update_department(department_id, current_user.tenant_id, data)
@@ -57,7 +57,7 @@ async def update_department(
 async def delete_department(
     department_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.delete")),
 ):
     service = DepartmentService(db)
     await service.delete_department(department_id, current_user.tenant_id)
@@ -82,7 +82,7 @@ async def list_designations(
 async def create_designation(
     data: DesignationCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.create")),
 ):
     service = DesignationService(db)
     return await service.create_designation(current_user.tenant_id, data)
@@ -93,7 +93,7 @@ async def update_designation(
     designation_id: uuid.UUID,
     data: DesignationUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.update")),
 ):
     service = DesignationService(db)
     return await service.update_designation(designation_id, current_user.tenant_id, data)
@@ -103,7 +103,7 @@ async def update_designation(
 async def delete_designation(
     designation_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.delete")),
 ):
     service = DesignationService(db)
     await service.delete_designation(designation_id, current_user.tenant_id)
@@ -128,7 +128,7 @@ async def list_branches(
 async def create_branch(
     data: BranchCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.create")),
 ):
     service = BranchService(db)
     return await service.create_branch(current_user.tenant_id, data)
@@ -139,7 +139,7 @@ async def update_branch(
     branch_id: uuid.UUID,
     data: BranchUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.update")),
 ):
     service = BranchService(db)
     return await service.update_branch(branch_id, current_user.tenant_id, data)
@@ -149,7 +149,7 @@ async def update_branch(
 async def delete_branch(
     branch_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.delete")),
 ):
     service = BranchService(db)
     await service.delete_branch(branch_id, current_user.tenant_id)
@@ -183,7 +183,7 @@ async def list_employees(
 async def create_employee(
     data: EmployeeCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.create")),
 ):
     service = EmployeeService(db)
     return await service.create_employee(current_user.tenant_id, data)
@@ -193,7 +193,7 @@ async def create_employee(
 async def bulk_import(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.create")),
 ):
     content = await file.read()
     service = EmployeeService(db)
@@ -222,7 +222,7 @@ async def update_employee(
     employee_id: uuid.UUID,
     data: EmployeeUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.update")),
 ):
     service = EmployeeService(db)
     return await service.update_employee(employee_id, current_user.tenant_id, data)
@@ -232,7 +232,7 @@ async def update_employee(
 async def delete_employee(
     employee_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.delete")),
 ):
     service = EmployeeService(db)
     await service.delete_employee(employee_id, current_user.tenant_id)
@@ -243,7 +243,7 @@ async def delete_employee(
 async def deactivate_employee(
     employee_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("employee.update")),
 ):
     service = EmployeeService(db)
     return await service.update_employee(employee_id, current_user.tenant_id, EmployeeUpdate(status="inactive"))

@@ -43,7 +43,7 @@ async def update_group(group_id: uuid.UUID, data: ShiftGroupUpdate, db: AsyncSes
         setattr(group, field, val)
     if data.shift_ids is not None:
         from sqlalchemy import delete as sql_del
-        await db.execute(sql_del(ShiftGroupMember).where(ShiftGroupMember.group_id == group_id))
+        await db.execute(sql_del(ShiftGroupMember).where(ShiftGroupMember.group_id == group_id, ShiftGroupMember.tenant_id == current_user.tenant_id))
         for sid in data.shift_ids:
             db.add(ShiftGroupMember(tenant_id=current_user.tenant_id, group_id=group_id, shift_id=sid))
     await db.commit()
@@ -65,5 +65,5 @@ async def delete_group(group_id: uuid.UUID, db: AsyncSession = Depends(get_db), 
 @router.get("/{group_id}/shifts")
 async def get_group_shifts(group_id: uuid.UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     from app.models.shift import Shift
-    stmt = select(Shift).join(ShiftGroupMember, ShiftGroupMember.shift_id == Shift.id).where(ShiftGroupMember.group_id == group_id)
+    stmt = select(Shift).join(ShiftGroupMember, ShiftGroupMember.shift_id == Shift.id).where(ShiftGroupMember.group_id == group_id, ShiftGroupMember.tenant_id == current_user.tenant_id)
     return list((await db.execute(stmt)).scalars().all())

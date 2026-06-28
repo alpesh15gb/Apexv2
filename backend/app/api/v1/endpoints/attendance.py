@@ -73,7 +73,7 @@ async def list_attendance(
 async def manual_mark_attendance(
     data: AttendanceCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("attendance.manage")),
 ):
     service = AttendanceService(db)
     return await service.manual_mark_attendance(current_user.tenant_id, data)
@@ -83,7 +83,7 @@ async def manual_mark_attendance(
 async def process_attendance(
     target_date: date_type = Query(...),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("attendance.manage")),
 ):
     service = AttendanceService(db)
     results = await service.calculate_daily_attendance(current_user.tenant_id, target_date)
@@ -94,7 +94,7 @@ async def process_attendance(
 async def approve_attendance(
     attendance_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("attendance.manage")),
 ):
     service = AttendanceService(db)
     return await service.approve_attendance(attendance_id, current_user.tenant_id, current_user.id)

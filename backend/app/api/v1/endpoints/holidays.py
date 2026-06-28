@@ -41,7 +41,7 @@ async def list_holidays(
 async def create_holiday(
     data: HolidayCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("holiday.manage")),
 ):
     holiday = Holiday(
         tenant_id=current_user.tenant_id,
@@ -62,7 +62,7 @@ async def update_holiday(
     holiday_id: uuid.UUID,
     data: HolidayUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("holiday.manage")),
 ):
     stmt = select(Holiday).where(
         Holiday.id == holiday_id,
@@ -86,7 +86,7 @@ async def update_holiday(
 async def delete_holiday(
     holiday_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("holiday.manage")),
 ):
     stmt = select(Holiday).where(
         Holiday.id == holiday_id,

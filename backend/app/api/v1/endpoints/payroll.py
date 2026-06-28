@@ -37,7 +37,7 @@ async def list_salary_structures(
 
 
 @router.post("/salary-structure", response_model=SalaryStructureResponse, status_code=201)
-async def create_salary_structure(data: SalaryStructureCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def create_salary_structure(data: SalaryStructureCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permissions("payroll.manage"))):
     ss = SalaryStructure(tenant_id=current_user.tenant_id, **data.model_dump())
     db.add(ss)
     await db.commit()
@@ -46,7 +46,7 @@ async def create_salary_structure(data: SalaryStructureCreate, db: AsyncSession 
 
 
 @router.put("/salary-structure/{ss_id}", response_model=SalaryStructureResponse)
-async def update_salary_structure(ss_id: uuid.UUID, data: SalaryStructureUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def update_salary_structure(ss_id: uuid.UUID, data: SalaryStructureUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permissions("payroll.manage"))):
     stmt = select(SalaryStructure).where(SalaryStructure.id == ss_id, SalaryStructure.tenant_id == current_user.tenant_id)
     ss = (await db.execute(stmt)).scalar_one_or_none()
     if not ss:
@@ -85,7 +85,7 @@ async def generate_payslips(
     year: int = Query(...),
     department_id: Optional[uuid.UUID] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("payroll.manage")),
 ):
     import calendar as cal
     _, last_day = cal.monthrange(year, month)
@@ -143,7 +143,7 @@ async def generate_payslips(
 
 
 @router.put("/payslips/{payslip_id}/freeze", response_model=PaySlipResponse)
-async def freeze_payslip(payslip_id: uuid.UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def freeze_payslip(payslip_id: uuid.UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permissions("payroll.manage"))):
     stmt = select(PaySlip).where(PaySlip.id == payslip_id, PaySlip.tenant_id == current_user.tenant_id)
     ps = (await db.execute(stmt)).scalar_one_or_none()
     if not ps:
@@ -169,7 +169,7 @@ async def list_loans(
 
 
 @router.post("/loans", response_model=LoanResponse, status_code=201)
-async def create_loan(data: LoanCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+async def create_loan(data: LoanCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permissions("payroll.manage"))):
     loan = Loan(tenant_id=current_user.tenant_id, **data.model_dump())
     db.add(loan)
     await db.commit()

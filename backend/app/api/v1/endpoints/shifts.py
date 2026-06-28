@@ -31,7 +31,7 @@ async def list_shifts(
 async def create_shift(
     data: ShiftCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("shift.manage")),
 ):
     service = ShiftService(db)
     return await service.create_shift(current_user.tenant_id, data)
@@ -55,7 +55,7 @@ async def update_shift(
     shift_id: uuid.UUID,
     data: ShiftUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("shift.manage")),
 ):
     service = ShiftService(db)
     return await service.update_shift(shift_id, current_user.tenant_id, data)
@@ -65,7 +65,7 @@ async def update_shift(
 async def delete_shift(
     shift_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("shift.manage")),
 ):
     service = ShiftService(db)
     await service.delete_shift(shift_id, current_user.tenant_id)
@@ -76,7 +76,7 @@ async def delete_shift(
 async def assign_shift(
     data: ShiftScheduleCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_permissions("shift.manage")),
 ):
     service = ShiftService(db)
     return await service.assign_shift(current_user.tenant_id, data)

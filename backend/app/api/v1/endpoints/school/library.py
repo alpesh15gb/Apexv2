@@ -130,8 +130,9 @@ async def return_book(
     transaction.status = "returned"
 
     book = await db.get(LibraryBook, transaction.book_id)
-    if book:
-        book.available_copies += 1
+    if not book or book.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail="Book not found")
+    book.available_copies += 1
 
     await db.commit()
     return {"id": str(transaction.id)}

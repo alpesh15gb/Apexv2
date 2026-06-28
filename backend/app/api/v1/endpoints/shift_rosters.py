@@ -43,7 +43,7 @@ async def update_roster(roster_id: uuid.UUID, data: ShiftRosterUpdate, db: Async
         setattr(roster, field, val)
     if data.entries is not None:
         from sqlalchemy import delete as sql_del
-        await db.execute(sql_del(ShiftRosterEntry).where(ShiftRosterEntry.roster_id == roster_id))
+        await db.execute(sql_del(ShiftRosterEntry).where(ShiftRosterEntry.roster_id == roster_id, ShiftRosterEntry.tenant_id == current_user.tenant_id))
         for entry in data.entries:
             db.add(ShiftRosterEntry(tenant_id=current_user.tenant_id, roster_id=roster_id, day_number=entry['day_number'], shift_id=entry.get('shift_id')))
     await db.commit()
@@ -64,5 +64,5 @@ async def delete_roster(roster_id: uuid.UUID, db: AsyncSession = Depends(get_db)
 
 @router.get("/{roster_id}/entries")
 async def get_roster_entries(roster_id: uuid.UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    stmt = select(ShiftRosterEntry).where(ShiftRosterEntry.roster_id == roster_id).order_by(ShiftRosterEntry.day_number)
+    stmt = select(ShiftRosterEntry).where(ShiftRosterEntry.roster_id == roster_id, ShiftRosterEntry.tenant_id == current_user.tenant_id).order_by(ShiftRosterEntry.day_number)
     return list((await db.execute(stmt)).scalars().all())

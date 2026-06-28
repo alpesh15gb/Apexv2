@@ -31,6 +31,7 @@ from app.schemas.auth import (
     RefreshTokenRequest,
 )
 from app.schemas.common import StatusResponse
+from app.middleware.rate_limit import rate_limit
 
 settings = get_settings()
 router = APIRouter()
@@ -44,6 +45,7 @@ def get_redis():
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+@rate_limit(limit=3, period=60)
 async def register(
     register_data: RegisterRequest,
     request: Request,
@@ -115,6 +117,7 @@ async def register(
 
 
 @router.post("/login", response_model=LoginResponse)
+@rate_limit(limit=5, period=60)
 async def login(
     login_data: LoginRequest,
     request: Request,
@@ -197,6 +200,7 @@ async def login(
 
 
 @router.post("/refresh", response_model=LoginResponse)
+@rate_limit(limit=10, period=60)
 async def refresh_token(
     refresh_data: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db),
