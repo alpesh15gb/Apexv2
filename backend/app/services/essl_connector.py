@@ -802,7 +802,7 @@ class EsslConnectorService:
                         elif isinstance(punches, dict):
                             punches = [punches]
 
-                        logger.info("emp_punches_fetched", emp_code=emp_code, count=len(punches), from_date=from_str, to_date=to_str)
+                        print(f"[SYNC] {emp_code}: got {len(punches)} punches, type={type(punches[0]).__name__ if punches else 'empty'}")
 
                         for punch in punches:
                             # Convert Pydantic model to dict if needed
@@ -821,7 +821,7 @@ class EsslConnectorService:
 
                             punch_time = self._parse_datetime(str(pt_str), self.server.timezone)
                             if not punch_time:
-                                logger.info("skipped_parse_failed", emp_code=emp_code, pt_str=str(pt_str))
+                                print(f"[SYNC] {emp_code}: parse failed for '{pt_str}'")
                                 continue
 
                             if max_punch_time is None or punch_time > max_punch_time:
@@ -847,7 +847,7 @@ class EsslConnectorService:
                                     await self.db.flush()
                                 created += 1
                             except Exception as flush_err:
-                                logger.warning("raw_log_flush_failed", employee_code=emp_code, error=str(flush_err), punch_time=str(punch_time))
+                                print(f"[SYNC] {emp_code}: flush failed: {flush_err}")
                                 skipped += 1
 
                     except Exception as e:
