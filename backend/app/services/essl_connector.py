@@ -919,14 +919,17 @@ class EsslConnectorService:
                     batch = batch["items"]
                 elif isinstance(batch, dict):
                     batch = [batch]
-                # Convert Pydantic models to dicts
+                # Convert Pydantic models to dicts, skip strings
                 for d in batch:
+                    if isinstance(d, str):
+                        continue
                     if hasattr(d, 'model_dump'):
                         all_essl_devices.append(d.model_dump())
                     elif isinstance(d, dict):
                         all_essl_devices.append(d)
 
             essl_devices = all_essl_devices
+            logger.info("essl_devices_parsed", count=len(essl_devices), types=[type(d).__name__ for d in essl_devices[:3]])
 
             history.records_fetched = len(essl_devices)
 
