@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
 from app.models.user import User
 from app.models.category import EmployeeCategory
 from app.schemas.common import ResponseBase
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("category.read"))])
 
 
 @router.get("/", response_model=List[CategoryResponse])

@@ -9,12 +9,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_superuser
+from app.core.deps import get_db, get_current_superuser, require_permissions
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.subscription import SubscriptionPlan, TenantSubscription
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("billing.read"))])
 
 
 class SubscriptionCancel(BaseModel):

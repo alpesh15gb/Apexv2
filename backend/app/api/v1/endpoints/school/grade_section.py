@@ -8,13 +8,13 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.school.grade import Grade, Section, House
 from app.models.school.subject import Subject, GradeSubject, TeacherAllocation
 from app.models.school.student import Student
 
-router = APIRouter(dependencies=[Depends(require_feature("class_management"))])
+router = APIRouter(dependencies=[Depends(require_feature("class_management")), Depends(require_permissions("school.settings"))])
 
 
 class GradeCreate(BaseModel):
@@ -155,7 +155,7 @@ async def list_section_students(
 
 # ── Subjects ────────────────────────────────────────
 
-subjects_router = APIRouter(dependencies=[Depends(require_feature("subject_management"))])
+subjects_router = APIRouter(dependencies=[Depends(require_feature("subject_management")), Depends(require_permissions("school.settings"))])
 
 
 @subjects_router.get("/subjects")
@@ -237,7 +237,7 @@ async def assign_subjects_to_grade(
 
 # ── Teacher Allocation ──────────────────────────────
 
-alloc_router = APIRouter(dependencies=[Depends(require_feature("class_management"))])
+alloc_router = APIRouter(dependencies=[Depends(require_feature("class_management")), Depends(require_permissions("school.settings"))])
 
 
 @alloc_router.get("/teacher-allocations")

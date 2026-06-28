@@ -2,13 +2,14 @@
 
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from app.core.security import decode_token
+from app.core.deps import require_permissions
 from app.services.websocket_manager import ws_manager
 import structlog
 
 logger = structlog.get_logger(__name__)
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("dashboard.read"))])
 
 
 @router.websocket("/ws/dashboard")

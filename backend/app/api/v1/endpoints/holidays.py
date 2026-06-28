@@ -7,13 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
 from app.models.user import User
 from app.models.holiday import Holiday
 from app.schemas.common import ResponseBase
 from app.schemas.holiday import HolidayCreate, HolidayUpdate, HolidayResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("holiday.read"))])
 
 
 @router.get("/", response_model=List[HolidayResponse])

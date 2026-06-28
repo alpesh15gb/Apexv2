@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_permissions, require_permissions, require_feature
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseBase
 from app.schemas.access_control import (
@@ -16,7 +16,7 @@ from app.schemas.access_control import (
 )
 from app.services.access_control import AccessControlService
 
-router = APIRouter(dependencies=[Depends(require_feature("access_control"))])
+router = APIRouter(dependencies=[Depends(require_feature("access_control")), Depends(require_permissions("access_control.read"))])
 
 
 # ── Zones ────────────────────────────────────────────

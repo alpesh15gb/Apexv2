@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_permissions, require_permissions, require_feature
 from app.models.user import User
 from app.models.onboarding import OnboardingTask
 from app.schemas.common import ResponseBase
 from app.schemas.onboarding import OnboardingTaskCreate, OnboardingTaskUpdate, OnboardingTaskResponse
 
-router = APIRouter(dependencies=[Depends(require_feature("onboarding"))])
+router = APIRouter(dependencies=[Depends(require_feature("onboarding")), Depends(require_permissions("onboarding.read"))])
 
 
 @router.get("/", response_model=List[OnboardingTaskResponse])

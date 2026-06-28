@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_permissions, require_permissions, require_feature
 from app.core.encryption import encrypt_value, decrypt_value
 from app.models.user import User
 from app.models.essl_server import EsslServer
@@ -26,7 +26,7 @@ from app.schemas.essl import (
 )
 from app.services.essl_connector import EsslConnectorService
 
-router = APIRouter(dependencies=[Depends(require_feature("biometric"))])
+router = APIRouter(dependencies=[Depends(require_feature("biometric")), Depends(require_permissions("biometric.read"))])
 
 
 # ------------------------------------------------------------------

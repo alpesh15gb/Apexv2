@@ -9,12 +9,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.school.medical import HealthRecord, DisciplineIncident
 from app.models.school.student import Student
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("medical.manage"))])
 
 
 class HealthRecordCreate(BaseModel):
@@ -38,7 +38,7 @@ class DisciplineIncidentCreate(BaseModel):
 
 # ── Medical ──────────────────────────────────────────
 
-medical_router = APIRouter(dependencies=[Depends(require_feature("school_medical"))])
+medical_router = APIRouter(dependencies=[Depends(require_feature("school_medical")), Depends(require_permissions("medical.manage"))])
 
 
 @medical_router.get("/students/{student_id}")
@@ -70,7 +70,7 @@ async def create_health_record(
 
 # ── Discipline ───────────────────────────────────────
 
-discipline_router = APIRouter(dependencies=[Depends(require_feature("school_discipline"))])
+discipline_router = APIRouter(dependencies=[Depends(require_feature("school_discipline")), Depends(require_permissions("discipline.manage"))])
 
 
 @discipline_router.get("/")

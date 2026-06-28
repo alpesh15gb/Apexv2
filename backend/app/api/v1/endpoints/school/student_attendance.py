@@ -9,12 +9,12 @@ from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.school.student_attendance import StudentAttendance
 from app.models.school.student import Student
 
-router = APIRouter(dependencies=[Depends(require_feature("student_attendance"))])
+router = APIRouter(dependencies=[Depends(require_feature("student_attendance")), Depends(require_permissions("student_attendance.read"))])
 
 
 class AttendanceMark(BaseModel):

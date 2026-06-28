@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
 from app.models.user import User
 from app.models.payroll import SalaryStructure, PaySlip, Loan
 from app.models.employee import Employee

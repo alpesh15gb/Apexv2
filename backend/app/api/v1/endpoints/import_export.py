@@ -11,12 +11,12 @@ from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_permissions, require_permissions
 from app.models.user import User
 from app.models.employee import Employee, Department, Designation, Branch
 from app.models.leave import LeaveBalance, LeaveType
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("employee.read"))])
 
 
 @router.post("/import/employees")

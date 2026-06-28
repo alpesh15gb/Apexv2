@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
 from app.models.user import User
 from app.models.asset_travel import CompanyAsset, TravelRequest
 from app.models.announcement import Announcement, Poll, PollResponse
@@ -20,7 +20,7 @@ from app.schemas.hr_features import (
     NotificationTemplateCreate, NotificationTemplateResponse,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("hr.read"))])
 
 
 # ── Company Assets ──────────────────────────────────────

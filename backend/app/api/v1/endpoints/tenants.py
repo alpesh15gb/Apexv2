@@ -3,13 +3,13 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_superuser
+from app.core.deps import get_db, get_current_superuser, require_permissions, require_permissions
 from app.models.user import User
 from app.schemas.tenant import TenantCreate, TenantUpdate, TenantResponse
 from app.schemas.common import PaginatedResponse
 from app.services.tenant import TenantService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("tenant.read"))])
 
 @router.get("/", response_model=PaginatedResponse[TenantResponse])
 async def list_tenants(

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.employee import Employee
@@ -12,7 +12,7 @@ from app.models.attendance import Attendance
 from app.models.leave import LeaveRequest
 from app.models.notification import Notification
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("system.read"))])
 
 
 @router.get("/health")

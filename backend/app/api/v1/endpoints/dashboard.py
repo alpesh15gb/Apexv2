@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
 from app.models.user import User
 from app.schemas.dashboard import (
     DashboardStats, AttendanceTrend, RecentActivity,
@@ -15,7 +15,7 @@ from app.schemas.dashboard import (
 )
 from app.services.dashboard import DashboardService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("dashboard.read"))])
 
 
 @router.get("/stats", response_model=DashboardStats)

@@ -9,11 +9,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.school.academic_year import AcademicYear, AcademicTerm, SchoolHoliday
 
-router = APIRouter(dependencies=[Depends(require_feature("academic_year"))])
+router = APIRouter(dependencies=[Depends(require_feature("academic_year")), Depends(require_permissions("school.settings"))])
 
 
 class AcademicYearCreate(BaseModel):

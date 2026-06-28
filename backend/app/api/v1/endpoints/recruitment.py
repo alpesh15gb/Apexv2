@@ -9,11 +9,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions, require_permissions
 from app.models.user import User
 from app.models.recruitment import JobRequisition, JobOpening, Candidate, Interview, Offer
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("recruitment.read"))])
 
 
 class InterviewFeedbackUpdate(BaseModel):

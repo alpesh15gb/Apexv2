@@ -9,12 +9,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user, require_feature
+from app.core.deps import get_db, get_current_active_user, require_feature, require_permissions
 from app.models.user import User
 from app.models.school.examination import ExamType, Exam, ExamSchedule, ExamMark, GradingScale, GradingScaleDetail
 from app.models.school.student import Student
 
-router = APIRouter(dependencies=[Depends(require_feature("examinations"))])
+router = APIRouter(dependencies=[Depends(require_feature("examinations")), Depends(require_permissions("exam.read"))])
 
 
 class ExamTypeCreate(BaseModel):
