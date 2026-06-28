@@ -334,7 +334,17 @@ class ESSLSoapService:
                         # Part 3 has comma-separated punch times
                         punch_times = [t.strip() for t in parts[2].split(",") if t.strip()]
                         for pt in punch_times:
-                            # Combine date with time
+                            # Validate time format (HH:MM:SS)
+                            time_parts = pt.split(":")
+                            if len(time_parts) != 3:
+                                continue  # Skip truncated times like "20:2"
+                            try:
+                                h, m, s = int(time_parts[0]), int(time_parts[1]), int(time_parts[2])
+                                if not (0 <= h <= 23 and 0 <= m <= 59 and 0 <= s <= 59):
+                                    continue
+                            except ValueError:
+                                continue
+                            
                             full_dt = f"{date_str} {pt}"
                             all_logs.append({
                                 "employee_code": employee_code,

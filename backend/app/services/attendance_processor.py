@@ -222,8 +222,31 @@ class AttendanceProcessor:
         if not day_punches:
             return "error"
 
-        punch_in = day_punches[0].punch_time
-        punch_out = day_punches[-1].punch_time if len(day_punches) > 1 else None
+        # Deduplicate punches with same timestamp (within 5 seconds)
+        unique_punches = []
+        for p in day_punches:
+            if not p.punch_time:
+                continue
+            is_dup = False
+            for u in unique_punches:
+                if abs((p.punch_time - u.punch_time).total_seconds()) < 5:
+                    is_dup = True
+                    break
+            if not is_dup:
+                unique_punches.append(p)
+        
+        if not unique_punches:
+            return "error"
+
+        # Sort by time
+        unique_punches.sort(key=lambda p: p.punch_time)
+        
+        punch_in = unique_punches[0].punch_time
+        punch_out = unique_punches[-1].punch_time if len(unique_punches) > 1 else None
+
+        # If punch_in == punch_out (same timestamp for first and last), set punch_out to None
+        if punch_out and punch_in == punch_out:
+            punch_out = None
 
         # Find shift
         shift = await self._find_shift(tenant_id, employee, punch_date)
