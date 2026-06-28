@@ -274,7 +274,9 @@ class AttendanceService:
     ) -> AttendanceSummary:
         # verify employee
         emp_stmt = select(Employee).where(Employee.id == employee_id, Employee.tenant_id == tenant_id)
-        if not (await self.db.execute(emp_stmt)).scalar_one_or_none():
+        emp_result = await self.db.execute(emp_stmt)
+        employee = emp_result.scalar_one_or_none()
+        if not employee:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         stmt = select(Attendance).where(
@@ -297,13 +299,14 @@ class AttendanceService:
 
         return AttendanceSummary(
             employee_id=employee_id,
+            employee_name=f"{employee.first_name} {employee.last_name}",
+            employee_code=employee.employee_code,
             total_days=total_days,
-            present_days=present_days,
-            absent_days=absent_days,
-            late_days=late_days,
-            early_out_days=early_out_days,
-            half_days=half_days,
-            total_hours=total_hours,
+            present=present_days,
+            absent=absent_days,
+            late=late_days,
+            early_out=early_out_days,
+            half_day=half_days,
             total_overtime_hours=total_overtime_hours
         )
 
