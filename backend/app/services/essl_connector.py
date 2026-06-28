@@ -842,7 +842,8 @@ class EsslConnectorService:
                                 async with self.db.begin_nested():
                                     await self.db.flush()
                                 created += 1
-                            except Exception:
+                            except Exception as flush_err:
+                                logger.warning("raw_log_flush_failed", employee_code=emp_code, error=str(flush_err), punch_time=str(punch_time))
                                 skipped += 1
 
                     except Exception as e:
