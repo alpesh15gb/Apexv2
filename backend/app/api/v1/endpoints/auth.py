@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
 
@@ -131,7 +132,7 @@ async def login(
 
     # Find user. Multi-tenancy check: filter by resolved tenant_id if present
     tenant_id = getattr(request.state, "tenant_id", None)
-    stmt = select(User).where(User.email == login_data.email)
+    stmt = select(User).options(selectinload(User.tenant)).where(User.email == login_data.email)
     if tenant_id:
         stmt = stmt.where(User.tenant_id == tenant_id)
 
