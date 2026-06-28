@@ -14,6 +14,7 @@ import '../../widgets/apex_date_picker.dart';
 import '../../widgets/apex_dropdown.dart';
 import '../../widgets/apex_section.dart';
 import '../../widgets/apex_text_field.dart';
+import '../../widgets/page_wrapper.dart';
 
 class EmployeeEditScreen extends ConsumerStatefulWidget {
   final String employeeId;
@@ -184,36 +185,34 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: ApexColors.neutral50,
-        appBar: const ApexAppBar(title: 'Edit Employee'),
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_employee == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: ApexColors.neutral50,
-        appBar: const ApexAppBar(title: 'Edit Employee'),
-        body: const Center(child: Text('Employee not found')),
+        body: Center(child: Text('Employee not found')),
       );
     }
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: ApexAppBar(
-        title: 'Edit ${_employee!.fullName}',
+      body: ApexPageWrapper(
+        title: 'Edit Employee',
+        description: 'Update account status, basic info, and mapped fields for ${_employee!.fullName}.',
+        onRefresh: _loadData,
         actions: [
-          TextButton.icon(
+          ApexButton(
+            label: _saving ? 'Saving...' : 'Save Changes',
             onPressed: _saving ? null : _save,
-            icon: _saving
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.save, size: 18),
-            label: Text(_saving ? 'Saving...' : 'Save'),
+            type: ApexButtonType.primary,
+            icon: _saving ? null : Icons.save,
+            loading: _saving,
           ),
-          const SizedBox(width: 8),
         ],
-      ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -390,6 +389,7 @@ class _EmployeeEditScreenState extends ConsumerState<EmployeeEditScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

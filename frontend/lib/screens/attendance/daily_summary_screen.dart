@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
@@ -8,9 +7,7 @@ import '../../providers/attendance_provider.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/apex_date_picker.dart';
-import '../../widgets/apex_section.dart';
-import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
+import '../../widgets/page_wrapper.dart';
 import '../../services/attendance_service.dart';
 
 class DailySummaryScreen extends ConsumerStatefulWidget {
@@ -29,71 +26,79 @@ class _DailySummaryScreenState extends ConsumerState<DailySummaryScreen> {
     final summaryAsync = ref.watch(dailySummaryProvider(dateStr));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Daily Summary', style: ApexTypography.titleLarge.copyWith(fontWeight: FontWeight.w600)),
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ApexDatePicker(
-              label: 'Select Date',
-              value: _selectedDate,
-              firstDate: DateTime(2020),
-              lastDate: DateTime.now(),
-              onChanged: (v) { if (v != null) setState(() => _selectedDate = v); },
+      backgroundColor: ApexColors.neutral50,
+      body: ApexPageWrapper(
+        title: 'Daily Summary',
+        description: 'Track aggregate attendance KPIs and reprocess daily punch logs.',
+        onRefresh: () => ref.invalidate(dailySummaryProvider(dateStr)),
+        filterBar: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 200,
+                child: ApexDatePicker(
+                  label: 'Selected Date',
+                  value: _selectedDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                  onChanged: (v) { if (v != null) setState(() => _selectedDate = v); },
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: summaryAsync.when(
+          data: (summary) => ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              _buildStatRow('Present', '${summary.present}', Icons.check_circle_outline, ApexColors.success),
+              _buildStatRow('Absent', '${summary.absent}', Icons.cancel_outlined, ApexColors.error),
+              _buildStatRow('Late Arrival', '${summary.late}', Icons.access_time, ApexColors.warning),
+              _buildStatRow('Half Day', '${summary.halfDay}', Icons.hourglass_bottom, ApexColors.info),
+              _buildStatRow('On Leave', '${summary.onLeave}', Icons.work_off_outlined, ApexColors.primary),
+              const SizedBox(height: 24),
+              ApexButton(
+                label: 'Process Attendance for this Day',
+                icon: Icons.build_circle_outlined,
+                expanded: true,
+                onPressed: () async {
+                  try {
+                    final service = ref.read(attendanceServiceProvider);
+                    await service.processAttendance(dateStr);
+                    ref.invalidate(dailySummaryProvider(dateStr));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Processed daily logs successfully'), backgroundColor: ApexColors.success),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Error: $err', style: ApexTypography.body.copyWith(color: ApexColors.error)),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () => ref.invalidate(dailySummaryProvider(dateStr)),
+                  child: const Text('Retry'),
+                ),
+              ],
             ),
           ),
-          const Divider(height: 1),
-
-          // Summary Stats Content
-          Expanded(
-            child: summaryAsync.when(
-              data: (summary) => ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildStatRow('Present', '${summary.present}', Icons.check_circle_outline, ApexColors.success),
-                  _buildStatRow('Absent', '${summary.absent}', Icons.cancel_outlined, ApexColors.error),
-                  _buildStatRow('Late Arrival', '${summary.late}', Icons.access_time, ApexColors.warning),
-                  _buildStatRow('Half Day', '${summary.halfDay}', Icons.hourglass_bottom, ApexColors.info),
-                  _buildStatRow('On Leave', '${summary.onLeave}', Icons.work_off_outlined, ApexColors.primary),
-                  const SizedBox(height: 32),
-                  ApexButton(
-                    label: 'Process Attendance for this Day',
-                    icon: Icons.build_circle_outlined,
-                    expanded: true,
-                    onPressed: () async {
-                      try {
-                        final service = ref.read(attendanceServiceProvider);
-                        await service.processAttendance(dateStr);
-                        ref.invalidate(dailySummaryProvider(dateStr));
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Processed daily logs successfully'), backgroundColor: ApexColors.success),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: ApexColors.error),
-                          );
-                        }
-                      }
-                    },
-                  ),
-                ],
-              ),
-              loading: () => const LoadingWidget(count: 3),
-              error: (err, stack) => CustomErrorWidget(
-                errorMessage: err.toString(),
-                onRetry: () => ref.invalidate(dailySummaryProvider(dateStr)),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -122,4 +127,3 @@ class _DailySummaryScreenState extends ConsumerState<DailySummaryScreen> {
     );
   }
 }
-

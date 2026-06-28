@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/visitor_provider.dart';
 import '../../providers/employee_provider.dart';
 import '../../services/visitor_service.dart';
-import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_text_field.dart';
 import '../../widgets/apex_dropdown.dart';
 import '../../widgets/apex_date_picker.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_section.dart';
+import '../../widgets/page_wrapper.dart';
 
 class VisitorRegisterScreen extends ConsumerStatefulWidget {
   const VisitorRegisterScreen({Key? key}) : super(key: key);
@@ -53,7 +52,7 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
     if (_formKey.currentState!.validate()) {
       if (_selectedHostId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select a host employee'), backgroundColor: ApexColors.error),
+          const SnackBar(content: Text('Please select a host employee'), backgroundColor: ApexColors.error),
         );
         return;
       }
@@ -80,7 +79,7 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Visitor Pass created successfully'), backgroundColor: ApexColors.success),
+            const SnackBar(content: Text('Visitor Pass created successfully'), backgroundColor: ApexColors.success),
           );
           context.pop();
         }
@@ -100,68 +99,71 @@ class _VisitorRegisterScreenState extends ConsumerState<VisitorRegisterScreen> {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: const ApexAppBar(title: 'Register Visitor'),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ApexSection(
-                title: 'VISITOR INFORMATION',
-                children: [
-                  ApexTextField(label: 'Visitor Name', controller: _nameController, required: true),
-                  const SizedBox(height: 16),
-                  ApexTextField(label: 'Phone Number', controller: _phoneController, keyboardType: TextInputType.phone),
-                  const SizedBox(height: 16),
-                  ApexTextField(label: 'Email Address', controller: _emailController, keyboardType: TextInputType.emailAddress),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: ApexTextField(label: 'ID Proof Type', controller: _idTypeController)),
-                      const SizedBox(width: 16),
-                      Expanded(child: ApexTextField(label: 'ID Proof Number', controller: _idNumberController)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ApexTextField(label: 'Company / Organization', controller: _companyController),
-                ],
-              ),
-              const SizedBox(height: 24),
-              ApexSection(
-                title: 'VISIT DETAILS',
-                children: [
-                  employeesAsync.employees.maybeWhen(
-                    data: (list) => ApexDropdown<String>(
-                      label: 'Host Employee',
-                      value: _selectedHostId,
-                      required: true,
-                      items: list.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName))).toList(),
-                      onChanged: (v) => setState(() => _selectedHostId = v),
+      body: ApexPageWrapper(
+        title: 'Register Visitor',
+        description: 'Record guest identification details and generate check-in access passes.',
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ApexSection(
+                  title: 'VISITOR INFORMATION',
+                  children: [
+                    ApexTextField(label: 'Visitor Name', controller: _nameController, required: true),
+                    const SizedBox(height: 16),
+                    ApexTextField(label: 'Phone Number', controller: _phoneController, keyboardType: TextInputType.phone),
+                    const SizedBox(height: 16),
+                    ApexTextField(label: 'Email Address', controller: _emailController, keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: ApexTextField(label: 'ID Proof Type', controller: _idTypeController)),
+                        const SizedBox(width: 16),
+                        Expanded(child: ApexTextField(label: 'ID Proof Number', controller: _idNumberController)),
+                      ],
                     ),
-                    orElse: () => const SizedBox(),
-                  ),
-                  const SizedBox(height: 16),
-                  ApexTextField(label: 'Purpose of Visit', controller: _purposeController, required: true),
-                  const SizedBox(height: 16),
-                  ApexDatePicker(
-                    label: 'Expected Date',
-                    value: _expectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 90)),
-                    onChanged: (picked) { if (picked != null) setState(() => _expectedDate = picked); },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              ApexButton(
-                label: 'Register & Create Pass',
-                icon: Icons.person_add,
-                expanded: true,
-                onPressed: _submit,
-              ),
-            ],
+                    const SizedBox(height: 16),
+                    ApexTextField(label: 'Company / Organization', controller: _companyController),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                ApexSection(
+                  title: 'VISIT DETAILS',
+                  children: [
+                    employeesAsync.employees.maybeWhen(
+                      data: (list) => ApexDropdown<String>(
+                        label: 'Host Employee',
+                        value: _selectedHostId,
+                        required: true,
+                        items: list.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName))).toList(),
+                        onChanged: (v) => setState(() => _selectedHostId = v),
+                      ),
+                      orElse: () => const SizedBox(),
+                    ),
+                    const SizedBox(height: 16),
+                    ApexTextField(label: 'Purpose of Visit', controller: _purposeController, required: true),
+                    const SizedBox(height: 16),
+                    ApexDatePicker(
+                      label: 'Expected Date',
+                      value: _expectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 90)),
+                      onChanged: (picked) { if (picked != null) setState(() => _expectedDate = picked); },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                ApexButton(
+                  label: 'Register & Create Pass',
+                  icon: Icons.person_add,
+                  expanded: true,
+                  onPressed: _submit,
+                ),
+              ],
+            ),
           ),
         ),
       ),

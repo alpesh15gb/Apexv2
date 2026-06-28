@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../design_system/typography.dart';
 import '../../core/dio_client.dart';
-import '../../widgets/apex_app_bar.dart';
 import '../../design_system/colors.dart';
-
+import '../../widgets/page_wrapper.dart';
+import '../../widgets/apex_button.dart';
 
 class PayslipItem {
   final String id, employeeId, status;
@@ -39,13 +39,13 @@ class PayslipListNotifier extends StateNotifier<AsyncValue<List<PayslipItem>>> {
       final params = <String, dynamic>{};
       if (month != null) params['month'] = month;
       if (year != null) params['year'] = year;
-      final r = await _dio.get('/payroll/payslips', queryParameters: params);
+      final r = await _dio.get('/payroll/payslips/', queryParameters: params);
       state = AsyncValue.data((r.data as List).map((e) => PayslipItem.fromJson(e)).toList());
     } catch (e, s) { state = AsyncValue.error(e, s); }
   }
 
   Future<Map<String, dynamic>> generate(int month, int year) async {
-    final r = await _dio.post('/payroll/payslips/generate', queryParameters: {'month': month, 'year': year});
+    final r = await _dio.post('/payroll/payslips/generate', data: {'month': month, 'year': year});
     await fetch(isRefresh: true, month: month, year: year);
     return r.data as Map<String, dynamic>;
   }
@@ -66,14 +66,21 @@ class PayrollScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: const ApexAppBar(title: 'Payroll'),
-      body: Column(children: [
-        Container(color: Colors.white, child: Row(children: [
-          _tab('Payslips', 0, tab, ref),
-          _tab('Generate', 1, tab, ref),
-        ])),
-        Expanded(child: tab == 0 ? _payslipsList(slipsAsync, ref) : _generateTab(context, ref)),
-      ]),
+      body: ApexPageWrapper(
+        title: 'Salary Processing',
+        description: 'Process, generate, and freeze employee monthly payslips.',
+        onRefresh: () => ref.read(payslipListProvider.notifier).fetch(isRefresh: true),
+        body: Column(children: [
+          Container(
+            color: Colors.white,
+            child: Row(children: [
+              _tab('Payslips', 0, tab, ref),
+              _tab('Generate', 1, tab, ref),
+            ]),
+          ),
+          Expanded(child: tab == 0 ? _payslipsList(slipsAsync, ref) : _generateTab(context, ref)),
+        ]),
+      ),
     );
   }
 
@@ -93,11 +100,11 @@ class PayrollScreen extends ConsumerWidget {
     return slipsAsync.when(
       data: (slips) {
         if (slips.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.receipt_long, size: 48, color: ApexColors.neutral500),
+          const Icon(Icons.receipt_long, size: 48, color: ApexColors.neutral400),
           const SizedBox(height: 16),
-          Text('No Payslips', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
+          Text('No Payslips', style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
           const SizedBox(height: 8),
-          Text('Generate payslips from the Generate tab', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
+          Text('Generate payslips from the Generate tab', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
         ]));
         return ListView.builder(padding: const EdgeInsets.all(16), itemCount: slips.length, itemBuilder: (context, i) {
           final p = slips[i];
@@ -117,7 +124,7 @@ class PayrollScreen extends ConsumerWidget {
               Text('₹${p.netPay.toStringAsFixed(0)}', style: ApexTypography.titleSmall.copyWith(color: ApexColors.success)),
               Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(p.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: statusColor, fontWeight: FontWeight.w600))),
             ]),
-            if (p.status == 'calculated') IconButton(icon: Icon(Icons.lock, size: 16, color: ApexColors.primary), onPressed: () => ref.read(payslipListProvider.notifier).freeze(p.id)),
+            if (p.status == 'calculated') IconButton(icon: const Icon(Icons.lock, size: 16, color: ApexColors.primary), onPressed: () => ref.read(payslipListProvider.notifier).freeze(p.id)),
           ]));
         });
       },
@@ -159,8 +166,3 @@ class PayrollScreen extends ConsumerWidget {
     ])));
   }
 }
-
-
-
-
-

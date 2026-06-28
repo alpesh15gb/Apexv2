@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
-import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
+import '../../widgets/page_wrapper.dart';
 
 final assetStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -111,36 +110,37 @@ class AssetDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        backgroundColor: ApexColors.neutral0,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        title: Text('Asset Management', style: ApexTypography.sectionTitle),
+      body: ApexPageWrapper(
+        title: 'Employee Assets',
+        description: 'Track and assign company inventory, hardware, and assets.',
+        onRefresh: () {
+          ref.invalidate(assetStatsProvider);
+          ref.read(assetListProvider.notifier).fetch();
+        },
         actions: [
-          ElevatedButton.icon(
+          ApexButton(
+            label: 'Add Asset',
             onPressed: () => _showCreateAssetDialog(context, ref),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Add Asset'),
-            style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary600, foregroundColor: Colors.white),
+            type: ApexButtonType.primary,
+            icon: Icons.add,
           ),
-          const SizedBox(width: 16),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            statsAsync.when(
-              data: (stats) => _StatsRow(stats: stats, isMobile: isMobile),
-              loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text('Error: $e'),
-            ),
-            const SizedBox(height: 16),
-            _FiltersBar(),
-            const SizedBox(height: 12),
-            _AssetTable(state: assetState, isMobile: isMobile),
-          ],
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              statsAsync.when(
+                data: (stats) => _StatsRow(stats: stats, isMobile: isMobile),
+                loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+                error: (e, _) => Text('Error: $e'),
+              ),
+              const SizedBox(height: 16),
+              _FiltersBar(),
+              const SizedBox(height: 12),
+              _AssetTable(state: assetState, isMobile: isMobile),
+            ],
+          ),
         ),
       ),
     );
@@ -157,8 +157,6 @@ class AssetDashboardScreen extends ConsumerWidget {
     final locationCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     String category = 'laptop';
-    DateTime? purchaseDate;
-    DateTime? warrantyEnd;
 
     showDialog(
       context: context,
@@ -178,7 +176,9 @@ class AssetDashboardScreen extends ConsumerWidget {
                 DropdownButtonFormField<String>(
                   value: category,
                   decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
-                  items: ['laptop', 'desktop', 'monitor', 'mobile', 'tablet', 'printer', 'furniture', 'vehicle', 'other'].map((c) => DropdownMenuItem(value: c, child: Text(c[0].toUpperCase() + c.substring(1)))).toList(),
+                  items: ['laptop', 'desktop', 'monitor', 'mobile', 'tablet', 'printer', 'furniture', 'vehicle', 'other']
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c[0].toUpperCase() + c.substring(1))))
+                      .toList(),
                   onChanged: (v) => setDialogState(() => category = v!),
                 ),
                 const SizedBox(height: 12),
@@ -260,10 +260,12 @@ class _StatsRow extends StatelessWidget {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: cards.map((c) => SizedBox(
-        width: isMobile ? double.infinity : (MediaQuery.of(context).size.width - 80) / 3,
-        child: c,
-      )).toList(),
+      children: cards
+          .map((c) => SizedBox(
+                width: isMobile ? double.infinity : (MediaQuery.of(context).size.width - 320) / 3,
+                child: c,
+              ))
+          .toList(),
     );
   }
 
@@ -326,8 +328,6 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
           _statusChip('Assigned', 'assigned'),
           _statusChip('Maintenance', 'maintenance'),
           _statusChip('Retired', 'retired'),
-          const Spacer(),
-          IconButton(icon: Icon(Icons.download, size: 18, color: ApexColors.neutral500), onPressed: () {}),
         ],
       ),
     );
@@ -402,7 +402,8 @@ class _AssetTable extends StatelessWidget {
                     child: Icon(_categoryIcon(a['category']), size: 18, color: _categoryColor(a['category'])),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: Column(
+                  Expanded(
+                      child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -446,7 +447,6 @@ class _AssetTable extends StatelessWidget {
   }
 
   void _showAssignDialog(BuildContext context, String assetId) {
-    // Simplified assign dialog
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Assign feature - select employee')));
   }
 
@@ -485,4 +485,3 @@ class _AssetTable extends StatelessWidget {
     }
   }
 }
-

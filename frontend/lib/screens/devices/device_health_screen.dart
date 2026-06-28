@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../providers/device_provider.dart';
-import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/page_wrapper.dart';
 
 class DeviceHealthScreen extends ConsumerWidget {
   const DeviceHealthScreen({Key? key}) : super(key: key);
@@ -14,55 +16,64 @@ class DeviceHealthScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Device Health Dashboard'),
-      ),
-      body: healthAsync.when(
-        data: (health) => Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      backgroundColor: ApexColors.neutral50,
+      body: ApexPageWrapper(
+        title: 'Device Health Status',
+        description: 'Verify connected hardware statistics, network pings, and sync logs control.',
+        onRefresh: () => ref.invalidate(deviceHealthProvider),
+        body: healthAsync.when(
+          data: (health) => ListView(
+            padding: const EdgeInsets.all(24),
             children: [
               Text(
-                'Biometric Terminals Status',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                'Biometric Terminals Connectivity',
+                style: ApexTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _buildHealthCard('Total Terminals', '${health.totalDevices}', Icons.devices, Colors.blue),
-              const SizedBox(height: 12),
-              _buildHealthCard('Online Terminals', '${health.online}', Icons.cloud_done, Colors.green),
-              const SizedBox(height: 12),
-              _buildHealthCard('Offline Terminals', '${health.offline}', Icons.cloud_off, Colors.red),
-              const SizedBox(height: 12),
-              _buildHealthCard('Inactive Terminals', '${health.inactive}', Icons.pause_circle_outline, Colors.orange),
-              const SizedBox(height: 12),
-              _buildHealthCard('Terminals with Errors', '${health.error}', Icons.error_outline, Colors.redAccent),
+              _buildHealthCard('Online Terminals', '${health.online}', Icons.cloud_done, ApexColors.success),
+              _buildHealthCard('Offline Terminals', '${health.offline}', Icons.cloud_off, ApexColors.error),
+              _buildHealthCard('Inactive Terminals', '${health.inactive}', Icons.pause_circle_outline, ApexColors.warning),
+              _buildHealthCard('Terminals with Errors', '${health.error}', Icons.error_outline, ApexColors.error),
             ],
           ),
-        ),
-        loading: () => const LoadingWidget(count: 3),
-        error: (err, stack) => CustomErrorWidget(
-          errorMessage: err.toString(),
-          onRetry: () => ref.invalidate(deviceHealthProvider),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Error: $err', style: ApexTypography.body.copyWith(color: ApexColors.error)),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () => ref.invalidate(deviceHealthProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildHealthCard(String title, String count, IconData icon, Color color) {
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.12),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        trailing: Text(
-          count,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: color,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: ApexCard(
+        padding: EdgeInsets.zero,
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: color.withOpacity(0.12),
+            child: Icon(icon, color: color),
+          ),
+          title: Text(title, style: ApexTypography.titleSmall.copyWith(fontWeight: FontWeight.w600)),
+          trailing: Text(
+            count,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
       ),

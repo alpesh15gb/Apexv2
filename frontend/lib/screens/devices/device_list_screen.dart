@@ -6,9 +6,9 @@ import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/device_provider.dart';
-import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_card.dart';
-
+import '../../widgets/page_wrapper.dart';
+import '../../widgets/apex_button.dart';
 
 class DeviceListScreen extends ConsumerWidget {
   const DeviceListScreen({Key? key}) : super(key: key);
@@ -21,68 +21,84 @@ class DeviceListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        title: Text('Device Operations', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.neutral900)),
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
+      body: ApexPageWrapper(
+        title: 'Device List',
+        description: 'Biometric terminals status, network pings, and sync logs control.',
+        onRefresh: () {
+          ref.invalidate(deviceListProvider);
+          ref.invalidate(deviceHealthProvider);
+        },
         actions: [
-          IconButton(icon: const Icon(Icons.refresh, size: 18), tooltip: 'Refresh', onPressed: () {
-            ref.invalidate(deviceListProvider);
-            ref.invalidate(deviceHealthProvider);
-          }),
+          ApexButton(
+            label: 'Add Device',
+            onPressed: () => context.push('/devices/add'),
+            type: ApexButtonType.primary,
+            icon: Icons.add,
+          ),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16 : 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Health KPIs
-            healthAsync.when(
-              data: (health) => _buildHealthKpis(health, isMobile),
-              loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
-              error: (_, __) => const SizedBox(),
-            ),
-            const SizedBox(height: 16),
-            // Device grid
-            Text('ALL DEVICES', style: ApexTypography.sectionHeader),
-            const SizedBox(height: 8),
-            devicesAsync.when(
-              data: (devices) {
-                if (devices.isEmpty) {
-                  return _EmptyState(
-                    icon: Icons.biotech,
-                    title: 'No Devices',
-                    description: 'Register a biometric device to get started.',
-                  );
-                }
-                return _DeviceGrid(devices: devices, isMobile: isMobile);
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.error_outline, size: 40, color: ApexColors.error),
-                    const SizedBox(height: 12),
-                    Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () => ref.invalidate(deviceListProvider),
-                      child: const Text('Retry'),
-                    ),
-                  ],
+        body: SingleChildScrollView(
+          padding: EdgeInsets.all(isMobile ? 16 : 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Health KPIs
+              healthAsync.when(
+                data: (health) => _buildHealthKpis(health, isMobile, context),
+                loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+                error: (_, __) => const SizedBox(),
+              ),
+              const SizedBox(height: 24),
+              // Device grid
+              Text('CONNECTED TERMINALS', style: ApexTypography.sectionHeader),
+              const SizedBox(height: 12),
+              devicesAsync.when(
+                data: (devices) {
+                  if (devices.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.biotech, size: 48, color: ApexColors.neutral400),
+                          const SizedBox(height: 16),
+                          Text('No Devices Registered', style: ApexTypography.cardTitle),
+                          const SizedBox(height: 8),
+                          Text('Register a biometric device to get started.', style: ApexTypography.caption),
+                          const SizedBox(height: 16),
+                          ApexButton(
+                            label: 'Add Device',
+                            onPressed: () => context.push('/devices/add'),
+                            type: ApexButtonType.primary,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return _DeviceGrid(devices: devices, isMobile: isMobile);
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error_outline, size: 40, color: ApexColors.error),
+                      const SizedBox(height: 12),
+                      Text('Error: ${e.toString()}', style: ApexTypography.bodySmall),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () => ref.invalidate(deviceListProvider),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHealthKpis(dynamic health, bool isMobile) {
+  Widget _buildHealthKpis(dynamic health, bool isMobile, BuildContext context) {
     final total = health.totalDevices;
     final onlinePct = total > 0 ? (health.online / total * 100).round() : 0;
 
@@ -92,10 +108,10 @@ class DeviceListScreen extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 8,
       mainAxisSpacing: 8,
-      childAspectRatio: 2.0,
+      childAspectRatio: 2.2,
       children: [
-        _KpiCard(label: 'Total', value: '$total', color: ApexColors.neutral500),
-        _KpiCard(label: 'Online', value: '${health.online}', color: ApexColors.success, subtitle: '$onlinePct% uptime'),
+        _KpiCard(label: 'Total Devices', value: '$total', color: ApexColors.neutral500),
+        _KpiCard(label: 'Online', value: '${health.online}', color: ApexColors.success, subtitle: '$onlinePct% active'),
         _KpiCard(label: 'Offline', value: '${health.offline}', color: health.offline > 0 ? ApexColors.error : ApexColors.success),
         _KpiCard(label: 'Inactive', value: '${health.inactive}', color: ApexColors.warning),
       ],
@@ -124,10 +140,10 @@ class _KpiCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(value, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
-                Text(label, style: ApexTypography.kpiLabel),
+                Text(value, style: ApexTypography.cardTitle.copyWith(fontWeight: FontWeight.w700, color: ApexColors.neutral900)),
+                Text(label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                 if (subtitle != null)
-                  Text(subtitle!, style: ApexTypography.captionSmall.copyWith(color: color)),
+                  Text(subtitle!, style: ApexTypography.captionSmall.copyWith(color: color, fontSize: 10)),
               ],
             ),
           ),
@@ -152,7 +168,7 @@ class _DeviceGrid extends StatelessWidget {
         crossAxisCount: isMobile ? 1 : 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 2.0,
+        childAspectRatio: 2.2,
       ),
       itemCount: devices.length,
       itemBuilder: (context, i) => _DeviceCard(device: devices[i]),
@@ -173,67 +189,37 @@ class _DeviceCard extends StatelessWidget {
       onTap: () => context.push('/devices/${device.id}'),
       padding: const EdgeInsets.all(12),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(Icons.biotech, color: color, size: 20),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-                      const SizedBox(width: 4),
-                      Text(device.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: color, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(Icons.biotech, color: color, size: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(device.deviceName, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900), overflow: TextOverflow.ellipsis),
-            Text('S/N: ${device.serialNumber}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
-            if (device.location != null)
-              Text(device.location!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
-          ],
-        ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-
-  const _EmptyState({required this.icon, required this.title, required this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: ApexColors.neutral500),
-            const SizedBox(height: 16),
-            Text(title, style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
-            const SizedBox(height: 8),
-            Text(description, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500), textAlign: TextAlign.center),
-          ],
-        ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                    const SizedBox(width: 4),
+                    Text(device.status.toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: color, fontWeight: FontWeight.w600, fontSize: 9)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(device.deviceName, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900), overflow: TextOverflow.ellipsis),
+          Text('S/N: ${device.serialNumber}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
+          if (device.location != null)
+            Text(device.location!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
+        ],
       ),
     );
   }
 }
-
-
-

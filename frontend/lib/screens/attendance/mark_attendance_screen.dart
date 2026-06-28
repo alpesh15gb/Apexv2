@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
@@ -13,6 +12,7 @@ import '../../widgets/apex_date_picker.dart';
 import '../../widgets/apex_dropdown.dart';
 import '../../widgets/apex_section.dart';
 import '../../widgets/apex_text_field.dart';
+import '../../widgets/page_wrapper.dart';
 
 class MarkAttendanceScreen extends ConsumerStatefulWidget {
   const MarkAttendanceScreen({Key? key}) : super(key: key);
@@ -93,112 +93,79 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        title: const Text('Mark Attendance'),
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16 : 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Employee & Date
-              ApexSection(
-                title: 'EMPLOYEE & DATE',
-                children: [
-                  employeesAsync.employees.when(
-                    data: (employees) => ApexDropdown<String>(
-                      label: 'Employee',
-                      value: _selectedEmployeeId,
-                      required: true,
-                      items: employees.map((e) => DropdownMenuItem(value: e.id, child: Text('${e.fullName} (${e.employeeCode})'))).toList(),
-                      onChanged: (v) => setState(() => _selectedEmployeeId = v),
+      body: ApexPageWrapper(
+        title: 'Manual Attendance',
+        description: 'Mark attendance or override daily check-in logs manually.',
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Employee & Date
+                ApexSection(
+                  title: 'EMPLOYEE & DATE',
+                  children: [
+                    employeesAsync.employees.when(
+                      data: (employees) => ApexDropdown<String>(
+                        label: 'Employee',
+                        value: _selectedEmployeeId,
+                        required: true,
+                        items: employees.map((e) => DropdownMenuItem(value: e.id, child: Text('${e.fullName} (${e.employeeCode})'))).toList(),
+                        onChanged: (v) => setState(() => _selectedEmployeeId = v),
+                      ),
+                      loading: () => const SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
+                      error: (_, __) => const SizedBox(),
                     ),
-                    loading: () => const SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
-                    error: (_, __) => const SizedBox(),
-                  ),
-                  ApexDatePicker(
-                    label: 'Date',
-                    value: _selectedDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
-                    onChanged: (v) { if (v != null) setState(() => _selectedDate = v); },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+                    ApexDatePicker(
+                      label: 'Date',
+                      value: _selectedDate,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                      onChanged: (v) { if (v != null) setState(() => _selectedDate = v); },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
-              // Attendance Details
-              ApexSection(
-                title: 'ATTENDANCE DETAILS',
-                children: [
-                  ApexDropdown<String>(
-                    label: 'Status',
-                    value: _selectedStatus,
-                    items: const [
-                      DropdownMenuItem(value: 'present', child: Text('Present')),
-                      DropdownMenuItem(value: 'absent', child: Text('Absent')),
-                      DropdownMenuItem(value: 'late', child: Text('Late')),
-                      DropdownMenuItem(value: 'half_day', child: Text('Half Day')),
-                    ],
-                    onChanged: (v) => setState(() => _selectedStatus = v ?? 'present'),
-                  ),
-                  _timeField('Punch In', _punchInTime, (v) => setState(() => _punchInTime = v)),
-                  _timeField('Punch Out', _punchOutTime, (v) => setState(() => _punchOutTime = v)),
-                  ApexTextField(
-                    label: 'Remarks',
-                    controller: _remarksController,
-                    maxLines: 2,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                // Attendance Details
+                ApexSection(
+                  title: 'ATTENDANCE DETAILS',
+                  children: [
+                    ApexDropdown<String>(
+                      label: 'Status',
+                      value: _selectedStatus,
+                      items: const [
+                        DropdownMenuItem(value: 'present', child: Text('Present')),
+                        DropdownMenuItem(value: 'absent', child: Text('Absent')),
+                        DropdownMenuItem(value: 'late', child: Text('Late')),
+                        DropdownMenuItem(value: 'half_day', child: Text('Half Day')),
+                      ],
+                      onChanged: (v) => setState(() => _selectedStatus = v ?? 'present'),
+                    ),
+                    _timeField('Punch In', _punchInTime, (v) => setState(() => _punchInTime = v)),
+                    _timeField('Punch Out', _punchOutTime, (v) => setState(() => _punchOutTime = v)),
+                    ApexTextField(
+                      label: 'Remarks',
+                      controller: _remarksController,
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
 
-              // Submit
-              ApexButton(
-                label: 'Mark Attendance',
-                expanded: true,
-                onPressed: _submit,
-              ),
-            ],
+                // Submit
+                ApexButton(
+                  label: 'Mark Attendance',
+                  expanded: true,
+                  onPressed: _submit,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _field(String label, TextEditingController controller) {
-    return ApexTextField(
-      label: label,
-      controller: controller,
-      maxLines: 2,
-    );
-  }
-
-  Widget _dropdown(String label, String? value, List<dynamic> items, ValueChanged<String?> onChanged) {
-    return ApexDropdown<String>(
-      label: label,
-      value: value,
-      items: items.map<DropdownMenuItem<String>>((item) {
-        if (item is String) return DropdownMenuItem<String>(value: item, child: Text(item));
-        return DropdownMenuItem<String>(value: item['id'] as String, child: Text(item['name'] as String));
-      }).toList(),
-      onChanged: onChanged,
-    );
-  }
-
-  Widget _dateField(String label, DateTime date, ValueChanged<DateTime> onChanged) {
-    return ApexDatePicker(
-      label: label,
-      value: date,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      onChanged: (v) { if (v != null) onChanged(v); },
     );
   }
 
@@ -222,16 +189,16 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
                 labelStyle: ApexTypography.body.copyWith(color: ApexColors.neutral500),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: ApexColors.neutral300, width: 1.5),
+                  borderSide: const BorderSide(color: ApexColors.neutral300, width: 1.5),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: ApexColors.neutral300, width: 1.5),
+                  borderSide: const BorderSide(color: ApexColors.neutral300, width: 1.5),
                 ),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                suffixIcon: Icon(Icons.access_time, size: 18, color: ApexColors.neutral400),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                suffixIcon: const Icon(Icons.access_time, size: 18, color: ApexColors.neutral400),
               ),
               child: Text(
                 time != null ? time.format(context) : 'Select time',
@@ -247,4 +214,3 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
     );
   }
 }
-

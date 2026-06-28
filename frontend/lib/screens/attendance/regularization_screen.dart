@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
-import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_date_picker.dart';
 import '../../widgets/apex_dropdown.dart';
 import '../../widgets/apex_text_field.dart';
+import '../../widgets/page_wrapper.dart';
 
 class AttendanceRegularizationScreen extends ConsumerStatefulWidget {
   const AttendanceRegularizationScreen({super.key});
@@ -28,39 +27,52 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
   }
 
   @override
+  void dispose() {
+    _tabCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        title: Text('Attendance Regularization', style: ApexTypography.sectionTitle),
+      body: ApexPageWrapper(
+        title: 'Attendance Regularization',
+        description: 'Correct punch errors, apply for outdoor duty, or work from home.',
         actions: [
           ApexButton(
-            label: 'Apply',
+            label: 'Apply Regularization',
             icon: Icons.add,
+            type: ApexButtonType.primary,
             onPressed: () => _showApplyDialog(context),
           ),
-          const SizedBox(width: 16),
         ],
-        bottom: TabBar(
-          controller: _tabCtrl,
-          labelColor: ApexColors.primary,
-          unselectedLabelColor: ApexColors.neutral500,
-          indicatorColor: ApexColors.primary,
-          tabs: const [
-            Tab(text: 'My Requests'),
-            Tab(text: 'Pending Approvals'),
+        body: Column(
+          children: [
+            Container(
+              color: Colors.white,
+              child: TabBar(
+                controller: _tabCtrl,
+                labelColor: ApexColors.primary,
+                unselectedLabelColor: ApexColors.neutral500,
+                indicatorColor: ApexColors.primary,
+                tabs: const [
+                  Tab(text: 'My Requests'),
+                  Tab(text: 'Pending Approvals'),
+                ],
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabCtrl,
+                children: [
+                  _MyRequestsTab(),
+                  _PendingApprovalsTab(),
+                ],
+              ),
+            ),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabCtrl,
-        children: [
-          _MyRequestsTab(),
-          _PendingApprovalsTab(),
-        ],
       ),
     );
   }
@@ -202,4 +214,3 @@ class _PendingApprovalsTab extends ConsumerWidget {
     );
   }
 }
-

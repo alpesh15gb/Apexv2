@@ -5,11 +5,8 @@ import 'package:intl/intl.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/visitor_provider.dart';
-import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
-import '../../widgets/empty_state.dart';
-import '../../widgets/apex_app_bar.dart';
-import '../../widgets/apex_card.dart';
+import '../../widgets/page_wrapper.dart';
+import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 
 class ActiveVisitorsScreen extends ConsumerWidget {
@@ -21,15 +18,24 @@ class ActiveVisitorsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: const ApexAppBar(title: 'Active Visitors (Inside)'),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(activeVisitorsProvider),
-        child: activeAsync.when(
+      body: ApexPageWrapper(
+        title: 'Active Visitors',
+        description: 'Real-time overview of checked-in guests inside the office building.',
+        onRefresh: () => ref.invalidate(activeVisitorsProvider),
+        body: activeAsync.when(
           data: (passes) {
             if (passes.isEmpty) {
-              return const EmptyState(
-                title: 'No Active Visitors',
-                description: 'There are no checked-in visitors in the workspace currently.',
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.badge_outlined, size: 48, color: ApexColors.neutral400),
+                    const SizedBox(height: 16),
+                    Text('No Active Visitors', style: ApexTypography.cardTitle),
+                    const SizedBox(height: 8),
+                    Text('There are no checked-in visitors in the workspace currently.', style: ApexTypography.caption),
+                  ],
+                ),
               );
             }
             return ListView.builder(
@@ -39,13 +45,18 @@ class ActiveVisitorsScreen extends ConsumerWidget {
                 final pass = passes[idx];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: ApexCard(
+                  child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: ApexColors.neutral200),
+                    ),
                     child: Row(
                       children: [
                         CircleAvatar(
                           backgroundColor: ApexColors.primary100,
-                          child: Icon(Icons.badge, color: ApexColors.primary600),
+                          child: const Icon(Icons.badge, color: ApexColors.primary600),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -74,11 +85,8 @@ class ActiveVisitorsScreen extends ConsumerWidget {
               },
             );
           },
-          loading: () => const LoadingWidget(count: 3),
-          error: (err, stack) => CustomErrorWidget(
-            errorMessage: err.toString(),
-            onRetry: () => ref.invalidate(activeVisitorsProvider),
-          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
         ),
       ),
     );

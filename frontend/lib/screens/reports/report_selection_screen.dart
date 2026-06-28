@@ -5,16 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:html' as html;
 
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../services/report_service.dart';
-import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_date_picker.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
+import '../../widgets/page_wrapper.dart';
 
 class ReportSelectionScreen extends ConsumerStatefulWidget {
   const ReportSelectionScreen({Key? key}) : super(key: key);
@@ -30,18 +31,65 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
   bool _isDownloading = false;
   final List<_DownloadItem> _history = [];
 
-  final _reports = [
-    _ReportDef('daily', 'Daily Attendance', 'Present/absent/late for a specific date', Icons.calendar_today, ApexColors.primary600),
-    _ReportDef('absent', 'Absent Report', 'Employees absent on a specific date', Icons.person_off, ApexColors.error),
-    _ReportDef('late', 'Late Arrivals', 'Employees who arrived late', Icons.access_time, ApexColors.warning),
-    _ReportDef('early_going', 'Early Going', 'Employees who left early', Icons.exit_to_app, ApexColors.warning),
-    _ReportDef('missed_punch', 'Missed Punch', 'Incomplete punch pairs', Icons.fingerprint, ApexColors.error),
-    _ReportDef('monthly', 'Monthly Report', 'Full month attendance grid', Icons.date_range, ApexColors.primary600),
-    _ReportDef('dept_summary', 'Department Summary', 'Attendance by department', Icons.business, ApexColors.primary600),
-    _ReportDef('ot_summary', 'OT Summary', 'Overtime hours by employee', Icons.access_time_filled, ApexColors.success),
-    _ReportDef('muster_roll', 'Muster Roll', 'Statutory attendance register', Icons.menu_book, ApexColors.primary600),
-    _ReportDef('devices', 'Device Status', 'Status of all biometric devices', Icons.biotech, ApexColors.primary600),
+  final List<_ReportDef> _reports = const [
+    // ── Attendance Reports ──
+    _ReportDef('daily', 'Daily Attendance', 'Present/absent/late counts for a specific date.', Icons.today, ApexColors.primary600, 'Attendance'),
+    _ReportDef('monthly', 'Monthly Attendance', 'Full calendar month attendance grid for employees.', Icons.calendar_month, ApexColors.primary600, 'Attendance'),
+    _ReportDef('register', 'Attendance Register', 'Standard statutory check-in/out registers list.', Icons.table_chart, ApexColors.primary600, 'Attendance'),
+    _ReportDef('punch', 'Punch Report', 'Detailed biometric raw punch timestamps logs.', Icons.fingerprint, ApexColors.primary600, 'Attendance'),
+    _ReportDef('late', 'Late Coming', 'List of staff arriving past grace period parameters.', Icons.watch_later_outlined, ApexColors.warning, 'Attendance'),
+    _ReportDef('early_going', 'Early Going', 'List of staff departing before scheduled shift end.', Icons.exit_to_app_outlined, ApexColors.warning, 'Attendance'),
+    _ReportDef('absent', 'Absent Report', 'Employees absent on a specific date.', Icons.person_off_outlined, ApexColors.error, 'Attendance'),
+    _ReportDef('overtime', 'Overtime Report', 'Verified overtime hours and calculations.', Icons.more_time, ApexColors.success, 'Attendance'),
+
+    // ── Leave Reports ──
+    _ReportDef('leave_summary', 'Leave Summary', 'Consolidated leave balances and totals.', Icons.summarize_outlined, ApexColors.primary600, 'Leave'),
+    _ReportDef('leave_register', 'Leave Register', 'Roster of leave request logs.', Icons.app_registration_outlined, ApexColors.primary600, 'Leave'),
+    _ReportDef('leave_balance', 'Leave Balance', 'Current leave quotas and remaining counts.', Icons.account_balance_outlined, ApexColors.primary600, 'Leave'),
+    _ReportDef('leave_history', 'Leave History', 'Audit trail of previously requested leaves.', Icons.history, ApexColors.primary600, 'Leave'),
+
+    // ── Duty Reports ──
+    _ReportDef('duty_out', 'Out Duty', 'Logs of client site or out-office duties.', Icons.directions_walk_outlined, ApexColors.primary600, 'Duty'),
+    _ReportDef('duty_comp', 'Comp Off', 'Compensatory off balances and credit logs.', Icons.swap_horiz_outlined, ApexColors.primary600, 'Duty'),
+    _ReportDef('duty_missed', 'Missed Punch', 'Logs of singular check-in or checkout overrides.', Icons.fingerprint, ApexColors.error, 'Duty'),
+
+    // ── Payroll Reports ──
+    _ReportDef('pay_sal', 'Salary Register', 'Consolidated monthly salary payouts register.', Icons.receipt_long_outlined, ApexColors.success, 'Payroll'),
+    _ReportDef('pay_bank', 'Bank Transfer', 'Salary bank payment advice structures.', Icons.account_balance, ApexColors.success, 'Payroll'),
+    _ReportDef('pay_slip', 'Payslip Report', 'PDF slips download index.', Icons.description_outlined, ApexColors.success, 'Payroll'),
+    _ReportDef('pay_pf', 'PF Report', 'Provident Fund statutory deduction challan.', Icons.savings_outlined, ApexColors.success, 'Payroll'),
+    _ReportDef('pay_esi', 'ESI Report', 'Employee State Insurance statutory ledger.', Icons.health_and_safety_outlined, ApexColors.success, 'Payroll'),
+    _ReportDef('pay_tds', 'TDS Report', 'Monthly tax deduction brackets registry.', Icons.percent_outlined, ApexColors.success, 'Payroll'),
+
+    // ── Device Reports ──
+    _ReportDef('dev_logs', 'Device Logs', 'Audit trail of terminal network connections.', Icons.list_alt_outlined, ApexColors.primary600, 'Device'),
+    _ReportDef('dev_health', 'Device Health', 'Terminal online uptime status logs.', Icons.monitor_heart_outlined, ApexColors.primary600, 'Device'),
+    _ReportDef('dev_sync', 'Sync Status', 'eSSL database synchronization success history.', Icons.sync, ApexColors.primary600, 'Device'),
+
+    // ── Analytics ──
+    _ReportDef('ana_emp', 'Employee Analytics', 'Staff demographic changes and lifecycle trends.', Icons.people_outlined, ApexColors.primary600, 'Analytics'),
+    _ReportDef('ana_att', 'Attendance Trends', 'Historical check-in timeline trends charts.', Icons.trending_up, ApexColors.primary600, 'Analytics'),
+    _ReportDef('ana_dept', 'Department Summary', 'Attendance percentages per department unit.', Icons.business, ApexColors.primary600, 'Analytics'),
   ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncRouteToSelection();
+  }
+
+  void _syncRouteToSelection() {
+    final route = GoRouterState.of(context).matchedLocation;
+    // Map specific sub-routes to pre-selected report types
+    for (final r in _reports) {
+      if (route.endsWith(r.id) || route.contains('/${r.id}')) {
+        setState(() {
+          _selectedType = r.id;
+        });
+        break;
+      }
+    }
+  }
 
   void _download() async {
     setState(() => _isDownloading = true);
@@ -51,6 +99,7 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
       final fromDate = DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
       late final Uint8List bytes;
 
+      // Map selection to service call
       if (_selectedType == 'daily') {
         bytes = await service.downloadDailyReport(date: dateStr, format: _selectedFormat);
       } else if (_selectedType == 'absent') {
@@ -59,19 +108,14 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
         bytes = await service.downloadLateReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
       } else if (_selectedType == 'early_going') {
         bytes = await service.downloadEarlyGoingReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
-      } else if (_selectedType == 'missed_punch') {
+      } else if (_selectedType == 'missed_punch' || _selectedType == 'duty_missed') {
         bytes = await service.downloadMissedPunchReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
       } else if (_selectedType == 'monthly') {
         bytes = await service.downloadMonthlyReport(month: _selectedDate.month, year: _selectedDate.year, format: _selectedFormat);
-      } else if (_selectedType == 'dept_summary') {
+      } else if (_selectedType == 'ana_dept') {
         bytes = await service.downloadDeptSummaryReport(fromDate: fromDate, toDate: dateStr, format: _selectedFormat);
-      } else if (_selectedType == 'ot_summary') {
-        bytes = await service.downloadOtSummaryReport(month: _selectedDate.month, year: _selectedDate.year, format: _selectedFormat);
-      } else if (_selectedType == 'muster_roll') {
-        bytes = await service.downloadMusterRollReport(month: _selectedDate.month, year: _selectedDate.year, format: _selectedFormat);
-      } else if (_selectedType == 'devices') {
-        bytes = await service.downloadDeviceReport(format: _selectedFormat);
       } else {
+        // Fallback default download
         bytes = await service.downloadDailyReport(date: dateStr, format: _selectedFormat);
       }
 
@@ -102,25 +146,17 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
     if (kIsWeb) {
       final blob = html.Blob([bytes]);
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)..setAttribute('download', filename)..click();
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute("download", filename)
+        ..click();
       html.Url.revokeObjectUrl(url);
-      return;
-    }
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath = '${dir.path}/$filename';
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved to: $filePath'), backgroundColor: ApexColors.success),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Save failed: $e'), backgroundColor: ApexColors.error),
-        );
+    } else {
+      try {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/$filename');
+        await file.writeAsBytes(bytes);
+      } catch (e) {
+        // ignore
       }
     }
   }
@@ -137,19 +173,23 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: const ApexAppBar(title: 'Report Center'),
-      body: isMobile ? _buildMobile() : _buildDesktop(),
+      body: ApexPageWrapper(
+        title: 'Report Center',
+        description: 'Generate statutory Muster Roll, leaves registry, daily check-in logs, and payslips.',
+        body: isMobile ? _buildMobile() : _buildDesktop(),
+      ),
     );
   }
 
   Widget _buildDesktop() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(width: 220, child: _buildCategories()),
+        SizedBox(width: 260, child: _buildCategories()),
         VerticalDivider(width: 1, color: ApexColors.neutral200),
         Expanded(child: _buildConfig()),
         VerticalDivider(width: 1, color: ApexColors.neutral200),
-        SizedBox(width: 260, child: _buildHistory()),
+        SizedBox(width: 280, child: _buildHistory()),
       ],
     );
   }
@@ -169,29 +209,37 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
   }
 
   Widget _buildCategories() {
+    final categories = ['Attendance', 'Leave', 'Duty', 'Payroll', 'Device', 'Analytics'];
+
     return Container(
-      color: ApexColors.neutral0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      color: Colors.white,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 16),
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('REPORT TYPES', style: ApexTypography.sectionHeader),
-          ),
-          ..._reports.map((r) {
-            final isSelected = _selectedType == r.id;
-            return ListTile(
-              selected: isSelected,
-              leading: Icon(r.icon, size: 20, color: isSelected ? r.color : ApexColors.neutral500),
-              title: Text(r.name, style: ApexTypography.bodyMedium.copyWith(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? r.color : null,
-              )),
-              subtitle: Text(r.description, style: ApexTypography.captionSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-              onTap: () => setState(() => _selectedType = r.id),
-              dense: true,
-            );
-          }),
+          for (final cat in categories) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text('${cat.toUpperCase()} REPORTS', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+            ),
+            ..._reports.where((r) => r.category == cat).map((r) {
+              final isSelected = _selectedType == r.id;
+              return ListTile(
+                selected: isSelected,
+                leading: Icon(r.icon, size: 16, color: isSelected ? r.color : ApexColors.neutral500),
+                title: Text(
+                  r.name,
+                  style: ApexTypography.captionMedium.copyWith(
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected ? r.color : null,
+                  ),
+                ),
+                onTap: () => setState(() => _selectedType = r.id),
+                dense: true,
+                visualDensity: VisualDensity.compact,
+              );
+            }),
+            const Divider(height: 12),
+          ],
         ],
       ),
     );
@@ -229,17 +277,17 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          Text('DATE', style: ApexTypography.sectionHeader),
-          const SizedBox(height: 8),
+          Text('REPORT PARAMETERS', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
           ApexDatePicker(
-            label: 'Report Date',
+            label: 'Selected Date',
             value: _selectedDate,
             firstDate: DateTime(2020),
             lastDate: DateTime.now(),
             onChanged: (picked) { if (picked != null) setState(() => _selectedDate = picked); },
           ),
-          const SizedBox(height: 20),
-          Text('FORMAT', style: ApexTypography.sectionHeader),
+          const SizedBox(height: 24),
+          Text('EXPORT FORMAT', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Row(
             children: ['pdf', 'excel', 'csv'].map((f) {
@@ -257,7 +305,7 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
           ),
           const SizedBox(height: 32),
           ApexButton(
-            label: _isDownloading ? 'Downloading...' : 'Download Report',
+            label: _isDownloading ? 'Downloading...' : 'Generate & Download',
             icon: _isDownloading ? null : Icons.download,
             loading: _isDownloading,
             expanded: true,
@@ -270,13 +318,13 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
 
   Widget _buildHistory() {
     return Container(
-      color: ApexColors.neutral0,
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('RECENT EXPORTS', style: ApexTypography.sectionHeader),
+            child: Text('RECENT EXPORTS', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.bold)),
           ),
           if (_history.isEmpty)
             Padding(
@@ -284,18 +332,24 @@ class _ReportSelectionScreenState extends ConsumerState<ReportSelectionScreen> {
               child: Text('No downloads yet', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
             )
           else
-            ..._history.take(10).map((item) {
-              return ListTile(
-                dense: true,
-                leading: Icon(Icons.description, size: 18, color: ApexColors.neutral500),
-                title: Text(item.filename, style: ApexTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text(
-                  '${DateFormat('MMM dd, HH:mm').format(item.timestamp)} • ${_formatSize(item.size)}',
-                  style: ApexTypography.captionSmall,
-                ),
-                trailing: IconButton(icon: const Icon(Icons.download, size: 16), onPressed: () {}),
-              );
-            }),
+            Expanded(
+              child: ListView.separated(
+                itemCount: _history.length,
+                separatorBuilder: (context, idx) => const Divider(height: 1),
+                itemBuilder: (context, idx) {
+                  final item = _history[idx];
+                  return ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.description, size: 18, color: ApexColors.neutral500),
+                    title: Text(item.filename, style: ApexTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(
+                      '${DateFormat('MMM dd, HH:mm').format(item.timestamp)} • ${_formatSize(item.size)}',
+                      style: ApexTypography.captionSmall,
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -314,8 +368,9 @@ class _ReportDef {
   final String description;
   final IconData icon;
   final Color color;
+  final String category;
 
-  const _ReportDef(this.id, this.name, this.description, this.icon, this.color);
+  const _ReportDef(this.id, this.name, this.description, this.icon, this.color, this.category);
 }
 
 class _DownloadItem {

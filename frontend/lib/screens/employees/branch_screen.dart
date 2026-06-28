@@ -8,9 +8,7 @@ import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/apex_text_field.dart';
-import '../../widgets/loading_widget.dart';
-import '../../widgets/error_widget.dart';
-import '../../widgets/empty_state.dart';
+import '../../widgets/page_wrapper.dart';
 import '../../services/employee_service.dart';
 
 class BranchScreen extends ConsumerStatefulWidget {
@@ -111,64 +109,92 @@ class _BranchScreenState extends ConsumerState<BranchScreen> {
     final branchesAsync = ref.watch(branchesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Branches'),
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
-      ),
-      body: branchesAsync.when(
-        data: (branches) {
-          if (branches.isEmpty) {
-            return EmptyState(
-              title: 'No Branches',
-              description: 'Create branch locations for your offices.',
-              actionLabel: 'Add Branch',
-              onActionPressed: _addBranch,
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: branches.length,
-            itemBuilder: (context, idx) {
-              final b = branches[idx];
-              return ApexCard(
-                padding: const EdgeInsets.all(12),
-                child: Row(
+      backgroundColor: ApexColors.neutral50,
+      body: ApexPageWrapper(
+        title: 'Branches',
+        description: 'Manage corporate office branches and locations.',
+        onRefresh: () => ref.refresh(branchesProvider),
+        actions: [
+          ApexButton(
+            label: 'Add Branch',
+            onPressed: _addBranch,
+            type: ApexButtonType.primary,
+            icon: Icons.add,
+          ),
+        ],
+        body: branchesAsync.when(
+          data: (branches) {
+            if (branches.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircleAvatar(
-                      backgroundColor: ApexColors.primary.withValues(alpha: 0.1),
-                      child: Icon(Icons.store, color: ApexColors.primary),
+                    const Icon(Icons.store, size: 48, color: ApexColors.neutral400),
+                    const SizedBox(height: 16),
+                    Text('No Branches', style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
+                    const SizedBox(height: 8),
+                    Text('Create branch locations for your offices.', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+                    const SizedBox(height: 16),
+                    ApexButton(
+                      label: 'Add Branch',
+                      onPressed: _addBranch,
+                      type: ApexButtonType.primary,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(b.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
-                          Text('Code: ${b.code} ${b.city != null ? '• ${b.city}' : ''}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
-                        ],
-                      ),
-                    ),
-                    b.isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
                   ],
                 ),
               );
-            },
-          );
-        },
-        loading: () => const LoadingWidget(count: 4),
-        error: (err, stack) => CustomErrorWidget(
-          errorMessage: err.toString(),
-          onRetry: () => ref.invalidate(branchesProvider),
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: branches.length,
+              itemBuilder: (context, idx) {
+                final b = branches[idx];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ApexColors.neutral200),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: ApexColors.primary.withOpacity(0.1),
+                        child: const Icon(Icons.store, color: ApexColors.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(b.name, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
+                            Text('Code: ${b.code} ${b.city != null ? '• ${b.city}' : ''}', style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
+                          ],
+                        ),
+                      ),
+                      b.isActive ? ApexBadge.success('ACTIVE') : ApexBadge.neutral('INACTIVE'),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Error: $err', style: ApexTypography.body.copyWith(color: ApexColors.error)),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () => ref.invalidate(branchesProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addBranch,
-        backgroundColor: ApexColors.primary,
-        tooltip: 'Add Branch',
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

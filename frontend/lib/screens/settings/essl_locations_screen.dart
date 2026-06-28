@@ -5,9 +5,9 @@ import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../models/essl_server.dart';
 import '../../providers/essl_provider.dart';
-import '../../services/essl_service.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_text_field.dart';
+import '../../widgets/page_wrapper.dart';
 
 class EsslLocationsScreen extends ConsumerWidget {
   final String serverId;
@@ -19,64 +19,63 @@ class EsslLocationsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        title: const Text('Locations'),
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
+      body: ApexPageWrapper(
+        title: 'Location List',
+        description: 'Verify connected hardware statistics, sync events, and trigger commands.',
+        onRefresh: () => ref.invalidate(esslLocationProvider(serverId)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add, size: 18),
-            tooltip: 'Add Location',
+          ApexButton(
+            label: 'Add Location',
             onPressed: () => _showLocationDialog(context, ref),
+            type: ApexButtonType.primary,
+            icon: Icons.add,
           ),
         ],
-      ),
-      body: locationsAsync.when(
-        data: (locations) {
-          if (locations.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.location_on_outlined, size: 48, color: ApexColors.neutral500),
-                  const SizedBox(height: 16),
-                  Text('No Locations Configured', style: ApexTypography.headingMedium.copyWith(color: ApexColors.neutral900)),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Add locations from your eBioserverNew to sync devices and employees per location.',
-                    style: ApexTypography.body.copyWith(color: ApexColors.neutral500),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ApexButton(
-                    label: 'Add Location',
-                    onPressed: () => _showLocationDialog(context, ref),
-                    type: ApexButtonType.primary,
-                    icon: Icons.add,
-                  ),
-                ],
-              ),
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: locations.length,
-            itemBuilder: (context, i) {
-              final loc = locations[i];
-              return _LocationCard(
-                location: loc,
-                serverId: serverId,
-                onEdit: () => _showLocationDialog(context, ref, location: loc),
-                onDelete: () => _confirmDelete(context, ref, loc),
-                onToggle: (v) => ref.read(esslLocationProvider(serverId).notifier).updateLocation(loc.id, {'is_active': v}),
+        body: locationsAsync.when(
+          data: (locations) {
+            if (locations.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 48, color: ApexColors.neutral400),
+                    const SizedBox(height: 16),
+                    Text('No Locations Configured', style: ApexTypography.cardTitle.copyWith(color: ApexColors.neutral900)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add locations from your eBioserverNew to sync devices and employees per location.',
+                      style: ApexTypography.caption.copyWith(color: ApexColors.neutral500),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ApexButton(
+                      label: 'Add Location',
+                      onPressed: () => _showLocationDialog(context, ref),
+                      type: ApexButtonType.primary,
+                      icon: Icons.add,
+                    ),
+                  ],
+                ),
               );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: locations.length,
+              itemBuilder: (context, i) {
+                final loc = locations[i];
+                return _LocationCard(
+                  location: loc,
+                  serverId: serverId,
+                  onEdit: () => _showLocationDialog(context, ref, location: loc),
+                  onDelete: () => _confirmDelete(context, ref, loc),
+                  onToggle: (v) => ref.read(esslLocationProvider(serverId).notifier).updateLocation(loc.id, {'is_active': v}),
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        ),
       ),
     );
   }
@@ -208,7 +207,7 @@ class _LocationCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: location.isActive ? ApexColors.primary.withValues(alpha: 0.1) : ApexColors.neutral500.withValues(alpha: 0.1),
+              color: location.isActive ? ApexColors.primary.withOpacity(0.1) : ApexColors.neutral500.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(Icons.location_on, color: location.isActive ? ApexColors.primary : ApexColors.neutral500, size: 20),

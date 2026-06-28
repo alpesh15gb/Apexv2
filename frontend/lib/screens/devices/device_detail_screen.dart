@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
 import '../../models/device.dart';
 import '../../providers/device_provider.dart';
 import '../../services/device_service.dart';
-import '../../widgets/loading_widget.dart';
 import '../../core/dio_client.dart';
-import '../../widgets/error_widget.dart';
-import '../../widgets/status_badge.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_button.dart';
+import '../../widgets/page_wrapper.dart';
 
 final deviceDetailProvider = FutureProvider.family<Device, String>((ref, id) async {
   final service = ref.read(deviceServiceProvider);
@@ -32,18 +34,23 @@ class DeviceDetailScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Device Details'),
-      ),
-      body: detailAsync.when(
-        data: (device) => SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+      backgroundColor: ApexColors.neutral50,
+      body: ApexPageWrapper(
+        title: 'Device Details',
+        description: 'Verify connected hardware statistics, sync events, and trigger commands.',
+        onRefresh: () {
+          ref.invalidate(deviceDetailProvider(deviceId));
+          ref.invalidate(deviceLogsProvider(deviceId));
+        },
+        body: detailAsync.when(
+          data: (device) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
                   child: Column(
                     children: [
                       Row(
@@ -55,14 +62,14 @@ class DeviceDetailScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   device.deviceName,
-                                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                  style: ApexTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 4),
-                                Text('S/N: ${device.serialNumber}', style: const TextStyle(color: Colors.grey)),
+                                Text('S/N: ${device.serialNumber}', style: TextStyle(color: ApexColors.neutral500, fontSize: 12)),
                               ],
                             ),
                           ),
-                          StatusBadge(status: device.status),
+                          _StatusBadge(status: device.status),
                         ],
                       ),
                       const Divider(height: 24),
@@ -72,107 +79,100 @@ class DeviceDetailScreen extends ConsumerWidget {
                       _buildDetailRow('Model', device.model ?? 'N/A'),
                       _buildDetailRow('Firmware', device.firmwareVersion ?? 'N/A'),
                       _buildDetailRow('Last Sync', device.lastSync != null ? DateFormat('MMM dd, hh:mm a').format(device.lastSync!) : 'Never'),
-                      const SizedBox(height: 16),
+                      const Divider(height: 24),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          ElevatedButton.icon(
+                          OutlinedButton.icon(
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Reboot Device'),
+                                  content: Text('Are you sure you want to reboot device "${device.deviceName}"? This will interrupt attendance log collection temporarily.'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Reboot', style: TextStyle(color: ApexColors.error))),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                try {
+                                  await ref.read(dioProvider).post('/commands/', data: {
+                                    'device_id': device.id,
+                                    'command_type': 'reboot',
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reboot command successfully queued'), backgroundColor: ApexColors.success));
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: ApexColors.error));
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.power_settings_new, size: 16),
+                            label: const Text('Reboot Terminal'),
+                            style: OutlinedButton.styleFrom(foregroundColor: ApexColors.error),
+                          ),
+                          const SizedBox(width: 12),
+                          ApexButton(
+                            label: 'Sync Now',
+                            icon: Icons.sync,
+                            type: ApexButtonType.primary,
                             onPressed: () async {
                               try {
                                 await ref.read(deviceListProvider.notifier).syncDevice(device.id);
                                 ref.invalidate(deviceDetailProvider(deviceId));
                                 ref.invalidate(deviceLogsProvider(deviceId));
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Device sync triggered'), backgroundColor: Colors.green),
-                                  );
-                                }
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Device sync triggered successfully'), backgroundColor: ApexColors.success));
                               } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Sync failed: ${e.toString()}'), backgroundColor: Colors.red),
-                                  );
-                                }
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sync failed: $e'), backgroundColor: ApexColors.error));
                               }
                             },
-                            icon: const Icon(Icons.sync),
-                            label: const Text('Sync'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () async {
-                              try {
-                                final service = ref.read(deviceServiceProvider);
-                                // Queue a reboot command via dio
-                                await ref.read(dioProvider).post('/commands/', data: {
-                                  'device_id': device.id,
-                                  'command_type': 'reboot',
-                                });
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Reboot command queued'), backgroundColor: Colors.green),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed: ${e.toString()}'), backgroundColor: Colors.red),
-                                  );
-                                }
-                              }
-                            },
-                            icon: const Icon(Icons.power_settings_new),
-                            label: const Text('Reboot'),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text('Device Activity Logs', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              logsAsync.when(
-                data: (data) {
-                  final list = data['items'] as List;
-                  if (list.isEmpty) {
-                    return const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: Center(child: Text('No activity logs found.')),
+                const SizedBox(height: 24),
+                Text('Device Activity Logs', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                logsAsync.when(
+                  data: (data) {
+                    final list = data['items'] as List;
+                    if (list.isEmpty) {
+                      return Container(
+                        height: 100,
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+                        child: const Center(child: Text('No activity logs found.')),
+                      );
+                    }
+                    return Container(
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: list.length,
+                        separatorBuilder: (context, idx) => const Divider(height: 1),
+                        itemBuilder: (context, idx) {
+                          final logMap = list[idx] as Map<String, dynamic>;
+                          final time = DateTime.parse(logMap['created_at']);
+                          return ListTile(
+                            title: Text(logMap['message'] ?? logMap['log_type'] ?? 'Log Event', style: ApexTypography.body),
+                            subtitle: Text(DateFormat('MMM dd, hh:mm a').format(time), style: ApexTypography.captionSmall),
+                            leading: const Icon(Icons.list_alt_outlined),
+                          );
+                        },
                       ),
                     );
-                  }
-                  return Card(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: list.length,
-                      separatorBuilder: (context, idx) => const Divider(height: 1),
-                      itemBuilder: (context, idx) {
-                        final logMap = list[idx] as Map<String, dynamic>;
-                        final time = DateTime.parse(logMap['created_at']);
-                        return ListTile(
-                          title: Text(logMap['message'] ?? logMap['log_type'] ?? 'Log Event'),
-                          subtitle: Text(DateFormat('MMM dd, hh:mm a').format(time)),
-                          leading: const Icon(Icons.list_alt_outlined),
-                        );
-                      },
-                    ),
-                  );
-                },
-                loading: () => const LoadingWidget(count: 3),
-                error: (err, stack) => Center(child: Text('Failed to load logs: ${err.toString()}')),
-              ),
-            ],
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('Failed to load logs: ${err.toString()}')),
+                ),
+              ],
+            ),
           ),
-        ),
-        loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-        error: (err, stack) => Scaffold(
-          body: CustomErrorWidget(
-            errorMessage: err.toString(),
-            onRetry: () => ref.invalidate(deviceDetailProvider(deviceId)),
-          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
         ),
       ),
     );
@@ -189,5 +189,19 @@ class DeviceDetailScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    switch (status) {
+      case 'online': return ApexBadge.success('ONLINE');
+      case 'offline': return ApexBadge.danger('OFFLINE');
+      default: return ApexBadge.neutral(status.toUpperCase());
+    }
   }
 }

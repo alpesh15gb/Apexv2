@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
-import '../../widgets/apex_app_bar.dart';
-import '../../widgets/apex_button.dart';
-import '../../widgets/apex_card.dart';
 import '../../design_system/typography.dart';
 import '../../design_system/colors.dart';
-
+import '../../widgets/apex_button.dart';
+import '../../widgets/apex_card.dart';
+import '../../widgets/page_wrapper.dart';
 
 final salaryStructuresProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -29,54 +27,49 @@ class SalaryStructuresScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        title: Text('Salary Structures', style: ApexTypography.sectionTitle),
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/payroll')),
+      body: ApexPageWrapper(
+        title: 'Salary Structures',
+        description: 'Define and manage standard salary components and corporate structures.',
+        onRefresh: () => ref.refresh(salaryStructuresProvider),
         actions: [
           ApexButton(
             label: 'New Structure',
             icon: Icons.add,
-            onPressed: () => _showCreateDialog(context, ref),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: structuresAsync.when(
-        data: (structures) {
-          if (structures.isEmpty) return _buildEmptyState(context, ref);
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: structures.length,
-            itemBuilder: (context, i) => _StructureCard(structure: structures[i], ref: ref),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.account_balance, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
-          const SizedBox(height: 16),
-          Text('No Salary Structures', style: ApexTypography.sectionTitle),
-          const SizedBox(height: 8),
-          Text('Create salary templates for your organization', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
-          const SizedBox(height: 24),
-          ApexButton(
-            label: 'Create Structure',
-            icon: Icons.add,
+            type: ApexButtonType.primary,
             onPressed: () => _showCreateDialog(context, ref),
           ),
         ],
+        body: structuresAsync.when(
+          data: (structures) {
+            if (structures.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.account_balance, size: 64, color: ApexColors.neutral400),
+                    const SizedBox(height: 16),
+                    Text('No Salary Structures', style: ApexTypography.cardTitle),
+                    const SizedBox(height: 8),
+                    Text('Create salary templates for your organization', style: ApexTypography.caption),
+                    const SizedBox(height: 24),
+                    ApexButton(
+                      label: 'Create Structure',
+                      icon: Icons.add,
+                      onPressed: () => _showCreateDialog(context, ref),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: structures.length,
+              itemBuilder: (context, i) => _StructureCard(structure: structures[i], ref: ref),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        ),
       ),
     );
   }
@@ -172,36 +165,36 @@ class _StructureCard extends StatelessWidget {
       child: ApexCard(
         padding: const EdgeInsets.all(18),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: Icon(Icons.account_balance, size: 20, color: ApexColors.primary),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.account_balance, size: 20, color: ApexColors.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: ApexTypography.cardTitle.copyWith(fontSize: 15)),
+                Text('Effective: ${structure['effective_from'] ?? '—'}', style: ApexTypography.captionSmall),
+              ])),
+              Text('₹${total.toStringAsFixed(0)}', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.success)),
+            ]),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _componentChip('Basic', basic),
+                _componentChip('HRA', hra),
+                _componentChip('DA', da),
+                if (structure['conveyance'] != null && structure['conveyance'] > 0) _componentChip('Conveyance', structure['conveyance']),
+                if (structure['medical'] != null && structure['medical'] > 0) _componentChip('Medical', structure['medical']),
+                if (structure['special'] != null && structure['special'] > 0) _componentChip('Special', structure['special']),
+              ],
             ),
-            const SizedBox(width: 14),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name, style: ApexTypography.cardTitle.copyWith(fontSize: 15)),
-              Text('Effective: ${structure['effective_from'] ?? '—'}', style: ApexTypography.captionSmall),
-            ])),
-            Text('₹${total.toStringAsFixed(0)}', style: ApexTypography.sectionTitle.copyWith(color: ApexColors.success)),
-          ]),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            children: [
-              _componentChip('Basic', basic),
-              _componentChip('HRA', hra),
-              _componentChip('DA', da),
-              if (structure['conveyance'] != null && structure['conveyance'] > 0) _componentChip('Conveyance', structure['conveyance']),
-              if (structure['medical'] != null && structure['medical'] > 0) _componentChip('Medical', structure['medical']),
-              if (structure['special'] != null && structure['special'] > 0) _componentChip('Special', structure['special']),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -214,8 +207,3 @@ class _StructureCard extends StatelessWidget {
     );
   }
 }
-
-
-
-
-

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/dio_client.dart';
-import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 import '../../design_system/typography.dart';
 import '../../design_system/colors.dart';
-
+import '../../widgets/page_wrapper.dart';
 
 final loansProvider = FutureProvider<List<dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -30,48 +28,49 @@ class LoansScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        title: Text('Loans & Advances', style: ApexTypography.sectionTitle),
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/payroll')),
+      body: ApexPageWrapper(
+        title: 'Loans & Advances',
+        description: 'Track employee salary advances, active loans, and monthly EMI recoveries.',
+        onRefresh: () => ref.refresh(loansProvider),
         actions: [
           ApexButton(
-            label: 'New Loan',
+            label: 'New Loan Request',
             icon: Icons.add,
+            type: ApexButtonType.primary,
             onPressed: () => _showCreateDialog(context, ref),
           ),
-          const SizedBox(width: 16),
         ],
-      ),
-      body: loansAsync.when(
-        data: (loans) {
-          if (loans.isEmpty) return _buildEmptyState(context);
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: loans.length,
-            itemBuilder: (context, i) => _LoanCard(loan: loans[i]),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.money, size: 64, color: ApexColors.neutral500.withOpacity(0.3)),
-          const SizedBox(height: 16),
-          Text('No Loans or Advances', style: ApexTypography.sectionTitle),
-          const SizedBox(height: 8),
-          Text('Employee loans and salary advances will appear here', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)),
-        ],
+        body: loansAsync.when(
+          data: (loans) {
+            if (loans.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.money, size: 64, color: ApexColors.neutral400),
+                    const SizedBox(height: 16),
+                    Text('No Loans or Advances', style: ApexTypography.cardTitle),
+                    const SizedBox(height: 8),
+                    Text('Employee loans and salary advances will appear here', style: ApexTypography.caption),
+                    const SizedBox(height: 24),
+                    ApexButton(
+                      label: 'Create Loan',
+                      icon: Icons.add,
+                      onPressed: () => _showCreateDialog(context, ref),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: loans.length,
+              itemBuilder: (context, i) => _LoanCard(loan: loans[i]),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e', style: ApexTypography.body.copyWith(color: ApexColors.error))),
+        ),
       ),
     );
   }
@@ -160,41 +159,41 @@ class _LoanCard extends StatelessWidget {
       child: ApexCard(
         padding: const EdgeInsets.all(18),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: ApexColors.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: Icon(Icons.money, size: 20, color: ApexColors.warning),
-            ),
-            const SizedBox(width: 14),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(_loanTypeName(type), style: ApexTypography.cardTitle.copyWith(fontSize: 15)),
-              Text('Started: ${loan['start_date'] ?? '—'}', style: ApexTypography.captionSmall),
-            ])),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('₹${amount.toStringAsFixed(0)}', style: ApexTypography.sectionTitle),
-              _statusBadge(status),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: ApexColors.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.money, size: 20, color: ApexColors.warning),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(_loanTypeName(type), style: ApexTypography.cardTitle.copyWith(fontSize: 15)),
+                Text('Started: ${loan['start_date'] ?? '—'}', style: ApexTypography.captionSmall),
+              ])),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text('₹${amount.toStringAsFixed(0)}', style: ApexTypography.sectionTitle),
+                _statusBadge(status),
+              ]),
             ]),
-          ]),
-          const SizedBox(height: 14),
-          Row(children: [
-            _infoItem('EMI', '₹${emi.toStringAsFixed(0)}/mo'),
-            const SizedBox(width: 24),
-            _infoItem('Paid', '$paid/$total installments'),
-            const SizedBox(width: 24),
-            _infoItem('Outstanding', '₹${outstanding.toStringAsFixed(0)}'),
-          ]),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: total > 0 ? paid / total : 0,
-            backgroundColor: ApexColors.neutral200,
-            color: ApexColors.success,
-            minHeight: 6,
-          ),
-        ],
-      ),
+            const SizedBox(height: 14),
+            Row(children: [
+              _infoItem('EMI', '₹${emi.toStringAsFixed(0)}/mo'),
+              const SizedBox(width: 24),
+              _infoItem('Paid', '$paid/$total installments'),
+              const SizedBox(width: 24),
+              _infoItem('Outstanding', '₹${outstanding.toStringAsFixed(0)}'),
+            ]),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: total > 0 ? paid / total : 0,
+              backgroundColor: ApexColors.neutral200,
+              color: ApexColors.success,
+              minHeight: 6,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -230,10 +229,4 @@ class _LoanCard extends StatelessWidget {
       default: return type;
     }
   }
-
 }
-
-
-
-
-

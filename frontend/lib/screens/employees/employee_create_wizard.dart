@@ -10,6 +10,7 @@ import '../../widgets/apex_button.dart';
 import '../../widgets/apex_date_picker.dart';
 import '../../widgets/apex_dropdown.dart';
 import '../../widgets/apex_text_field.dart';
+import '../../widgets/page_wrapper.dart';
 
 class EmployeeCreateWizard extends ConsumerStatefulWidget {
   const EmployeeCreateWizard({super.key});
@@ -92,31 +93,27 @@ class _EmployeeCreateWizardState extends ConsumerState<EmployeeCreateWizard> {
 
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: ApexColors.neutral900,
-        elevation: 0,
-        title: Text('Add Employee', style: ApexTypography.sectionTitle),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
-        bottom: PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: ApexColors.neutral200)),
-      ),
-      body: Column(
-        children: [
-          _buildStepIndicator(),
-          Expanded(
-            child: isMobile ? _buildStepContent() : Row(
-              children: [
-                Container(
-                  width: 220,
-                  decoration: BoxDecoration(color: Colors.white, border: Border(right: BorderSide(color: ApexColors.neutral200))),
-                  child: _buildStepList(),
-                ),
-                Expanded(child: _buildStepContent()),
-              ],
+      body: ApexPageWrapper(
+        title: 'Add Employee',
+        description: 'Complete the steps to onboard a new employee to the system.',
+        body: Column(
+          children: [
+            _buildStepIndicator(),
+            Expanded(
+              child: isMobile ? _buildStepContent() : Row(
+                children: [
+                  Container(
+                    width: 220,
+                    decoration: BoxDecoration(color: Colors.white, border: Border(right: BorderSide(color: ApexColors.neutral200))),
+                    child: _buildStepList(),
+                  ),
+                  Expanded(child: _buildStepContent()),
+                ],
+              ),
             ),
-          ),
-          _buildBottomBar(),
-        ],
+            _buildBottomBar(),
+          ],
+        ),
       ),
     );
   }
