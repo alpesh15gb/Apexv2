@@ -1,5 +1,8 @@
 """Super Admin Dashboard endpoints."""
 
+import uuid
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,17 +56,17 @@ async def get_admin_stats(
 
 @router.get("/recent-activity")
 async def get_recent_activity(
+    tenant_id: Optional[uuid.UUID] = None,
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_superuser),
 ):
-    """Get recent login activity across all tenants."""
+    """Get recent login activity, optionally filtered by tenant."""
     from app.models.audit_log import AuditLog
-    stmt = (
-        select(AuditLog)
-        .order_by(AuditLog.created_at.desc())
-        .limit(limit)
-    )
+    stmt = select(AuditLog)
+    if tenant_id:
+        stmt = stmt.where(AuditLog.tenant_id == tenant_id)
+    stmt = stmt.order_by(AuditLog.created_at.desc()).limit(limit)
     result = await db.execute(stmt)
     logs = result.scalars().all()
     return [

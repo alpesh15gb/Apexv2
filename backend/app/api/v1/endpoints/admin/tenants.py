@@ -348,3 +348,43 @@ async def update_tenant_features(
     count = await FeatureGate.bulk_set_features(db, tenant_id, features.feature_codes, features.enabled, current_user.id)
     await db.commit()
     return {"updated": count}
+
+
+@router.get("/{tenant_id}/users")
+async def get_tenant_users(
+    tenant_id: uuid.UUID,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_superuser),
+):
+    """List users for a specific tenant."""
+    stmt = (
+        select(User)
+        .where(User.tenant_id == tenant_id)
+        .order_by(User.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    result = await db.execute(stmt)
+    users = result.scalars().all()
+
+    count_stmt = select(func.count(User.id)).where(User.tenant_id == tenant_id)
+    total = (await db.execute(count_stmt)).scalar() or 0
+
+    return {
+        "items": [
+            {
+                "id": str(u.id),
+                "email": u.email,
+                "full_name": u.full_name,
+                "is_active": u.is_active,
+                "is_superuser": u.is_superuser,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+            for u in users
+        ],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }

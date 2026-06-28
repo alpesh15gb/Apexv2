@@ -268,9 +268,27 @@ class _SubscriptionTabState extends ConsumerState<_SubscriptionTab> {
   }
 
   void _assignPlan(String planId) async {
-    final dio = ref.read(dioProvider);
-    await dio.put('/admin/tenants/${widget.tenantId}', data: {'subscription_status': 'active'});
-    _load();
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.post('/admin/billing/subscriptions', data: {
+        'tenant_id': widget.tenantId,
+        'plan_id': planId,
+        'billing_cycle': 'monthly',
+        'auto_renewal': true,
+      });
+      _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Plan assigned successfully'), backgroundColor: ApexColors.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error assigning plan: $e'), backgroundColor: ApexColors.error),
+        );
+      }
+    }
   }
 }
 
@@ -481,7 +499,7 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
   Future<void> _load() async {
     try {
       final dio = ref.read(dioProvider);
-      final res = await dio.get('/employees/', queryParameters: {'page': 1, 'page_size': 100});
+      final res = await dio.get('/admin/tenants/${widget.tenantId}/users', queryParameters: {'page': 1, 'page_size': 100});
       setState(() {
         _users = res.data['items'] ?? [];
         _loading = false;
@@ -492,6 +510,7 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_users.isEmpty) return Center(child: Text('No users found', style: ApexTypography.body.copyWith(color: ApexColors.neutral500)));
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _users.length,
@@ -502,16 +521,23 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
           child: Row(children: [
-            CircleAvatar(radius: 16, backgroundColor: ApexColors.primary600.withOpacity(0.1), child: Text((u['first_name'] ?? '?')[0].toUpperCase(), style: ApexTypography.titleLarge.copyWith(color: ApexColors.primary600))),
+            CircleAvatar(radius: 16, backgroundColor: ApexColors.primary600.withOpacity(0.1), child: Text((u['full_name'] ?? '?')[0].toUpperCase(), style: ApexTypography.titleLarge.copyWith(color: ApexColors.primary600))),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${u['first_name'] ?? ''} ${u['last_name'] ?? ''}', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
-              Text(u['employee_code'] ?? '', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+              Text(u['full_name'] ?? '', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+              Text(u['email'] ?? '', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
             ])),
+            if (u['is_superuser'] == true)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: ApexColors.primary600.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                child: Text('SUPERADMIN', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: ApexColors.primary600)),
+              ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: (u['status'] == 'active' ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: Text((u['status'] ?? 'unknown').toUpperCase(), style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: u['status'] == 'active' ? ApexColors.successDark : ApexColors.neutral500)),
+              decoration: BoxDecoration(color: (u['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              child: Text(u['is_active'] == true ? 'ACTIVE' : 'INACTIVE', style: ApexTypography.captionSmall.copyWith(fontWeight: FontWeight.w600, color: u['is_active'] == true ? ApexColors.successDark : ApexColors.neutral500)),
             ),
           ]),
         );
@@ -537,7 +563,7 @@ class _AuditTabState extends ConsumerState<_AuditTab> {
   Future<void> _load() async {
     try {
       final dio = ref.read(dioProvider);
-      final res = await dio.get('/admin/dashboard/recent-activity', queryParameters: {'limit': 50});
+      final res = await dio.get('/admin/dashboard/recent-activity', queryParameters: {'tenant_id': widget.tenantId, 'limit': 50});
       setState(() { _logs = res.data is List ? res.data : []; _loading = false; });
     } catch (e) { setState(() => _loading = false); }
   }

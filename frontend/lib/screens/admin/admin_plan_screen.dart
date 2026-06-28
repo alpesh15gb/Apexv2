@@ -114,44 +114,92 @@ class AdminPlanScreen extends ConsumerWidget {
   void _showPlanDialog(BuildContext context, WidgetRef ref, Map<String, dynamic>? existing) {
     final nameCtrl = TextEditingController(text: existing?['name'] ?? '');
     final codeCtrl = TextEditingController(text: existing?['code'] ?? '');
+    final descCtrl = TextEditingController(text: existing?['description'] ?? '');
     final monthlyCtrl = TextEditingController(text: '${existing?['price_monthly'] ?? 0}');
+    final quarterlyCtrl = TextEditingController(text: '${existing?['price_quarterly'] ?? 0}');
     final annualCtrl = TextEditingController(text: '${existing?['price_annual'] ?? 0}');
+    final lifetimeCtrl = TextEditingController(text: '${existing?['price_lifetime'] ?? 0}');
     final empCtrl = TextEditingController(text: '${existing?['max_employees'] ?? 50}');
+    final branchCtrl = TextEditingController(text: '${existing?['max_branches'] ?? 5}');
+    final deviceCtrl = TextEditingController(text: '${existing?['max_devices'] ?? 5}');
+    final storageCtrl = TextEditingController(text: '${existing?['max_storage_mb'] ?? 1024}');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(existing != null ? 'Edit Plan' : 'New Plan'),
-        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Plan Name')),
-          const SizedBox(height: 8),
-          TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code'), enabled: existing == null),
-          const SizedBox(height: 8),
-          TextField(controller: monthlyCtrl, decoration: const InputDecoration(labelText: 'Monthly Price'), keyboardType: TextInputType.number),
-          const SizedBox(height: 8),
-          TextField(controller: annualCtrl, decoration: const InputDecoration(labelText: 'Annual Price'), keyboardType: TextInputType.number),
-          const SizedBox(height: 8),
-          TextField(controller: empCtrl, decoration: const InputDecoration(labelText: 'Max Employees'), keyboardType: TextInputType.number),
-        ])),
+        content: SizedBox(
+          width: 480,
+          child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Plan Name')),
+            const SizedBox(height: 8),
+            TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code'), enabled: existing == null),
+            const SizedBox(height: 8),
+            TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description'), maxLines: 2),
+            const SizedBox(height: 16),
+            Text('Pricing', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: TextField(controller: monthlyCtrl, decoration: const InputDecoration(labelText: 'Monthly ₹'), keyboardType: TextInputType.number)),
+              const SizedBox(width: 8),
+              Expanded(child: TextField(controller: quarterlyCtrl, decoration: const InputDecoration(labelText: 'Quarterly ₹'), keyboardType: TextInputType.number)),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: TextField(controller: annualCtrl, decoration: const InputDecoration(labelText: 'Annual ₹'), keyboardType: TextInputType.number)),
+              const SizedBox(width: 8),
+              Expanded(child: TextField(controller: lifetimeCtrl, decoration: const InputDecoration(labelText: 'Lifetime ₹'), keyboardType: TextInputType.number)),
+            ]),
+            const SizedBox(height: 16),
+            Text('Limits', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: TextField(controller: empCtrl, decoration: const InputDecoration(labelText: 'Max Employees'), keyboardType: TextInputType.number)),
+              const SizedBox(width: 8),
+              Expanded(child: TextField(controller: branchCtrl, decoration: const InputDecoration(labelText: 'Max Branches'), keyboardType: TextInputType.number)),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: TextField(controller: deviceCtrl, decoration: const InputDecoration(labelText: 'Max Devices'), keyboardType: TextInputType.number)),
+              const SizedBox(width: 8),
+              Expanded(child: TextField(controller: storageCtrl, decoration: const InputDecoration(labelText: 'Storage MB'), keyboardType: TextInputType.number)),
+            ]),
+          ])),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              final dio = ref.read(dioProvider);
-              final data = {
-                'name': nameCtrl.text,
-                'code': codeCtrl.text,
-                'price_monthly': double.tryParse(monthlyCtrl.text) ?? 0,
-                'price_annual': double.tryParse(annualCtrl.text) ?? 0,
-                'max_employees': int.tryParse(empCtrl.text) ?? 50,
-              };
-              if (existing != null) {
-                await dio.put('/admin/plans/${existing['id']}', data: data);
-              } else {
-                await dio.post('/admin/plans/', data: data);
+              try {
+                final dio = ref.read(dioProvider);
+                final data = {
+                  'name': nameCtrl.text,
+                  'code': codeCtrl.text,
+                  if (descCtrl.text.isNotEmpty) 'description': descCtrl.text,
+                  'price_monthly': double.tryParse(monthlyCtrl.text) ?? 0,
+                  'price_quarterly': double.tryParse(quarterlyCtrl.text) ?? 0,
+                  'price_annual': double.tryParse(annualCtrl.text) ?? 0,
+                  'price_lifetime': double.tryParse(lifetimeCtrl.text) ?? 0,
+                  'max_employees': int.tryParse(empCtrl.text) ?? 50,
+                  'max_branches': int.tryParse(branchCtrl.text) ?? 5,
+                  'max_devices': int.tryParse(deviceCtrl.text) ?? 5,
+                  'max_storage_mb': int.tryParse(storageCtrl.text) ?? 1024,
+                };
+                if (existing != null) {
+                  await dio.put('/admin/plans/${existing['id']}', data: data);
+                } else {
+                  await dio.post('/admin/plans/', data: data);
+                }
+                Navigator.pop(ctx);
+                ref.invalidate(adminPlansProvider);
+              } catch (e) {
+                Navigator.pop(ctx);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: ApexColors.error),
+                  );
+                }
               }
-              Navigator.pop(ctx);
-              ref.invalidate(adminPlansProvider);
             },
             child: const Text('Save'),
           ),
