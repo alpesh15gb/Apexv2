@@ -802,6 +802,8 @@ class EsslConnectorService:
                         elif isinstance(punches, dict):
                             punches = [punches]
 
+                        logger.info("emp_punches_fetched", emp_code=emp_code, count=len(punches), from_date=from_str, to_date=to_str)
+
                         for punch in punches:
                             # Convert Pydantic model to dict if needed
                             if hasattr(punch, 'model_dump'):
@@ -814,10 +816,12 @@ class EsslConnectorService:
                             dev_serial = punch.get("device_serial") or punch.get("DeviceSerialNumber")
 
                             if not pt_str:
+                                logger.info("skipped_no_pt_str", emp_code=emp_code, punch_keys=list(punch.keys()))
                                 continue
 
                             punch_time = self._parse_datetime(str(pt_str), self.server.timezone)
                             if not punch_time:
+                                logger.info("skipped_parse_failed", emp_code=emp_code, pt_str=str(pt_str))
                                 continue
 
                             if max_punch_time is None or punch_time > max_punch_time:
