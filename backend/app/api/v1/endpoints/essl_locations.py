@@ -6,14 +6,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature
 from app.models.user import User
 from app.models.essl_server import EsslServer
 from app.models.essl_location import EsslLocation
 from app.schemas.common import ResponseBase
 from app.schemas.essl import EsslLocationCreate, EsslLocationUpdate, EsslLocationResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_feature("biometric"))])
 
 
 async def _get_server(db: AsyncSession, server_id: uuid.UUID, tenant_id: uuid.UUID) -> EsslServer:

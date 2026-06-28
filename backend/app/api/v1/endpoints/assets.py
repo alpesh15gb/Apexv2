@@ -9,11 +9,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature
 from app.models.user import User
 from app.models.asset_travel import CompanyAsset
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_feature("assets"))])
 
 
 class AssetCreate(BaseModel):

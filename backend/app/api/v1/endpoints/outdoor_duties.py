@@ -7,14 +7,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature
 from app.models.user import User
 from app.models.outdoor_duty import OutdoorDuty
 from app.models.employee import Employee
 from app.schemas.common import ResponseBase
 from app.schemas.outdoor_duty import OutdoorDutyCreate, OutdoorDutyUpdate, OutdoorDutyResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_feature("outdoor_duty"))])
 
 
 @router.get("/", response_model=List[OutdoorDutyResponse])

@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature
 from app.models.user import User
 from app.models.employee import Employee
 from app.models.attendance import Attendance, PunchLog
@@ -20,7 +20,7 @@ from app.models.announcement import Announcement
 from app.models.notification import Notification
 from app.models.expense import ExpenseClaim
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_feature("ess"))])
 
 
 class ProfileUpdate(BaseModel):

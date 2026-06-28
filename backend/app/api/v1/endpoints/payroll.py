@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_feature
 from app.models.user import User
 from app.models.payroll import SalaryStructure, PaySlip, Loan
 from app.models.employee import Employee
@@ -18,7 +18,7 @@ from app.schemas.payroll import (
     PaySlipResponse, LoanCreate, LoanResponse,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_feature("payroll"))])
 
 
 # ── Salary Structure ─────────────────────────────────────

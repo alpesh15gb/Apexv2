@@ -2,7 +2,7 @@
 
 import uuid
 from typing import Callable, List
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -136,3 +136,28 @@ async def get_current_tenant(
             detail="Tenant not found for user",
         )
     return current_user.tenant
+
+
+def require_feature(feature_code: str) -> Callable:
+    """Check if the current tenant has the specified feature enabled.
+
+    Superusers bypass all feature checks.
+    """
+    async def feature_dependency(
+        current_user: User = Depends(get_current_active_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        if current_user.is_superuser:
+            return current_user
+
+        from app.core.feature_gate import FeatureGate
+
+        enabled = await FeatureGate.is_enabled(db, current_user.tenant_id, feature_code)
+        if not enabled:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Feature '{feature_code}' is not enabled for your plan. Contact your administrator.",
+            )
+        return current_user
+
+    return feature_dependency
