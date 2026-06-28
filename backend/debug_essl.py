@@ -1,6 +1,7 @@
 """Debug eSSL API calls directly."""
 import asyncio
 import sys
+import base64
 sys.path.insert(0, "/app")
 
 from sqlalchemy import select
@@ -28,100 +29,66 @@ async def debug():
         soap = ESSLSoapService(server.server_url, server.username, password, server.timeout_seconds)
         client = ESSLClient(soap)
 
-        # Step 1: Get raw SOAP response for GetDeviceList
-        print("\n=== STEP 1: Raw SOAP GetDeviceList ===")
-        raw = await soap.get_device_list()
-        print(f"Success: {raw.get('success')}")
-        data = raw.get("data")
-        print(f"Data type: {type(data).__name__}")
-        print(f"Data: {str(data)[:500]}")
-
-        # Step 2: Get processed response from client
-        print("\n=== STEP 2: Client get_devices() ===")
-        result = await client.get_devices(bypass_cache=True)
-        data = result.get("data", [])
-        print(f"Data type: {type(data).__name__}")
-        if isinstance(data, dict):
-            items = data.get("items", [])
-            print(f"Items type: {type(items).__name__}, count: {len(items)}")
-            for i, item in enumerate(items[:3]):
-                print(f"  [{i}] type={type(item).__name__}, value={str(item)[:200]}")
-                if hasattr(item, 'model_dump'):
-                    print(f"       dict={item.model_dump()}")
-                elif isinstance(item, dict):
-                    print(f"       keys={list(item.keys())}")
-
-        # Step 3: Simulate sync_devices extraction
-        print("\n=== STEP 3: Simulate sync extraction ===")
-        all_essl_devices = []
-        batch = result.get("data", [])
-        if isinstance(batch, dict) and "items" in batch:
-            batch = batch["items"]
-        elif isinstance(batch, dict):
-            batch = [batch]
-        for d in batch:
-            if isinstance(d, str):
-                print(f"  SKIPPED string: {d[:50]}")
-                continue
-            if hasattr(d, 'model_dump'):
-                all_essl_devices.append(d.model_dump())
-            elif isinstance(d, dict):
-                all_essl_devices.append(d)
-            else:
-                print(f"  SKIPPED unknown type: {type(d).__name__}")
-        print(f"Extracted devices: {len(all_essl_devices)}")
-        for d in all_essl_devices[:3]:
-            print(f"  {d}")
-
-        # Step 4: Test GetEmployeePunchLogs with wider date range
-        print("\n=== STEP 4: GetEmployeePunchLogs (wide range) ===")
+        # Get employee mappings
         r2 = await db.execute(select(EsslEmployeeMapping).where(EsslEmployeeMapping.essl_server_id == server.id))
         emp_maps = list(r2.scalars().all())
-        if emp_maps:
-            code = emp_maps[0].employee_code
-            result = await client.get_employee_punch_logs(code, "2026-01-01", "2026-06-28")
-            data = result.get("data", {})
-            if isinstance(data, dict) and "items" in data:
-                items = data["items"]
-                print(f"Punches for {code}: {len(items)} items")
-            else:
-                print(f"Data type: {type(data).__name__}, value: {str(data)[:300]}")
+        code = emp_maps[0].employee_code if emp_maps else "DW0006"
 
-        # Step 5: Test GetDeviceLogs SOAP directly (not DeviceCommand)
-        print("\n=== STEP 5: Raw SOAP GetDeviceLogs ===")
-        raw = await soap.get_device_list()
-        raw_data = raw.get("data", "")
-        if isinstance(raw_data, str) and ";" in raw_data:
-            first_device = raw_data.split(";")[0].split(",")[1].strip()
-            print(f"Testing device: {first_device}")
-            logs = await soap.get_device_logs(first_device, "2026-06-01", "2026-06-28")
-            print(f"Success: {logs.get('success')}")
-            print(f"Error: {logs.get('error')}")
-            log_data = logs.get("data")
-            print(f"Data type: {type(log_data).__name__}")
-            print(f"Data: {str(log_data)[:500]}")
+        # Step 1: Raw SOAP with plain password
+        print(f"\n=== STEP 1: GetEmployeePunchLogs with PLAIN password for {code} ===")
+        raw = await soap._execute_soap_call(
+            "GetEmployeePunchLogs",
+            {"EmployeeCode": code, "AttendanceDate": "2026-06-27"}
+        )
+        print(f"  Response: {str(raw)[:500]}")
 
-        # Step 6: Raw SOAP GetEmployeePunchLogs for one day
-        print("\n=== STEP 6: Raw SOAP GetEmployeePunchLogs ===")
-        if emp_maps:
-            code = emp_maps[0].employee_code
+        # Step 2: Raw SOAP with Base64 password
+        print(f"\n=== STEP 2: GetEmployeePunchLogs with BASE64 password for {code} ===")
+        b64_password = base64.b64encode(password.encode()).decode()
+        soap_b64 = ESSLSoapService(server.server_url, server.username, b64_password, server.timeout_seconds)
+        raw = await soap_b64._execute_soap_call(
+            "GetEmployeePunchLogs",
+            {"EmployeeCode": code, "AttendanceDate": "2026-06-27"}
+        )
+        print(f"  Response: {str(raw)[:500]}")
+
+        # Step 3: Try different date formats
+        print(f"\n=== STEP 3: Different date formats for {code} ===")
+        for date_fmt in ["2026-06-27", "27/06/2026", "06/27/2026", "27-06-2026", "2026/06/27"]:
             raw = await soap._execute_soap_call(
                 "GetEmployeePunchLogs",
-                {"EmployeeCode": code, "AttendanceDate": "2026-06-27"}
+                {"EmployeeCode": code, "AttendanceDate": date_fmt}
             )
-            print(f"Raw response for {code} on 2026-06-27:")
-            print(f"  {str(raw)[:500]}")
+            result_str = str(raw)[:200]
+            print(f"  {date_fmt}: {result_str}")
 
-        # Step 7: Check DeviceCommand_GetDeviceLogs
-        print("\n=== STEP 7: DeviceCommand_GetDeviceLogs ===")
+        # Step 4: Try GetDeviceLogs with Base64 password
+        print(f"\n=== STEP 4: GetDeviceLogs with BASE64 password ===")
+        raw_dev = await soap.get_device_list()
+        raw_data = raw_dev.get("data", "")
         if isinstance(raw_data, str) and ";" in raw_data:
             first_device = raw_data.split(";")[0].split(",")[1].strip()
-            raw = await soap._execute_soap_call(
+            print(f"  Testing device: {first_device}")
+            
+            # Try plain password
+            logs = await soap.get_device_logs(first_device, "2026-06-01", "2026-06-28")
+            print(f"  Plain password - Success: {logs.get('success')}, Error: {logs.get('error')}")
+            
+            # Try Base64 password
+            logs = await soap_b64.get_device_logs(first_device, "2026-06-01", "2026-06-28")
+            print(f"  Base64 password - Success: {logs.get('success')}, Error: {logs.get('error')}")
+            if logs.get('data'):
+                print(f"  Data: {str(logs.get('data'))[:500]}")
+
+        # Step 5: Try to get punch data from device logs
+        print(f"\n=== STEP 5: DeviceCommand_GetDeviceLogs with Base64 password ===")
+        if isinstance(raw_data, str) and ";" in raw_data:
+            first_device = raw_data.split(";")[0].split(",")[1].strip()
+            raw = await soap_b64._execute_soap_call(
                 "DeviceCommand_GetDeviceLogs",
                 {"DeviceSerialNumber": first_device, "varFromDate": "2026-06-01", "varToDate": "2026-06-28"}
             )
-            print(f"Raw response for {first_device}:")
-            print(f"  {str(raw)[:500]}")
+            print(f"  Response: {str(raw)[:500]}")
 
 
 if __name__ == "__main__":
