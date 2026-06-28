@@ -83,6 +83,16 @@ class Attendance(TenantModel):
         UniqueConstraint("tenant_id", "employee_id", "date", name="uq_attendances_tenant_employee_date"),
     )
 
+    @property
+    def employee_name(self):
+        if self.employee:
+            return f"{self.employee.first_name} {self.employee.last_name}".strip()
+        return None
+
+    @property
+    def employee_code(self):
+        return self.employee.employee_code if self.employee else None
+
 
 class PunchLog(TenantModel):
     __tablename__ = "punch_logs"
