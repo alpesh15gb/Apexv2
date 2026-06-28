@@ -41,8 +41,8 @@ final dioProvider = Provider<Dio>((ref) {
           String message;
           if (data is Map) {
             message = data['detail'] ?? data['message'] ?? data['error'] ?? 'Request failed (${error.response!.statusCode})';
-          } else if (data is String) {
-            message = data;
+          } else if (data is String && data.isNotEmpty) {
+            message = data.length > 200 ? 'Server error (${error.response!.statusCode})' : data;
           } else {
             message = 'Request failed (${error.response!.statusCode})';
           }
@@ -55,17 +55,37 @@ final dioProvider = Provider<Dio>((ref) {
           ));
         }
 
-        if (error.type == DioExceptionType.unknown && 
-            error.error != null && 
-            error.error.toString().contains('SystemLiteral')) {
-          return handler.reject(DioException(
-            requestOptions: error.requestOptions,
-            response: error.response,
-            type: DioExceptionType.badResponse,
-            error: 'Server returned an invalid response (expected JSON, got XML/HTML). Check if the API server is running.',
-          ));
+        // Network and timeout errors
+        String message;
+        switch (error.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            message = 'Connection timed out. Please check your internet and try again.';
+            break;
+          case DioExceptionType.connectionError:
+            message = 'Cannot connect to server. Please check if the service is running.';
+            break;
+          case DioExceptionType.cancel:
+            message = 'Request was cancelled.';
+            break;
+          default:
+            if (error.type == DioExceptionType.unknown && 
+                error.error != null && 
+                error.error.toString().contains('SystemLiteral')) {
+              message = 'Server returned an invalid response. Check if the API server is running.';
+            } else {
+              message = 'An unexpected error occurred. Please try again.';
+            }
         }
-        if (error.response?.statusCode == 401 &&
+        return handler.reject(DioException(
+          requestOptions: error.requestOptions,
+          response: error.response,
+          type: error.type,
+          message: message,
+          error: message,
+        ));
+      },
             error.requestOptions.path != ApiConstants.login &&
             error.requestOptions.path != ApiConstants.refresh) {
           
