@@ -6,6 +6,8 @@ import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/device_provider.dart';
+import '../../widgets/apex_app_bar.dart';
+import '../../widgets/apex_card.dart';
 
 
 class DeviceListScreen extends ConsumerWidget {
@@ -111,13 +113,8 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ApexCard(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ApexColors.neutral200),
-      ),
       child: Row(
         children: [
           Container(width: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
@@ -172,18 +169,12 @@ class _DeviceCard extends StatelessWidget {
     final isOnline = device.status == 'online';
     final color = isOnline ? ApexColors.success : ApexColors.error;
 
-    return InkWell(
+    return ApexCard(
       onTap: () => context.push('/devices/${device.id}'),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Column(
+      padding: const EdgeInsets.all(12),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -206,14 +197,13 @@ class _DeviceCard extends StatelessWidget {
                 ),
               ],
             ),
-            const Spacer(),
+            const SizedBox(height: 8),
             Text(device.deviceName, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900), overflow: TextOverflow.ellipsis),
             Text('S/N: ${device.serialNumber}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
             if (device.location != null)
               Text(device.location!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
           ],
         ),
-      ),
     );
   }
 }

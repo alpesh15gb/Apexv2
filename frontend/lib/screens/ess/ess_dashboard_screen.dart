@@ -91,8 +91,8 @@ class _AttendanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasAttendance = attendance != null;
     final status = hasAttendance ? (attendance['status'] ?? 'not_marked') : 'not_marked';
-    final checkIn = hasAttendance ? attendance['check_in'] : null;
-    final checkOut = hasAttendance ? attendance['check_out'] : null;
+    final checkIn = hasAttendance ? attendance['punch_in'] : null;
+    final checkOut = hasAttendance ? attendance['punch_out'] : null;
 
     return ApexCard(
       child: Column(
@@ -242,3 +242,4 @@ class _LeaveBalanceCard extends StatelessWidget {
     );
   }
 }
+

@@ -145,8 +145,8 @@ class _TodayCard extends StatelessWidget {
       data: (dash) {
         final att = dash?['today_attendance'];
         final status = att?['status'] ?? 'not_marked';
-        final checkIn = att?['check_in'];
-        final checkOut = att?['check_out'];
+        final checkIn = att?['punch_in'];
+        final checkOut = att?['punch_out'];
 
         return Container(
           width: double.infinity,
@@ -338,9 +338,9 @@ class _DailyLogCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = record['status'] ?? 'unknown';
     final date = record['date'] ?? '';
-    final checkIn = record['check_in'];
-    final checkOut = record['check_out'];
-    final hours = record['working_hours'];
+    final checkIn = record['punch_in'];
+    final checkOut = record['punch_out'];
+    final hours = record['total_hours'];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -414,3 +414,4 @@ class _DailyLogCard extends StatelessWidget {
     }
   }
 }
+

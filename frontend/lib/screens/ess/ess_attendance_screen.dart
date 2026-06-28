@@ -64,13 +64,13 @@ class EssAttendanceScreen extends ConsumerWidget {
                     const SizedBox(width: 14),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(r['date'] ?? '', style: ApexTypography.titleMedium),
-                      Text('${r['check_in'] ?? '—'} → ${r['check_out'] ?? '—'}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                      Text('${r['punch_in'] ?? '—'} → ${r['punch_out'] ?? '—'}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                     ])),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       _statusBadge(r['status']),
-                      if (r['working_hours'] != null) ...[
+                      if (r['total_hours'] != null) ...[
                         const SizedBox(height: 4),
-                        Text('${r['working_hours']}h', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                        Text('${r['total_hours']}h', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                       ],
                     ]),
                   ]),
@@ -124,3 +124,4 @@ class EssAttendanceScreen extends ConsumerWidget {
     }
   }
 }
+

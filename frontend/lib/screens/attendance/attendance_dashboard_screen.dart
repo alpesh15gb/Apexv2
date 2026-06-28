@@ -11,10 +11,6 @@ import '../../widgets/apex_app_bar.dart';
 import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
-import '../../design_system/typography.dart';
-import '../../widgets/apex_badge.dart';
-import '../../widgets/apex_button.dart';
-import '../../widgets/apex_card.dart';
 import '../../widgets/apex_date_picker.dart';
 
 final attendanceStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
@@ -345,15 +341,15 @@ class _AttendanceTable extends StatelessWidget {
                       CircleAvatar(
                         radius: 14,
                         backgroundColor: ApexColors.primary.withOpacity(0.1),
-                        child: Text((r['employee_name'] ?? '?')[0].toUpperCase(), style: TextStyle(fontSize: 11, color: ApexColors.primary, fontWeight: FontWeight.w700)),
+                        child: Text((r['employee_name'] ?? '?')[0].toUpperCase(), style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary, fontWeight: FontWeight.w700)),
                       ),
                       const SizedBox(width: 8),
                       Expanded(child: Text(r['employee_name'] ?? '—', style: ApexTypography.table, overflow: TextOverflow.ellipsis)),
                     ])),
                     SizedBox(width: 100, child: Text(r['employee_code'] ?? '—', style: ApexTypography.table.copyWith(color: ApexColors.neutral500))),
-                    SizedBox(width: 100, child: Text(_formatTime(r['check_in']), style: ApexTypography.table)),
-                    SizedBox(width: 100, child: Text(_formatTime(r['check_out']), style: ApexTypography.table)),
-                    SizedBox(width: 80, child: Text('${r['working_hours'] ?? '—'}h', style: ApexTypography.table)),
+                    SizedBox(width: 100, child: Text(_formatTime(r['punch_in']), style: ApexTypography.table)),
+                    SizedBox(width: 100, child: Text(_formatTime(r['punch_out']), style: ApexTypography.table)),
+                    SizedBox(width: 80, child: Text(r['total_hours'] != null ? '${(r['total_hours'] as num).toStringAsFixed(1)}h' : '—', style: ApexTypography.table)),
                     SizedBox(
                       width: 80,
                       child: _statusBadge(status),
