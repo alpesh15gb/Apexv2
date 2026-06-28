@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db, get_current_active_user
+from app.core.deps import get_db, get_current_active_user, require_permissions
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseBase
 from app.schemas.employee import (
@@ -15,7 +15,7 @@ from app.schemas.employee import (
 )
 from app.services.employee import EmployeeService, DepartmentService, DesignationService, BranchService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permissions("employee.read"))])
 
 
 # ── Departments ──────────────────────────────────────
