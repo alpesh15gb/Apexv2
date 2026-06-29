@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final String errorMessage;
@@ -24,12 +25,12 @@ class CustomErrorWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.08),
+                color: ApexColors.error.withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.error_outline,
-                color: Colors.red,
+                color: ApexColors.error,
                 size: 48,
               ),
             ),
@@ -38,14 +39,14 @@ class CustomErrorWidget extends StatelessWidget {
               'An Error Occurred',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: isDark ? ApexColors.neutral0 : ApexColors.neutral900,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               errorMessage,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark ? Colors.white60 : Colors.black54,
+                color: isDark ? ApexColors.neutral0.withOpacity(0.6) : ApexColors.neutral600,
               ),
               textAlign: TextAlign.center,
             ),
@@ -56,7 +57,7 @@ class CustomErrorWidget extends StatelessWidget {
               label: const Text('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: ApexColors.neutral0,
               ),
             ),
           ],

@@ -50,7 +50,7 @@ class _AttendanceRegularizationScreenState extends ConsumerState<AttendanceRegul
         body: Column(
           children: [
             Container(
-              color: Colors.white,
+              color: ApexColors.neutral0,
               child: TabBar(
                 controller: _tabCtrl,
                 labelColor: ApexColors.primary,

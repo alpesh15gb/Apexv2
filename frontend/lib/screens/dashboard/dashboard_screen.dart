@@ -15,11 +15,40 @@ import '../../providers/dashboard_provider.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_card.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _invalidateAll();
+  }
+
+  void _invalidateAll() {
+    ref.invalidate(dashboardStatsProvider);
+    ref.invalidate(dashboardChartProvider(7));
+    ref.invalidate(departmentDistributionProvider);
+    ref.invalidate(recentPunchLogsProvider);
+    ref.invalidate(syncHealthProvider);
+  }
+
+  Future<void> _refreshAll() async {
+    _invalidateAll();
+    await Future.wait([
+      ref.read(dashboardChartProvider(7).future),
+      ref.read(departmentDistributionProvider.future),
+      ref.read(recentPunchLogsProvider.future),
+      ref.read(syncHealthProvider.future),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Check tenant type and show appropriate dashboard
     final authState = ref.watch(authProvider);
     final user = authState.value;
@@ -36,13 +65,7 @@ class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: ApexColors.neutral50,
       body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(dashboardStatsProvider);
-          ref.invalidate(dashboardChartProvider(7));
-          ref.invalidate(departmentDistributionProvider);
-          ref.invalidate(recentPunchLogsProvider);
-          ref.invalidate(syncHealthProvider);
-        },
+        onRefresh: _refreshAll,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(

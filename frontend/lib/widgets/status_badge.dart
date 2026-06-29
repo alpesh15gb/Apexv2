@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 
 class StatusBadge extends StatelessWidget {
   final String status;
@@ -20,8 +21,8 @@ class StatusBadge extends StatelessWidget {
       case 'paid':
       case 'granted':
       case 'completed':
-        badgeColor = Colors.green.shade100;
-        textColor = Colors.green.shade800;
+        badgeColor = ApexColors.success100;
+        textColor = ApexColors.success800;
         break;
       case 'offline':
       case 'absent':
@@ -30,29 +31,29 @@ class StatusBadge extends StatelessWidget {
       case 'unpaid':
       case 'denied':
       case 'failed':
-        badgeColor = Colors.red.shade100;
-        textColor = Colors.red.shade800;
+        badgeColor = ApexColors.error100;
+        textColor = ApexColors.error800;
         break;
       case 'pending':
       case 'scheduled':
       case 'requested':
       case 'sent':
-        badgeColor = Colors.amber.shade100;
-        textColor = Colors.amber.shade900;
+        badgeColor = ApexColors.warning100;
+        textColor = ApexColors.warning900;
         break;
       case 'cancelled':
       case 'half_day':
       case 'half-day':
       case 'on_leave':
       case 'leave':
-        badgeColor = Colors.blue.shade100;
-        textColor = Colors.blue.shade800;
+        badgeColor = ApexColors.info100;
+        textColor = ApexColors.info800;
         if (statusLower == 'half_day') label = 'Half Day';
         if (statusLower == 'on_leave') label = 'On Leave';
         break;
       default:
-        badgeColor = Colors.grey.shade200;
-        textColor = Colors.grey.shade700;
+        badgeColor = ApexColors.gray200;
+        textColor = ApexColors.gray700;
         break;
     }
 

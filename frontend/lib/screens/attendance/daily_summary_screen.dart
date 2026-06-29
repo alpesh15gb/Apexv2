@@ -32,7 +32,7 @@ class _DailySummaryScreenState extends ConsumerState<DailySummaryScreen> {
         description: 'Track aggregate attendance KPIs and reprocess daily punch logs.',
         onRefresh: () => ref.invalidate(dailySummaryProvider(dateStr)),
         filterBar: Container(
-          color: Colors.white,
+          color: ApexColors.neutral0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
           child: Row(
             children: [

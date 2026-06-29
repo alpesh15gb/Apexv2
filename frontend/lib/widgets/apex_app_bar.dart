@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 import '../design_system/typography.dart';
-
-const _text = Color(0xFF111827);
-const _border = Color(0xFFE5E7EB);
 
 class ApexAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -24,16 +22,16 @@ class ApexAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(title, style: ApexTypography.sectionTitle.copyWith(color: _text)),
-      backgroundColor: Colors.white,
-      foregroundColor: _text,
+      title: Text(title, style: ApexTypography.sectionTitle.copyWith(color: ApexColors.gray900)),
+      backgroundColor: ApexColors.neutral0,
+      foregroundColor: ApexColors.gray900,
       elevation: 0,
       centerTitle: centerTitle,
       leading: leading,
       actions: actions,
       bottom: const PreferredSize(
         preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1, color: _border),
+        child: Divider(height: 1, color: ApexColors.gray200),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 
 class DebouncedSearchBar extends StatefulWidget {
   final String hintText;
@@ -42,7 +43,7 @@ class _DebouncedSearchBarState extends State<DebouncedSearchBar> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+        color: isDark ? ApexColors.neutral800 : ApexColors.neutral100,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(

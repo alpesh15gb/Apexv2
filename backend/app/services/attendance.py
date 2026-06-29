@@ -245,6 +245,8 @@ class AttendanceService:
         department_id: Optional[uuid.UUID] = None,
         branch_id: Optional[uuid.UUID] = None,
         status_val: Optional[str] = None,
+        shift_id: Optional[uuid.UUID] = None,
+        search: Optional[str] = None,
         from_date: Optional[date] = None,
         to_date: Optional[date] = None,
         page: int = 1,
@@ -268,6 +270,19 @@ class AttendanceService:
         if status_val:
             count_stmt = count_stmt.where(Attendance.status == status_val)
             stmt = stmt.where(Attendance.status == status_val)
+        if shift_id:
+            count_stmt = count_stmt.where(Attendance.shift_id == shift_id)
+            stmt = stmt.where(Attendance.shift_id == shift_id)
+        if search:
+            term = f"%{search}%"
+            search_filter = or_(
+                Employee.first_name.ilike(term),
+                Employee.last_name.ilike(term),
+                Employee.employee_code.ilike(term),
+                Employee.phone.ilike(term),
+            )
+            count_stmt = count_stmt.where(search_filter)
+            stmt = stmt.where(search_filter)
         if from_date:
             count_stmt = count_stmt.where(Attendance.date >= from_date)
             stmt = stmt.where(Attendance.date >= from_date)

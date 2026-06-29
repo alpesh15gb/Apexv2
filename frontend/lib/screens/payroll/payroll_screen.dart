@@ -72,7 +72,7 @@ class PayrollScreen extends ConsumerWidget {
         onRefresh: () => ref.read(payslipListProvider.notifier).fetch(isRefresh: true),
         body: Column(children: [
           Container(
-            color: Colors.white,
+            color: ApexColors.neutral0,
             child: Row(children: [
               _tab('Payslips', 0, tab, ref),
               _tab('Generate', 1, tab, ref),
@@ -110,7 +110,7 @@ class PayrollScreen extends ConsumerWidget {
           final p = slips[i];
           final statusColor = p.status == 'frozen' ? ApexColors.primary : p.status == 'paid' ? ApexColors.success : ApexColors.neutral500;
           final monthName = DateFormat('MMMM').format(DateTime(p.year, p.month));
-          return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)), child: Row(children: [
+          return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)), child: Row(children: [
             Container(width: 48, height: 48, decoration: BoxDecoration(color: ApexColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text('${p.month}', style: ApexTypography.titleSmall.copyWith(color: ApexColors.primary)),
               Text(p.year.toString().substring(2), style: ApexTypography.captionSmall.copyWith(color: ApexColors.primary)),
@@ -161,7 +161,7 @@ class PayrollScreen extends ConsumerWidget {
         },
         icon: const Icon(Icons.calculate, size: 18),
         label: const Text('Generate Payslips'),
-        style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+        style: ElevatedButton.styleFrom(backgroundColor: ApexColors.primary, foregroundColor: ApexColors.neutral0, padding: const EdgeInsets.symmetric(vertical: 14)),
       )),
     ])));
   }

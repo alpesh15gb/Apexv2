@@ -22,7 +22,7 @@ class ApexCard extends StatelessWidget {
         width: double.infinity,
         padding: padding ?? EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ApexColors.neutral0,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: ApexColors.neutral200),
           boxShadow: [

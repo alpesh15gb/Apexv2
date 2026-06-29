@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import '../design_system/colors.dart';
 
 class LoadingWidget extends StatelessWidget {
   final bool useShimmer;
@@ -20,8 +21,8 @@ class LoadingWidget extends StatelessWidget {
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-    final highlightColor = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    final baseColor = isDark ? ApexColors.neutral800 : ApexColors.neutral200;
+    final highlightColor = isDark ? ApexColors.neutral700 : ApexColors.neutral100;
 
     return Shimmer.fromColors(
       baseColor: baseColor,
@@ -41,7 +42,7 @@ class LoadingWidget extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: ApexColors.neutral0,
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -53,19 +54,19 @@ class LoadingWidget extends StatelessWidget {
                       Container(
                         width: double.infinity,
                         height: 12,
-                        color: Colors.white,
+                        color: ApexColors.neutral0,
                       ),
                       const SizedBox(height: 8),
                       Container(
                         width: 150,
                         height: 12,
-                        color: Colors.white,
+                        color: ApexColors.neutral0,
                       ),
                       const SizedBox(height: 8),
                       Container(
                         width: 80,
                         height: 10,
-                        color: Colors.white,
+                        color: ApexColors.neutral0,
                       ),
                     ],
                   ),

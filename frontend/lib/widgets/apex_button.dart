@@ -31,7 +31,7 @@ class ApexButton extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: type == ApexButtonType.primary || type == ApexButtonType.danger || type == ApexButtonType.success
-                  ? Colors.white
+                  ? ApexColors.neutral0
                   : ApexColors.primary,
             ),
           )
@@ -55,7 +55,7 @@ class ApexButton extends StatelessWidget {
             onPressed: loading ? null : onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: ApexColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: ApexColors.neutral0,
               disabledBackgroundColor: ApexColors.neutral300,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               textStyle: ApexTypography.button,
@@ -101,7 +101,7 @@ class ApexButton extends StatelessWidget {
             onPressed: loading ? null : onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: ApexColors.error,
-              foregroundColor: Colors.white,
+              foregroundColor: ApexColors.neutral0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               textStyle: ApexTypography.button,
             ),
@@ -116,7 +116,7 @@ class ApexButton extends StatelessWidget {
             onPressed: loading ? null : onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: ApexColors.success,
-              foregroundColor: Colors.white,
+              foregroundColor: ApexColors.neutral0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               textStyle: ApexTypography.button,
             ),

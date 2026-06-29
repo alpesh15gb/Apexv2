@@ -71,7 +71,7 @@ class _OpLogsScreenState extends ConsumerState<OpLogsScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ApexColors.neutral0,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: ApexColors.neutral200),
               ),

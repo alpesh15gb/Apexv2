@@ -196,7 +196,7 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
                   borderSide: const BorderSide(color: ApexColors.neutral300, width: 1.5),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: ApexColors.neutral0,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 suffixIcon: const Icon(Icons.access_time, size: 18, color: ApexColors.neutral400),
               ),

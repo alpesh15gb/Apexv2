@@ -35,8 +35,8 @@ class ApexDatePicker extends StatelessWidget {
               data: Theme.of(context).copyWith(
                 colorScheme: ColorScheme.light(
                   primary: ApexColors.primary,
-                  onPrimary: Colors.white,
-                  surface: Colors.white,
+                  onPrimary: ApexColors.neutral0,
+                  surface: ApexColors.neutral0,
                   onSurface: ApexColors.neutral900,
                 ),
               ),
@@ -60,7 +60,7 @@ class ApexDatePicker extends StatelessWidget {
             borderSide: BorderSide(color: ApexColors.neutral300, width: 1.5),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: ApexColors.neutral0,
           contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           suffixIcon: Icon(Icons.calendar_today, size: 18, color: ApexColors.neutral400),
         ),

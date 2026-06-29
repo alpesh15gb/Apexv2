@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -45,7 +46,7 @@ class EmptyState extends StatelessWidget {
               title,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: isDark ? ApexColors.neutral0 : ApexColors.neutral900,
               ),
               textAlign: TextAlign.center,
             ),
@@ -53,7 +54,7 @@ class EmptyState extends StatelessWidget {
             Text(
               description,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark ? Colors.white60 : Colors.black54,
+                color: isDark ? ApexColors.neutral0.withOpacity(0.6) : ApexColors.neutral600,
               ),
               textAlign: TextAlign.center,
             ),

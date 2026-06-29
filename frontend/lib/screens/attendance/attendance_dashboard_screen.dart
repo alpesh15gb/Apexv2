@@ -1,12 +1,16 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'dart:html' as html;
 
 import '../../core/dio_client.dart';
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
+import '../../services/report_service.dart';
 import '../../widgets/page_wrapper.dart';
 import '../../widgets/apex_button.dart';
 import '../../widgets/apex_badge.dart';
@@ -44,7 +48,9 @@ class AttendanceListState {
   final String dateFilter;
   final String? departmentFilter;
   final String? branchFilter;
+  final String? shiftFilter;
   final String? statusFilter;
+  final String searchFilter;
 
   AttendanceListState({
     this.records = const [],
@@ -56,7 +62,9 @@ class AttendanceListState {
     this.dateFilter = '',
     this.departmentFilter,
     this.branchFilter,
+    this.shiftFilter,
     this.statusFilter,
+    this.searchFilter = '',
   });
 
   AttendanceListState copyWith({
@@ -69,7 +77,9 @@ class AttendanceListState {
     String? dateFilter,
     String? departmentFilter,
     String? branchFilter,
+    String? shiftFilter,
     String? statusFilter,
+    String? searchFilter,
   }) {
     return AttendanceListState(
       records: records ?? this.records,
@@ -81,7 +91,9 @@ class AttendanceListState {
       dateFilter: dateFilter ?? this.dateFilter,
       departmentFilter: departmentFilter ?? this.departmentFilter,
       branchFilter: branchFilter ?? this.branchFilter,
+      shiftFilter: shiftFilter ?? this.shiftFilter,
       statusFilter: statusFilter ?? this.statusFilter,
+      searchFilter: searchFilter ?? this.searchFilter,
     );
   }
 }
@@ -99,7 +111,9 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       if (state.dateFilter.isNotEmpty) params['date'] = state.dateFilter;
       if (state.departmentFilter != null) params['department_id'] = state.departmentFilter;
       if (state.branchFilter != null) params['branch_id'] = state.branchFilter;
+      if (state.shiftFilter != null) params['shift_id'] = state.shiftFilter;
       if (state.statusFilter != null) params['status'] = state.statusFilter;
+      if (state.searchFilter.isNotEmpty) params['search'] = state.searchFilter;
 
       final res = await _dio.get('/attendance/', queryParameters: params);
       final data = res.data;
@@ -123,7 +137,9 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       dateFilter: date,
       departmentFilter: state.departmentFilter,
       branchFilter: state.branchFilter,
+      shiftFilter: state.shiftFilter,
       statusFilter: state.statusFilter,
+      searchFilter: state.searchFilter,
     );
     fetch();
   }
@@ -136,7 +152,9 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       dateFilter: state.dateFilter,
       departmentFilter: department,
       branchFilter: state.branchFilter,
+      shiftFilter: state.shiftFilter,
       statusFilter: state.statusFilter,
+      searchFilter: state.searchFilter,
     );
     fetch();
   }
@@ -149,7 +167,24 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       dateFilter: state.dateFilter,
       departmentFilter: state.departmentFilter,
       branchFilter: branch,
+      shiftFilter: state.shiftFilter,
       statusFilter: state.statusFilter,
+      searchFilter: state.searchFilter,
+    );
+    fetch();
+  }
+
+  void setShiftFilter(String? shift) {
+    state = AttendanceListState(
+      records: state.records,
+      total: state.total,
+      totalPages: state.totalPages,
+      dateFilter: state.dateFilter,
+      departmentFilter: state.departmentFilter,
+      branchFilter: state.branchFilter,
+      shiftFilter: shift,
+      statusFilter: state.statusFilter,
+      searchFilter: state.searchFilter,
     );
     fetch();
   }
@@ -162,8 +197,15 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       dateFilter: state.dateFilter,
       departmentFilter: state.departmentFilter,
       branchFilter: state.branchFilter,
+      shiftFilter: state.shiftFilter,
       statusFilter: status,
+      searchFilter: state.searchFilter,
     );
+    fetch();
+  }
+
+  void setSearchFilter(String search) {
+    state = state.copyWith(searchFilter: search);
     fetch();
   }
 
@@ -178,6 +220,41 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
 class AttendanceDashboardScreen extends ConsumerWidget {
   const AttendanceDashboardScreen({super.key});
 
+  Future<void> _exportCsv(BuildContext context, WidgetRef ref) async {
+    final attState = ref.read(attendanceListProvider);
+    try {
+      final service = ref.read(reportServiceProvider);
+      final bytes = await service.downloadFilteredAttendance(
+        date: attState.dateFilter,
+        departmentId: attState.departmentFilter,
+        branchId: attState.branchFilter,
+        shiftId: attState.shiftFilter,
+        status: attState.statusFilter,
+        search: attState.searchFilter.isNotEmpty ? attState.searchFilter : null,
+      );
+      final filename = 'attendance_${attState.dateFilter}.csv';
+      if (kIsWeb) {
+        final blob = html.Blob([bytes]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        html.AnchorElement(href: url)
+          ..setAttribute('download', filename)
+          ..click();
+        html.Url.revokeObjectUrl(url);
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exported $filename'), backgroundColor: ApexColors.success),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e'), backgroundColor: ApexColors.error),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(attendanceStatsProvider);
@@ -190,7 +267,6 @@ class AttendanceDashboardScreen extends ConsumerWidget {
         title: 'Attendance Dashboard',
         description: 'Track daily attendance summaries, punch logs, and active status.',
         actions: [
-          // Action buttons grouped properly
           ApexButton(
             label: 'Refresh',
             icon: Icons.refresh,
@@ -199,6 +275,13 @@ class AttendanceDashboardScreen extends ConsumerWidget {
               ref.invalidate(attendanceStatsProvider);
               ref.read(attendanceListProvider.notifier).fetch();
             },
+          ),
+          const SizedBox(width: 8),
+          ApexButton(
+            label: 'Export',
+            icon: Icons.download,
+            type: ApexButtonType.ghost,
+            onPressed: () => _exportCsv(context, ref),
           ),
           const SizedBox(width: 8),
           ApexButton(
@@ -383,12 +466,23 @@ class _FiltersBar extends ConsumerStatefulWidget {
 class _FiltersBarState extends ConsumerState<_FiltersBar> {
   List<dynamic> _departments = [];
   List<dynamic> _branches = [];
+  List<dynamic> _shifts = [];
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _loadDepartments();
     _loadBranches();
+    _loadShifts();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchDebounce?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadDepartments() async {
@@ -415,6 +509,25 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
     }
   }
 
+  Future<void> _loadShifts() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final res = await dio.get('/shifts/', queryParameters: {'page': 1, 'page_size': 100});
+      setState(() {
+        _shifts = res.data['items'] ?? [];
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      ref.read(attendanceListProvider.notifier).setSearchFilter(value);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateStr = ref.watch(attendanceDateProvider);
@@ -434,15 +547,12 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
           },
           width: isMobile ? null : 180,
         ),
-        ApexFilter.dropdown(
-          label: 'Department',
-          value: attState.departmentFilter,
-          items: [
-            const DropdownMenuItem<String>(value: null, child: Text('All Departments')),
-            ..._departments.map((d) => DropdownMenuItem<String>(value: d['id'] as String, child: Text(d['name'] ?? ''))),
-          ],
-          onChanged: (v) => ref.read(attendanceListProvider.notifier).setDepartmentFilter(v),
-          width: isMobile ? null : 200,
+        ApexFilter.search(
+          label: 'Search',
+          hintText: 'Name, code, or mobile',
+          onChanged: _onSearchChanged,
+          controller: _searchController,
+          width: isMobile ? null : 220,
         ),
         ApexFilter.dropdown(
           label: 'Location',
@@ -452,7 +562,27 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
             ..._branches.map((b) => DropdownMenuItem<String>(value: b['id'] as String, child: Text(b['name'] ?? ''))),
           ],
           onChanged: (v) => ref.read(attendanceListProvider.notifier).setBranchFilter(v),
-          width: isMobile ? null : 200,
+          width: isMobile ? null : 180,
+        ),
+        ApexFilter.dropdown(
+          label: 'Department',
+          value: attState.departmentFilter,
+          items: [
+            const DropdownMenuItem<String>(value: null, child: Text('All Departments')),
+            ..._departments.map((d) => DropdownMenuItem<String>(value: d['id'] as String, child: Text(d['name'] ?? ''))),
+          ],
+          onChanged: (v) => ref.read(attendanceListProvider.notifier).setDepartmentFilter(v),
+          width: isMobile ? null : 180,
+        ),
+        ApexFilter.dropdown(
+          label: 'Shift',
+          value: attState.shiftFilter,
+          items: [
+            const DropdownMenuItem<String>(value: null, child: Text('All Shifts')),
+            ..._shifts.map((s) => DropdownMenuItem<String>(value: s['id'] as String, child: Text(s['name'] ?? ''))),
+          ],
+          onChanged: (v) => ref.read(attendanceListProvider.notifier).setShiftFilter(v),
+          width: isMobile ? null : 160,
         ),
         ApexFilter.dropdown(
           label: 'Status',
@@ -463,13 +593,16 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
             DropdownMenuItem<String>(value: 'absent', child: Text('Absent')),
             DropdownMenuItem<String>(value: 'late', child: Text('Late')),
             DropdownMenuItem<String>(value: 'on_leave', child: Text('On Leave')),
+            DropdownMenuItem<String>(value: 'half_day', child: Text('Half Day')),
           ],
           onChanged: (v) => ref.read(attendanceListProvider.notifier).setStatusFilter(v),
-          width: isMobile ? null : 160,
+          width: isMobile ? null : 150,
         ),
       ],
       onReset: () {
         final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        _searchController.clear();
+        _searchDebounce?.cancel();
         ref.read(attendanceDateProvider.notifier).state = today;
         ref.read(attendanceListProvider.notifier).resetFilters(today);
       },
@@ -496,8 +629,15 @@ class _AttendanceTable extends StatelessWidget {
       return _TableEmpty();
     }
 
+    const double rowHeight = 52;
+    const double headerHeight = 44;
+    final double tableHeight = headerHeight + (records.length * rowHeight);
+    final double maxHeight = isMobile ? 450 : 600;
+    final double containerHeight = tableHeight < maxHeight ? tableHeight : maxHeight;
+
     Widget buildTable() {
       return Container(
+        height: containerHeight,
         decoration: BoxDecoration(
           color: ApexColors.neutral0,
           borderRadius: BorderRadius.circular(12),
@@ -513,12 +653,14 @@ class _AttendanceTable extends StatelessWidget {
         child: Column(
           children: [
             const _TableHeader(),
-            ...records.asMap().entries.map((entry) {
-              return _TableRow(
-                record: entry.value,
-                index: entry.key,
-              );
-            }),
+            Expanded(
+              child: ListView.builder(
+                itemCount: records.length,
+                itemBuilder: (context, index) {
+                  return _TableRow(record: records[index], index: index);
+                },
+              ),
+            ),
           ],
         ),
       );

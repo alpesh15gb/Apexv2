@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../design_system/colors.dart';
 
 class DateRangePickerWidget extends StatelessWidget {
   final DateTimeRange? selectedRange;
@@ -36,8 +37,8 @@ class DateRangePickerWidget extends StatelessWidget {
               data: Theme.of(context).copyWith(
                 appBarTheme: theme.appBarTheme.copyWith(
                   backgroundColor: theme.colorScheme.primary,
-                  iconTheme: const IconThemeData(color: Colors.white),
-                  titleTextStyle: const TextStyle(color: Colors.white),
+                  iconTheme: const IconThemeData(color: ApexColors.neutral0),
+                  titleTextStyle: const TextStyle(color: ApexColors.neutral0),
                 ),
               ),
               child: child!,
@@ -51,10 +52,10 @@ class DateRangePickerWidget extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+          color: isDark ? ApexColors.neutral800 : ApexColors.neutral100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black12,
+            color: isDark ? ApexColors.neutral0.withOpacity(0.1) : ApexColors.neutral900.withOpacity(0.12),
             width: 1,
           ),
         ),

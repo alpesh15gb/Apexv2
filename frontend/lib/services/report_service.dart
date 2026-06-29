@@ -127,6 +127,29 @@ class ReportService {
     final response = await _dio.get<List<int>>('/reports/attendance/muster-roll', queryParameters: {'month': month, 'year': year, 'format': format}, options: Options(responseType: ResponseType.bytes));
     return Uint8List.fromList(response.data!);
   }
+
+  Future<Uint8List> downloadFilteredAttendance({
+    required String date,
+    String? departmentId,
+    String? branchId,
+    String? shiftId,
+    String? status,
+    String? search,
+    String format = 'csv',
+  }) async {
+    final params = <String, dynamic>{'date': date, 'format': format};
+    if (departmentId != null) params['department_id'] = departmentId;
+    if (branchId != null) params['branch_id'] = branchId;
+    if (shiftId != null) params['shift_id'] = shiftId;
+    if (status != null) params['status'] = status;
+    if (search != null && search.isNotEmpty) params['search'] = search;
+    final response = await _dio.get<List<int>>(
+      '/attendance/export',
+      queryParameters: params,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return Uint8List.fromList(response.data!);
+  }
 }
 
 final reportServiceProvider = Provider<ReportService>((ref) {

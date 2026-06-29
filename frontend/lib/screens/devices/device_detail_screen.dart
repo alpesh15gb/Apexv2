@@ -50,7 +50,7 @@ class DeviceDetailScreen extends ConsumerWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+                  decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
                   child: Column(
                     children: [
                       Row(
@@ -142,12 +142,12 @@ class DeviceDetailScreen extends ConsumerWidget {
                     if (list.isEmpty) {
                       return Container(
                         height: 100,
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+                        decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
                         child: const Center(child: Text('No activity logs found.')),
                       );
                     }
                     return Container(
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+                      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
                       child: ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -184,7 +184,7 @@ class DeviceDetailScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500, color: ApexColors.neutral400)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),

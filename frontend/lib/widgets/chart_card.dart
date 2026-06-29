@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 
 class ChartCard extends StatelessWidget {
   final String title;
@@ -36,7 +37,7 @@ class ChartCard extends StatelessWidget {
                         title,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: isDark ? ApexColors.neutral0 : ApexColors.neutral900,
                         ),
                       ),
                       if (subtitle != null) ...[
@@ -44,7 +45,7 @@ class ChartCard extends StatelessWidget {
                         Text(
                           subtitle!,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: isDark ? Colors.white60 : Colors.black54,
+                            color: isDark ? ApexColors.neutral0.withOpacity(0.6) : ApexColors.neutral600,
                           ),
                         ),
                       ],

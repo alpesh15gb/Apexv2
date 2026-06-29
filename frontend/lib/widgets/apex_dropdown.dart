@@ -52,7 +52,7 @@ class ApexDropdown<T> extends StatelessWidget {
           borderSide: BorderSide(color: ApexColors.error, width: 1.5),
         ),
         filled: true,
-        fillColor: enabled ? Colors.white : ApexColors.neutral50,
+        fillColor: enabled ? ApexColors.neutral0 : ApexColors.neutral50,
         contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );

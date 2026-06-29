@@ -75,7 +75,7 @@ class _PayrollRunScreenState extends ConsumerState<PayrollRunScreen> {
               constraints: const BoxConstraints(maxWidth: 460),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ApexColors.neutral0,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: ApexColors.neutral200),
               ),

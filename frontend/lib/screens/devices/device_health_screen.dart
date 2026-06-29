@@ -30,7 +30,7 @@ class DeviceHealthScreen extends ConsumerWidget {
                 style: ApexTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _buildHealthCard('Total Terminals', '${health.totalDevices}', Icons.devices, Colors.blue),
+              _buildHealthCard('Total Terminals', '${health.totalDevices}', Icons.devices, ApexColors.primary),
               _buildHealthCard('Online Terminals', '${health.online}', Icons.cloud_done, ApexColors.success),
               _buildHealthCard('Offline Terminals', '${health.offline}', Icons.cloud_off, ApexColors.error),
               _buildHealthCard('Inactive Terminals', '${health.inactive}', Icons.pause_circle_outline, ApexColors.warning),

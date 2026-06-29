@@ -106,7 +106,7 @@ class _LiveAttendanceScreenState extends ConsumerState<LiveAttendanceScreen> {
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: ApexColors.neutral0,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: ApexColors.neutral200),
                     ),

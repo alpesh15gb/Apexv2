@@ -202,7 +202,7 @@ class _MonthSelector extends StatelessWidget {
     final monthName = DateFormat('MMMM').format(DateTime(year, month));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
       child: Row(
         children: [
           IconButton(icon: const Icon(Icons.chevron_left), onPressed: onPrev),
@@ -268,7 +268,7 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -299,7 +299,7 @@ class _ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
       child: Row(
         children: [
           ApexButton(
@@ -346,13 +346,13 @@ class _PayslipsTable extends StatelessWidget {
     if (state.payslips.isEmpty) {
       return Container(
         height: 136,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+        decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
         child: Center(child: Text('No payslips for this month', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
       );
     }
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
       child: Column(
         children: [
           if (!isMobile)
@@ -395,7 +395,7 @@ class _PayslipsTable extends StatelessWidget {
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: i.isEven ? Colors.white : ApexColors.neutral50,
+              color: i.isEven ? ApexColors.neutral0 : ApexColors.neutral50,
               child: Row(children: [
                 SizedBox(width: 180, child: Row(children: [
                   CircleAvatar(

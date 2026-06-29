@@ -84,7 +84,7 @@ class _PushEmployeesScreenState extends ConsumerState<PushEmployeesScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ApexColors.neutral0,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: ApexColors.neutral200),
               ),

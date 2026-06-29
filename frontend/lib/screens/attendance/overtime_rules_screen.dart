@@ -47,7 +47,7 @@ class _OvertimeRulesScreenState extends ConsumerState<OvertimeRulesScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ApexColors.neutral0,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: ApexColors.neutral200),
               ),
@@ -69,7 +69,7 @@ class _OvertimeRulesScreenState extends ConsumerState<OvertimeRulesScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ApexColors.neutral0,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: ApexColors.neutral200),
               ),
@@ -106,7 +106,7 @@ class _OvertimeRulesScreenState extends ConsumerState<OvertimeRulesScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ApexColors.neutral0,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: ApexColors.neutral200),
               ),

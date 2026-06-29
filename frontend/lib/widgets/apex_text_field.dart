@@ -82,7 +82,7 @@ class ApexTextField extends StatelessWidget {
           borderSide: BorderSide(color: ApexColors.neutral200, width: 1),
         ),
         filled: true,
-        fillColor: enabled ? Colors.white : ApexColors.neutral50,
+        fillColor: enabled ? ApexColors.neutral0 : ApexColors.neutral50,
         contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );

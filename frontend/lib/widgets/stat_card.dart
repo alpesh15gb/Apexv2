@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 
 class StatCard extends StatelessWidget {
   final String title;
@@ -41,7 +42,7 @@ class StatCard extends StatelessWidget {
                     child: Text(
                       title,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark ? Colors.white60 : Colors.black54,
+                        color: isDark ? ApexColors.neutral0.withOpacity(0.6) : ApexColors.neutral600,
                         fontWeight: FontWeight.w500,
                       ),
                       maxLines: 1,
@@ -63,7 +64,7 @@ class StatCard extends StatelessWidget {
                 value,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: isDark ? ApexColors.neutral0 : ApexColors.neutral900,
                 ),
               ),
               if (trend != null) ...[
@@ -72,14 +73,14 @@ class StatCard extends StatelessWidget {
                   children: [
                     Icon(
                       isTrendPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                      color: isTrendPositive ? Colors.green : Colors.red,
+                      color: isTrendPositive ? ApexColors.success : ApexColors.error,
                       size: 14,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       trend!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: isTrendPositive ? Colors.green : Colors.red,
+                        color: isTrendPositive ? ApexColors.success : ApexColors.error,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

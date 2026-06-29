@@ -53,7 +53,9 @@ async def list_attendance(
     employee_id: uuid.UUID = Query(None),
     department_id: uuid.UUID = Query(None),
     branch_id: uuid.UUID = Query(None),
+    shift_id: uuid.UUID = Query(None),
     status: str = Query(None),
+    search: str = Query(None),
     date: date_type = Query(None),
     from_date: date_type = Query(None),
     to_date: date_type = Query(None),
@@ -67,11 +69,56 @@ async def list_attendance(
     items, total = await service.get_attendance(
         current_user.tenant_id, employee_id=employee_id,
         department_id=department_id, branch_id=branch_id,
-        status_val=status, from_date=from_date, to_date=to_date,
+        shift_id=shift_id, status_val=status, search=search,
+        from_date=from_date, to_date=to_date,
         page=page, page_size=page_size,
     )
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size,
                              total_pages=(total + page_size - 1) // page_size)
+
+
+@router.get("/export")
+async def export_attendance(
+    date: date_type = Query(None),
+    department_id: uuid.UUID = Query(None),
+    branch_id: uuid.UUID = Query(None),
+    shift_id: uuid.UUID = Query(None),
+    status: str = Query(None),
+    search: str = Query(None),
+    format: str = Query("csv", regex="^(csv|xlsx)$"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = AttendanceService(db)
+    from_date = date
+    to_date = date
+    items, _ = await service.get_attendance(
+        current_user.tenant_id,
+        department_id=department_id, branch_id=branch_id,
+        shift_id=shift_id, status_val=status, search=search,
+        from_date=from_date, to_date=to_date,
+        page=1, page_size=10000,
+    )
+    import csv, io
+    from fastapi.responses import StreamingResponse
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["Employee Name", "Employee Code", "Date", "Status", "Punch In", "Punch Out", "Total Hours", "Overtime Hours", "Is Late", "Late Minutes", "Shift", "Remarks"])
+    for r in items:
+        writer.writerow([
+            r.employee_name or "", r.employee_code or "", r.date,
+            r.status, r.punch_in or "", r.punch_out or "",
+            r.total_hours or 0, r.overtime_hours or 0,
+            r.is_late, r.late_minutes,
+            r.shift.name if r.shift else "", r.remarks or "",
+        ])
+    buf.seek(0)
+    filename = f"attendance_{date or 'all'}.csv"
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/", response_model=AttendanceResponse, status_code=201)
