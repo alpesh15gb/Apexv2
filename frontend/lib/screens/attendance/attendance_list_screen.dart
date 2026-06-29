@@ -440,9 +440,8 @@ class _AttendanceTable extends StatelessWidget {
             final idx = entry.key;
             final r = entry.value;
             final status = r.status ?? 'absent';
-            final employeeName = '${r.employeeFirstName} ${r.employeeLastName}'.trim();
+            final employeeName = r.employeeName ?? '—';
             final employeeCode = r.employeeCode ?? '—';
-
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
@@ -468,9 +467,9 @@ class _AttendanceTable extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Expanded(flex: 2, child: Text(r.checkIn ?? '—')),
-                  Expanded(flex: 2, child: Text(r.checkOut ?? '—')),
-                  Expanded(flex: 2, child: Text(r.workHours != null ? '${r.workHours} hrs' : '—')),
+                  Expanded(flex: 2, child: Text(r.punchIn != null ? DateFormat('hh:mm a').format(r.punchIn!.toLocal()) : '—')),
+                  Expanded(flex: 2, child: Text(r.punchOut != null ? DateFormat('hh:mm a').format(r.punchOut!.toLocal()) : '—')),
+                  Expanded(flex: 2, child: Text(r.totalHours != null ? '${r.totalHours!.toStringAsFixed(1)} hrs' : '—')),
                   SizedBox(
                     width: 100,
                     child: _StatusBadge(status: status),

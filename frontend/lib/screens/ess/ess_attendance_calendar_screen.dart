@@ -178,9 +178,9 @@ class _TodayCard extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  _timeBlock('Clock In', checkIn ?? '--:--', Icons.login),
+                  _timeBlock('Clock In', _formatTime(checkIn), Icons.login),
                   const SizedBox(width: 32),
-                  _timeBlock('Clock Out', checkOut ?? '--:--', Icons.logout),
+                  _timeBlock('Clock Out', _formatTime(checkOut), Icons.logout),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -199,6 +199,16 @@ class _TodayCard extends StatelessWidget {
       loading: () => const SizedBox(height: 100, child: Center(child: LoadingWidget(useShimmer: false))),
       error: (e, _) => const SizedBox.shrink(),
     );
+  }
+
+  String _formatTime(dynamic time) {
+    if (time == null) return '--:--';
+    try {
+      final dt = DateTime.parse(time.toString()).toLocal();
+      return DateFormat('hh:mm a').format(dt);
+    } catch (_) {
+      return time.toString();
+    }
   }
 
   Widget _timeBlock(String label, String time, IconData icon) {
@@ -409,8 +419,8 @@ class _DailyLogCard extends StatelessWidget {
   String _formatTime(dynamic time) {
     if (time == null) return '--:--';
     try {
-      final dt = DateTime.parse(time.toString());
-      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      final dt = DateTime.parse(time.toString()).toLocal();
+      return DateFormat('hh:mm a').format(dt);
     } catch (_) {
       return time.toString();
     }

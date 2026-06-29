@@ -390,9 +390,9 @@ class _AttendanceTable extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Expanded(flex: 2, child: Text(r['check_in'] ?? '—')),
-                  Expanded(flex: 2, child: Text(r['check_out'] ?? '—')),
-                  Expanded(flex: 2, child: Text(r['work_hours'] ?? '—')),
+                  Expanded(flex: 2, child: Text(_formatTime(r['punch_in']))),
+                  Expanded(flex: 2, child: Text(_formatTime(r['punch_out']))),
+                  Expanded(flex: 2, child: Text(r['total_hours'] != null ? '${(r['total_hours'] as num).toStringAsFixed(1)} hrs' : '—')),
                   SizedBox(
                     width: 100,
                     child: _StatusBadge(status: status),
@@ -419,6 +419,16 @@ class _AttendanceTable extends StatelessWidget {
       ),
     );
   }
+  String _formatTime(dynamic time) {
+    if (time == null) return '—';
+    try {
+      final dt = DateTime.parse(time.toString()).toLocal();
+      return DateFormat('hh:mm a').format(dt);
+    } catch (_) {
+      return time.toString();
+    }
+  }
+
 }
 
 class _StatusBadge extends StatelessWidget {

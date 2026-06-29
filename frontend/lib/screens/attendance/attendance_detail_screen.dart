@@ -110,8 +110,8 @@ class AttendanceDetailScreen extends ConsumerWidget {
                             backgroundColor: ApexColors.primary.withOpacity(0.08),
                             child: const Icon(Icons.fingerprint, color: ApexColors.primary),
                           ),
-                          title: Text('Punched at: ${DateFormat('hh:mm a').format(log.timestamp)}', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w500)),
-                          subtitle: Text('Date: ${DateFormat('MMM dd, yyyy').format(log.timestamp)} • Source: ${log.source}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
+                          title: Text('Punched at: ${DateFormat('hh:mm a').format(log.timestamp.toLocal())}', style: ApexTypography.body.copyWith(fontWeight: FontWeight.w500)),
+                          subtitle: Text('Date: ${DateFormat('MMM dd, yyyy').format(log.timestamp.toLocal())} • Source: ${log.source}', style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
                         );
                       },
                     ),

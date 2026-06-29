@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
@@ -71,7 +72,7 @@ class EssAttendanceScreen extends ConsumerWidget {
                     const SizedBox(width: 14),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(r['date'] ?? '', style: ApexTypography.titleMedium),
-                      Text('${r['punch_in'] ?? '—'} → ${r['punch_out'] ?? '—'}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                      Text('${_formatTime(r['punch_in'])} → ${_formatTime(r['punch_out'])}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                     ])),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       _statusBadge(r['status']),
@@ -109,6 +110,16 @@ class EssAttendanceScreen extends ConsumerWidget {
       case 'absent': return ApexColors.error;
       case 'late': return ApexColors.warning;
       default: return ApexColors.neutral500;
+    }
+  }
+
+  String _formatTime(dynamic time) {
+    if (time == null) return '—';
+    try {
+      final dt = DateTime.parse(time.toString()).toLocal();
+      return DateFormat('hh:mm a').format(dt);
+    } catch (_) {
+      return time.toString();
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
@@ -122,13 +123,23 @@ class _AttendanceCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _timeBlock('Clock In', checkIn ?? '--:--')),
-              Expanded(child: _timeBlock('Clock Out', checkOut ?? '--:--')),
+              Expanded(child: _timeBlock('Clock In', _formatTime(checkIn))),
+              Expanded(child: _timeBlock('Clock Out', _formatTime(checkOut))),
             ],
           ),
         ],
       ),
     );
+  }
+
+  String _formatTime(dynamic time) {
+    if (time == null) return '--:--';
+    try {
+      final dt = DateTime.parse(time.toString()).toLocal();
+      return DateFormat('hh:mm a').format(dt);
+    } catch (_) {
+      return time.toString();
+    }
   }
 
   Widget _timeBlock(String label, String time) {
