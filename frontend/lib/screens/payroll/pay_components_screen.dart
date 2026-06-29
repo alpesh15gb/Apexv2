@@ -54,8 +54,8 @@ class _PayComponentsScreenState extends ConsumerState<PayComponentsScreen> {
         onRetry: _load,
         isEmpty: _components.isEmpty && !_loading && _error == null,
         emptyIcon: Icons.extension_outlined,
-        emptyTitle: 'No Pay Components',
-        emptySubtitle: 'Pay component configuration will be available soon.',
+        emptyTitle: 'Pay Components Not Configured',
+        emptySubtitle: 'This feature is not yet configured. Contact your administrator.',
         body: const SizedBox.shrink(),
       ),
     );

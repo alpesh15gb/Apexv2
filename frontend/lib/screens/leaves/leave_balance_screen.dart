@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design_system/colors.dart';
 import '../../providers/leave_provider.dart';
 import '../../providers/employee_provider.dart';
 import '../../widgets/loading_widget.dart';
@@ -52,10 +53,10 @@ class LeaveBalanceScreen extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildBalanceStat('Allowed', '${b.totalDays}', Colors.grey),
-                              _buildBalanceStat('Used', '${b.usedDays}', Colors.red),
-                              _buildBalanceStat('Pending', '${b.pendingDays}', Colors.amber),
-                              _buildBalanceStat('Available', '${b.availableDays}', Colors.green),
+                              _buildBalanceStat('Allowed', '${b.totalDays}', ApexColors.neutral400),
+                              _buildBalanceStat('Used', '${b.usedDays}', ApexColors.error),
+                              _buildBalanceStat('Pending', '${b.pendingDays}', ApexColors.warning),
+                              _buildBalanceStat('Available', '${b.availableDays}', ApexColors.success),
                             ],
                           ),
                         ],
@@ -93,7 +94,7 @@ class LeaveBalanceScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 11, color: ApexColors.neutral400)),
       ],
     );
   }

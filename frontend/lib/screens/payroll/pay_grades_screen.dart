@@ -54,8 +54,8 @@ class _PayGradesScreenState extends ConsumerState<PayGradesScreen> {
         onRetry: _load,
         isEmpty: _grades.isEmpty && !_loading && _error == null,
         emptyIcon: Icons.leaderboard_outlined,
-        emptyTitle: 'No Pay Grades',
-        emptySubtitle: 'Pay grade configuration will be available soon.',
+        emptyTitle: 'Pay Grades Not Configured',
+        emptySubtitle: 'This feature is not yet configured. Contact your administrator.',
         body: const SizedBox.shrink(),
       ),
     );

@@ -54,8 +54,8 @@ class _PayCyclesScreenState extends ConsumerState<PayCyclesScreen> {
         onRetry: _load,
         isEmpty: _cycles.isEmpty && !_loading && _error == null,
         emptyIcon: Icons.loop_outlined,
-        emptyTitle: 'No Pay Cycles',
-        emptySubtitle: 'Pay cycle configuration will be available soon.',
+        emptyTitle: 'Pay Cycles Not Configured',
+        emptySubtitle: 'This feature is not yet configured. Contact your administrator.',
         body: const SizedBox.shrink(),
       ),
     );

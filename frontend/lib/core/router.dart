@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../design_system/colors.dart';
+
 import '../screens/splash_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
@@ -199,11 +201,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+            const Icon(Icons.error_outline, size: 64, color: ApexColors.neutral400),
             const SizedBox(height: 16),
             Text('Page not found', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text(state.uri.toString(), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+            Text(state.uri.toString(), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ApexColors.neutral400)),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context.go('/dashboard'),
