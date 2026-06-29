@@ -243,6 +243,7 @@ class AttendanceService:
         tenant_id: uuid.UUID,
         employee_id: Optional[uuid.UUID] = None,
         department_id: Optional[uuid.UUID] = None,
+        branch_id: Optional[uuid.UUID] = None,
         status_val: Optional[str] = None,
         from_date: Optional[date] = None,
         to_date: Optional[date] = None,
@@ -261,6 +262,9 @@ class AttendanceService:
         if department_id:
             count_stmt = count_stmt.where(Employee.department_id == department_id)
             stmt = stmt.where(Employee.department_id == department_id)
+        if branch_id:
+            count_stmt = count_stmt.where(Employee.branch_id == branch_id)
+            stmt = stmt.where(Employee.branch_id == branch_id)
         if status_val:
             count_stmt = count_stmt.where(Attendance.status == status_val)
             stmt = stmt.where(Attendance.status == status_val)

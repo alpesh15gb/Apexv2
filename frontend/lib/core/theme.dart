@@ -92,6 +92,17 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: ApexRadius.lgAll),
         elevation: 8,
       ),
+      canvasColor: ApexColors.neutral0,
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: ApexTypography.body.copyWith(color: ApexColors.neutral900),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(ApexColors.neutral0),
+          elevation: WidgetStatePropertyAll(4),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+      ),
     );
   }
 
@@ -180,6 +191,17 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: ApexRadius.lgAll),
         elevation: 8,
+      ),
+      canvasColor: ApexColors.darkSurface,
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: ApexTypography.body.copyWith(color: ApexColors.darkOnSurface),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(ApexColors.darkSurface),
+          elevation: WidgetStatePropertyAll(4),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
       ),
     );
   }

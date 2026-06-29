@@ -52,17 +52,22 @@ async def list_attendance(
     page_size: int = Query(20, ge=1, le=100),
     employee_id: uuid.UUID = Query(None),
     department_id: uuid.UUID = Query(None),
+    branch_id: uuid.UUID = Query(None),
     status: str = Query(None),
+    date: date_type = Query(None),
     from_date: date_type = Query(None),
     to_date: date_type = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    if date and not from_date:
+        from_date = date
+        to_date = date
     service = AttendanceService(db)
     items, total = await service.get_attendance(
         current_user.tenant_id, employee_id=employee_id,
-        department_id=department_id, status_val=status,
-        from_date=from_date, to_date=to_date,
+        department_id=department_id, branch_id=branch_id,
+        status_val=status, from_date=from_date, to_date=to_date,
         page=page, page_size=page_size,
     )
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size,

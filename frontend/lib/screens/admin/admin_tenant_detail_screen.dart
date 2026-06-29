@@ -459,7 +459,9 @@ class _FeaturesTabState extends ConsumerState<_FeaturesTab> {
           const SizedBox(width: 12),
           DropdownButton<String>(
             value: _categoryFilter,
-            items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+            dropdownColor: ApexColors.neutral0,
+            style: ApexTypography.body.copyWith(color: ApexColors.neutral900),
+            items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: ApexTypography.body.copyWith(color: ApexColors.neutral900)))).toList(),
             onChanged: (v) => setState(() => _categoryFilter = v ?? 'All'),
           ),
         ]),

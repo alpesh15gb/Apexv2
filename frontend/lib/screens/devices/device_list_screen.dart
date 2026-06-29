@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../providers/device_provider.dart';
+import '../../providers/essl_provider.dart';
+import '../../services/essl_service.dart';
 import '../../widgets/apex_card.dart';
 import '../../widgets/page_wrapper.dart';
 import '../../widgets/apex_button.dart';
@@ -54,24 +57,7 @@ class DeviceListScreen extends ConsumerWidget {
               devicesAsync.when(
                 data: (devices) {
                   if (devices.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.biotech, size: 48, color: ApexColors.neutral400),
-                          const SizedBox(height: 16),
-                          Text('No Devices Registered', style: ApexTypography.cardTitle),
-                          const SizedBox(height: 8),
-                          Text('Register a biometric device to get started.', style: ApexTypography.caption),
-                          const SizedBox(height: 16),
-                          ApexButton(
-                            label: 'Add Device',
-                            onPressed: () => context.push('/devices/add'),
-                            type: ApexButtonType.primary,
-                          ),
-                        ],
-                      ),
-                    );
+                    return const _EmptyDeviceState();
                   }
                   return _DeviceGrid(devices: devices, isMobile: isMobile);
                 },
@@ -176,6 +162,109 @@ class _DeviceGrid extends StatelessWidget {
   }
 }
 
+class _EmptyDeviceState extends ConsumerStatefulWidget {
+  const _EmptyDeviceState();
+
+  @override
+  ConsumerState<_EmptyDeviceState> createState() => _EmptyDeviceStateState();
+}
+
+class _EmptyDeviceStateState extends ConsumerState<_EmptyDeviceState> {
+  bool _syncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(esslServerListProvider.notifier).fetchServers();
+    });
+  }
+
+  Future<void> _syncAllServers() async {
+    setState(() => _syncing = true);
+    try {
+      final serversAsync = ref.read(esslServerListProvider);
+      final servers = serversAsync.valueOrNull ?? [];
+      final esslService = ref.read(esslServiceProvider);
+
+      if (servers.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No eSSL servers configured. Add one in Settings > eSSL Servers.')),
+          );
+        }
+        return;
+      }
+
+      for (final server in servers) {
+        await esslService.syncDevices(server.id);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sync triggered for ${servers.length} server(s). Refreshing...')),
+        );
+        ref.invalidate(deviceListProvider);
+        ref.invalidate(deviceHealthProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sync failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.sync_disabled, size: 48, color: ApexColors.neutral400),
+          const SizedBox(height: 16),
+          Text('No Devices Found', style: ApexTypography.cardTitle),
+          const SizedBox(height: 8),
+          Text(
+            'Devices are synced from your eSSL biometric servers.\nTrigger a sync to pull device data.',
+            style: ApexTypography.caption,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ApexButton(
+                label: _syncing ? 'Syncing...' : 'Sync from eSSL',
+                onPressed: _syncing ? null : _syncAllServers,
+                type: ApexButtonType.primary,
+                icon: Icons.sync,
+              ),
+              const SizedBox(width: 12),
+              ApexButton(
+                label: 'Add Manually',
+                onPressed: () => context.push('/devices/add'),
+                type: ApexButtonType.secondary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.push('/settings/essl'),
+            child: Text(
+              'Manage eSSL Servers',
+              style: ApexTypography.caption.copyWith(color: ApexColors.primary500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DeviceCard extends StatelessWidget {
   final dynamic device;
   const _DeviceCard({required this.device});
@@ -218,6 +307,12 @@ class _DeviceCard extends StatelessWidget {
           Text('S/N: ${device.serialNumber}', style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
           if (device.location != null)
             Text(device.location!, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500), overflow: TextOverflow.ellipsis),
+          if (device.lastSync != null)
+            Text(
+              'Synced: ${DateFormat('MMM d, h:mm a').format(device.lastSync!)}',
+              style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral400, fontSize: 10),
+              overflow: TextOverflow.ellipsis,
+            ),
         ],
       ),
     );

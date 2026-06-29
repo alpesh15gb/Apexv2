@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/page_wrapper.dart';
-import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
 
 class WeeklyOffScreen extends ConsumerStatefulWidget {
@@ -53,7 +52,7 @@ class _WeeklyOffScreenState extends ConsumerState<WeeklyOffScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ApexColors.neutral0,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: ApexColors.neutral200),
               ),
@@ -63,15 +62,15 @@ class _WeeklyOffScreenState extends ConsumerState<WeeklyOffScreen> {
                   Text('Off-Day Policy Type', style: ApexTypography.cardTitle),
                   const SizedBox(height: 12),
                   RadioListTile<String>(
-                    title: const Text('Standard Weekly Off'),
-                    subtitle: const Text('Fixed off-days every week (e.g. Saturday and Sunday)'),
+                    title: Text('Standard Weekly Off', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
+                    subtitle: Text('Fixed off-days every week (e.g. Saturday and Sunday)', style: ApexTypography.caption.copyWith(color: ApexColors.neutral600)),
                     value: 'standard',
                     groupValue: _policyType,
                     onChanged: (v) => setState(() => _policyType = v!),
                   ),
                   RadioListTile<String>(
-                    title: const Text('Rotating Off-Days'),
-                    subtitle: const Text('Configured dynamically via roster patterns'),
+                    title: Text('Rotating Off-Days', style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
+                    subtitle: Text('Configured dynamically via roster patterns', style: ApexTypography.caption.copyWith(color: ApexColors.neutral600)),
                     value: 'rotating',
                     groupValue: _policyType,
                     onChanged: (v) => setState(() => _policyType = v!),
@@ -84,7 +83,7 @@ class _WeeklyOffScreenState extends ConsumerState<WeeklyOffScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: ApexColors.neutral0,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: ApexColors.neutral200),
                 ),
@@ -94,7 +93,7 @@ class _WeeklyOffScreenState extends ConsumerState<WeeklyOffScreen> {
                     Text('Select Fixed Off-Days', style: ApexTypography.cardTitle),
                     const SizedBox(height: 12),
                     ..._days.keys.map((day) => CheckboxListTile(
-                          title: Text(day),
+                          title: Text(day, style: ApexTypography.body.copyWith(color: ApexColors.neutral900)),
                           value: _days[day],
                           onChanged: (v) => setState(() => _days[day] = v ?? false),
                         )),

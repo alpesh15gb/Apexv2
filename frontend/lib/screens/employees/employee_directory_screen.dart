@@ -25,7 +25,9 @@ class EmployeeDirectoryState {
   final int totalPages;
   final String search;
   final String? departmentFilter;
+  final String? departmentFilterName;
   final String? branchFilter;
+  final String? branchFilterName;
   final String? statusFilter;
   final ViewMode viewMode;
 
@@ -38,7 +40,9 @@ class EmployeeDirectoryState {
     this.totalPages = 1,
     this.search = '',
     this.departmentFilter,
+    this.departmentFilterName,
     this.branchFilter,
+    this.branchFilterName,
     this.statusFilter,
     this.viewMode = ViewMode.table,
   });
@@ -52,7 +56,9 @@ class EmployeeDirectoryState {
     int? totalPages,
     String? search,
     String? departmentFilter,
+    String? departmentFilterName,
     String? branchFilter,
+    String? branchFilterName,
     String? statusFilter,
     ViewMode? viewMode,
   }) {
@@ -65,7 +71,9 @@ class EmployeeDirectoryState {
       totalPages: totalPages ?? this.totalPages,
       search: search ?? this.search,
       departmentFilter: departmentFilter != null ? departmentFilter : (departmentFilter == null && this.departmentFilter != null ? this.departmentFilter : null),
+      departmentFilterName: departmentFilter != null ? departmentFilterName : (departmentFilter == null && this.departmentFilterName != null ? this.departmentFilterName : null),
       branchFilter: branchFilter != null ? branchFilter : (branchFilter == null && this.branchFilter != null ? this.branchFilter : null),
+      branchFilterName: branchFilter != null ? branchFilterName : (branchFilter == null && this.branchFilterName != null ? this.branchFilterName : null),
       statusFilter: statusFilter != null ? statusFilter : (statusFilter == null && this.statusFilter != null ? this.statusFilter : null),
       viewMode: viewMode ?? this.viewMode,
     );
@@ -97,7 +105,7 @@ class EmployeeDirectoryNotifier extends StateNotifier<EmployeeDirectoryState> {
         loading: false,
         page: res.data['page'] ?? page,
         total: res.data['total'] ?? items.length,
-        totalPages: res.data['pages'] ?? 1,
+        totalPages: res.data['total_pages'] ?? 1,
       );
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
@@ -109,18 +117,22 @@ class EmployeeDirectoryNotifier extends StateNotifier<EmployeeDirectoryState> {
       search: search,
       viewMode: state.viewMode,
       departmentFilter: state.departmentFilter,
+      departmentFilterName: state.departmentFilterName,
       branchFilter: state.branchFilter,
+      branchFilterName: state.branchFilterName,
       statusFilter: state.statusFilter,
     );
     fetch();
   }
 
-  void setFilter({String? department, String? branch, String? status}) {
+  void setFilter({String? department, String? departmentName, String? branch, String? branchName, String? status}) {
     state = EmployeeDirectoryState(
       search: state.search,
       viewMode: state.viewMode,
       departmentFilter: department ?? state.departmentFilter,
+      departmentFilterName: departmentName ?? state.departmentFilterName,
       branchFilter: branch ?? state.branchFilter,
+      branchFilterName: branchName ?? state.branchFilterName,
       statusFilter: status ?? state.statusFilter,
     );
     fetch();
@@ -222,8 +234,8 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
-          _filterChip('Department', dirState.departmentFilter, () => _showDepartmentFilter()),
-          _filterChip('Location', dirState.branchFilter, () => _showBranchFilter()),
+          _filterChip('Department', dirState.departmentFilterName, () => _showDepartmentFilter()),
+          _filterChip('Location', dirState.branchFilterName, () => _showBranchFilter()),
           _filterChip('Status', dirState.statusFilter, () => _showStatusFilter()),
           if (dirState.departmentFilter != null || dirState.branchFilter != null || dirState.statusFilter != null) ...[
             const SizedBox(width: 12),
@@ -365,7 +377,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
     showDialog(context: context, builder: (ctx) => _FilterDialog(
       title: 'Select Department',
       endpoint: '/employees/departments',
-      onSelect: (id) => ref.read(employeeDirectoryProvider.notifier).setFilter(department: id),
+      onSelect: (id, name) => ref.read(employeeDirectoryProvider.notifier).setFilter(department: id, departmentName: name),
     ));
   }
 
@@ -373,7 +385,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
     showDialog(context: context, builder: (ctx) => _FilterDialog(
       title: 'Select Location',
       endpoint: '/employees/branches',
-      onSelect: (id) => ref.read(employeeDirectoryProvider.notifier).setFilter(branch: id),
+      onSelect: (id, name) => ref.read(employeeDirectoryProvider.notifier).setFilter(branch: id, branchName: name),
     ));
   }
 
@@ -539,7 +551,7 @@ class _EmployeeTableRow extends StatelessWidget {
 class _FilterDialog extends ConsumerStatefulWidget {
   final String title;
   final String endpoint;
-  final Function(String?) onSelect;
+  final Function(String?, String?) onSelect;
 
   const _FilterDialog({required this.title, required this.endpoint, required this.onSelect});
 
@@ -580,14 +592,14 @@ class _FilterDialogState extends ConsumerState<_FilterDialog> {
               SimpleDialogOption(
                 child: const Text('All'),
                 onPressed: () {
-                  widget.onSelect(null);
+                  widget.onSelect(null, null);
                   Navigator.pop(context);
                 },
               ),
               ..._items.map((item) => SimpleDialogOption(
                     child: Text(item['name'] ?? item['code'] ?? ''),
                     onPressed: () {
-                      widget.onSelect(item['id']);
+                      widget.onSelect(item['id'], item['name'] ?? item['code'] ?? '');
                       Navigator.pop(context);
                     },
                   )),

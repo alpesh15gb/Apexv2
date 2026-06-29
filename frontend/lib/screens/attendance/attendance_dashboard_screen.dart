@@ -43,6 +43,7 @@ class AttendanceListState {
   final int page;
   final String dateFilter;
   final String? departmentFilter;
+  final String? branchFilter;
   final String? statusFilter;
 
   AttendanceListState({
@@ -54,6 +55,7 @@ class AttendanceListState {
     this.page = 1,
     this.dateFilter = '',
     this.departmentFilter,
+    this.branchFilter,
     this.statusFilter,
   });
 
@@ -66,6 +68,7 @@ class AttendanceListState {
     int? page,
     String? dateFilter,
     String? departmentFilter,
+    String? branchFilter,
     String? statusFilter,
   }) {
     return AttendanceListState(
@@ -77,6 +80,7 @@ class AttendanceListState {
       page: page ?? this.page,
       dateFilter: dateFilter ?? this.dateFilter,
       departmentFilter: departmentFilter ?? this.departmentFilter,
+      branchFilter: branchFilter ?? this.branchFilter,
       statusFilter: statusFilter ?? this.statusFilter,
     );
   }
@@ -94,6 +98,7 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       final params = <String, dynamic>{'page': page, 'page_size': 20};
       if (state.dateFilter.isNotEmpty) params['date'] = state.dateFilter;
       if (state.departmentFilter != null) params['department_id'] = state.departmentFilter;
+      if (state.branchFilter != null) params['branch_id'] = state.branchFilter;
       if (state.statusFilter != null) params['status'] = state.statusFilter;
 
       final res = await _dio.get('/attendance/', queryParameters: params);
@@ -117,6 +122,7 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       totalPages: state.totalPages,
       dateFilter: date,
       departmentFilter: state.departmentFilter,
+      branchFilter: state.branchFilter,
       statusFilter: state.statusFilter,
     );
     fetch();
@@ -129,6 +135,20 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       totalPages: state.totalPages,
       dateFilter: state.dateFilter,
       departmentFilter: department,
+      branchFilter: state.branchFilter,
+      statusFilter: state.statusFilter,
+    );
+    fetch();
+  }
+
+  void setBranchFilter(String? branch) {
+    state = AttendanceListState(
+      records: state.records,
+      total: state.total,
+      totalPages: state.totalPages,
+      dateFilter: state.dateFilter,
+      departmentFilter: state.departmentFilter,
+      branchFilter: branch,
       statusFilter: state.statusFilter,
     );
     fetch();
@@ -141,6 +161,7 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       totalPages: state.totalPages,
       dateFilter: state.dateFilter,
       departmentFilter: state.departmentFilter,
+      branchFilter: state.branchFilter,
       statusFilter: status,
     );
     fetch();
@@ -361,11 +382,13 @@ class _FiltersBar extends ConsumerStatefulWidget {
 
 class _FiltersBarState extends ConsumerState<_FiltersBar> {
   List<dynamic> _departments = [];
+  List<dynamic> _branches = [];
 
   @override
   void initState() {
     super.initState();
     _loadDepartments();
+    _loadBranches();
   }
 
   Future<void> _loadDepartments() async {
@@ -374,6 +397,18 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
       final res = await dio.get('/employees/departments', queryParameters: {'page': 1, 'page_size': 100});
       setState(() {
         _departments = res.data['items'] ?? [];
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  Future<void> _loadBranches() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final res = await dio.get('/employees/branches', queryParameters: {'page': 1, 'page_size': 100});
+      setState(() {
+        _branches = res.data['items'] ?? [];
       });
     } catch (e) {
       // ignore
@@ -407,6 +442,16 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
             ..._departments.map((d) => DropdownMenuItem<String>(value: d['id'] as String, child: Text(d['name'] ?? ''))),
           ],
           onChanged: (v) => ref.read(attendanceListProvider.notifier).setDepartmentFilter(v),
+          width: isMobile ? null : 200,
+        ),
+        ApexFilter.dropdown(
+          label: 'Location',
+          value: attState.branchFilter,
+          items: [
+            const DropdownMenuItem<String>(value: null, child: Text('All Locations')),
+            ..._branches.map((b) => DropdownMenuItem<String>(value: b['id'] as String, child: Text(b['name'] ?? ''))),
+          ],
+          onChanged: (v) => ref.read(attendanceListProvider.notifier).setBranchFilter(v),
           width: isMobile ? null : 200,
         ),
         ApexFilter.dropdown(

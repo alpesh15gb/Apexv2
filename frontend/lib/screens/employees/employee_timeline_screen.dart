@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/dio_client.dart';
 import '../../design_system/colors.dart';
@@ -47,40 +48,66 @@ class _EmployeeTimelineScreenState extends ConsumerState<EmployeeTimelineScreen>
 
   Future<void> _loadTimeline(String employeeId) async {
     setState(() => _loadingTimeline = true);
-    // Mock timeline events for operational simulation with zero placeholders
-    await Future.delayed(const Duration(milliseconds: 400));
-    final emp = _employees.firstWhere((e) => e['id'] == employeeId, orElse: () => null);
-    final name = emp != null ? '${emp['first_name']} ${emp['last_name']}' : 'Employee';
-    final code = emp != null ? emp['employee_code'] : 'EMP';
-    final dept = emp != null ? emp['department_name'] ?? 'HR' : 'HR';
-    final branch = emp != null ? emp['branch_name'] ?? 'HO' : 'HO';
+    try {
+      final dio = ref.read(dioProvider);
+      final res = await dio.get('/timeline/', queryParameters: {'employee_id': employeeId});
+      final items = (res.data as List).cast<Map<String, dynamic>>();
+      setState(() {
+        _timelineEvents = items.map((e) {
+          final type = (e['event_type'] ?? 'general') as String;
+          IconData icon;
+          Color color;
+          switch (type) {
+            case 'onboarding':
+              icon = Icons.person_add;
+              color = ApexColors.successDark;
+              break;
+            case 'transfer':
+              icon = Icons.swap_horiz;
+              color = ApexColors.warning;
+              break;
+            case 'promotion':
+              icon = Icons.trending_up;
+              color = ApexColors.primary;
+              break;
+            case 'biometric':
+              icon = Icons.fingerprint;
+              color = ApexColors.successDark;
+              break;
+            case 'department':
+              icon = Icons.business;
+              color = ApexColors.primary;
+              break;
+            default:
+              icon = Icons.event;
+              color = ApexColors.neutral600;
+          }
+          return {
+            'date': e['event_date'] ?? '',
+            'title': e['title'] ?? '',
+            'subtitle': e['description'] ?? '',
+            'icon': icon,
+            'color': color,
+          };
+        }).toList();
+        _loadingTimeline = false;
+      });
+    } catch (e) {
+      setState(() {
+        _timelineEvents = [];
+        _loadingTimeline = false;
+      });
+    }
+  }
 
-    setState(() {
-      _timelineEvents = [
-        {
-          'date': '2026-06-25 09:30 AM',
-          'title': 'Biometric Mapping Linked',
-          'subtitle': 'Mapped employee code $code to device eBioServer HO.',
-          'icon': Icons.fingerprint,
-          'color': ApexColors.successDark,
-        },
-        {
-          'date': '2026-06-10 10:00 AM',
-          'title': 'Assigned to Department',
-          'subtitle': 'Mapped to department: $dept at branch $branch.',
-          'icon': Icons.business,
-          'color': ApexColors.primary,
-        },
-        {
-          'date': '2026-06-01 09:00 AM',
-          'title': 'Joined the Organization',
-          'subtitle': 'Onboarded employee $name ($code) as permanent staff.',
-          'icon': Icons.person_add,
-          'color': ApexColors.successDark,
-        },
-      ];
-      _loadingTimeline = false;
-    });
+  String _formatDate(String raw) {
+    if (raw.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(raw);
+      return DateFormat('yyyy-MM-dd').format(dt);
+    } catch (_) {
+      return raw;
+    }
   }
 
   @override
@@ -178,7 +205,7 @@ class _EmployeeTimelineScreenState extends ConsumerState<EmployeeTimelineScreen>
                                 children: [
                                   Text(e['title'] as String, style: ApexTypography.titleSmall.copyWith(color: ApexColors.neutral900)),
                                   const Spacer(),
-                                  Text(e['date'] as String, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral400)),
+                                  Text(_formatDate(e['date'] as String), style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral400)),
                                 ],
                               ),
                               const SizedBox(height: 6),

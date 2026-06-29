@@ -80,7 +80,9 @@ class _AdminFeatureScreenState extends ConsumerState<AdminFeatureScreen> {
                 const SizedBox(width: 12),
                 DropdownButton<String>(
                   value: _categoryFilter,
-                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: ApexTypography.caption))).toList(),
+                  dropdownColor: ApexColors.neutral0,
+                  style: ApexTypography.caption.copyWith(color: ApexColors.neutral900),
+                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: ApexTypography.caption.copyWith(color: ApexColors.neutral900)))).toList(),
                   onChanged: (v) => setState(() => _categoryFilter = v ?? 'All'),
                 ),
               ]),

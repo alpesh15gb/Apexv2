@@ -26,8 +26,8 @@ class _UtilitiesScreenState extends ConsumerState<UtilitiesScreen> {
 
   // Form controllers
   final _fileNameCtrl = TextEditingController();
-  final _webhookUrlCtrl = TextEditingController(text: 'https://api.company.com/webhooks/attendance');
-  final _apiKeyCtrl = TextEditingController(text: 'pk_live_51MzkSFG29a8a18z90e0b');
+  final _webhookUrlCtrl = TextEditingController();
+  final _apiKeyCtrl = TextEditingController();
   String _exportFormat = 'csv';
   String _bulkDeptId = 'all';
 

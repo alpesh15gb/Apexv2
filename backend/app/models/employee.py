@@ -68,6 +68,8 @@ class Branch(TenantModel):
     )
     name = Column(String(255), nullable=False)
     code = Column(String(100), nullable=False)
+    address = Column(String(500), nullable=True)
+    city = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Relationships
