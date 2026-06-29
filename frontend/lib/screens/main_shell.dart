@@ -255,9 +255,9 @@ class _PermanentSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeInOut,
-      width: expanded ? 260 : 64,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOutCubic,
+      width: expanded ? 256 : 72,
       decoration: BoxDecoration(
         color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
         border: Border(
@@ -401,21 +401,21 @@ class _SidebarContent extends StatelessWidget {
                 hintText: 'Search navigation...',
                 hintStyle: ApexTypography.body.copyWith(color: ApexColors.neutral400),
                 prefixIcon: const Icon(Icons.search, size: 16, color: ApexColors.neutral400),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 isDense: true,
                 filled: true,
                 fillColor: isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral50,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: const BorderSide(color: ApexColors.primary, width: 1.5),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: ApexColors.primary600, width: 1.5),
                 ),
               ),
             ),
@@ -635,14 +635,14 @@ class _ModuleTile extends StatelessWidget {
     final active = _isModuleActive;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Column(
         children: [
-          // Module header row
           Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(10),
+              hoverColor: isDark ? Colors.white.withOpacity(0.06) : ApexColors.neutral100,
               onTap: () {
                 if (!sidebarExpanded && module.rootRoute != null) {
                   onNavigate(module.rootRoute!);
@@ -650,16 +650,14 @@ class _ModuleTile extends StatelessWidget {
                   onToggleModule();
                 }
               },
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: active
-                      ? (isDark
-                          ? Colors.white.withOpacity(0.08)
-                          : ApexColors.primary50)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(6),
+                  color: active ? (isDark ? Colors.white.withOpacity(0.10) : ApexColors.primary50) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
@@ -667,17 +665,17 @@ class _ModuleTile extends StatelessWidget {
                       active ? module.activeIcon : module.icon,
                       size: 18,
                       color: active
-                          ? (isDark ? Colors.white : ApexColors.primary)
+                          ? (isDark ? Colors.white : ApexColors.primary600)
                           : (isDark ? ApexColors.neutral400 : ApexColors.neutral500),
                     ),
                     if (sidebarExpanded) ...[
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           module.label,
                           style: ApexTypography.bodyMedium.copyWith(
                             color: active
-                                ? (isDark ? Colors.white : ApexColors.primary)
+                                ? (isDark ? Colors.white : ApexColors.primary600)
                                 : (isDark ? ApexColors.darkOnSurface : ApexColors.neutral700),
                             fontWeight: active ? FontWeight.w600 : FontWeight.w500,
                           ),
@@ -751,35 +749,40 @@ class _GroupTile extends StatelessWidget {
         Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(8),
+            hoverColor: isDark ? Colors.white.withOpacity(0.05) : ApexColors.neutral100,
             onTap: onToggle,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Row(
                 children: [
                   Icon(
                     group.icon,
-                    size: 15,
+                    size: 16,
                     color: active
-                        ? (isDark ? Colors.white : ApexColors.primary500)
+                        ? (isDark ? Colors.white : ApexColors.primary600)
                         : (isDark ? ApexColors.neutral500 : ApexColors.neutral400),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       group.label,
                       style: ApexTypography.captionMedium.copyWith(
                         color: active
-                            ? (isDark ? Colors.white : ApexColors.primary)
+                            ? (isDark ? Colors.white : ApexColors.primary600)
                             : (isDark ? ApexColors.neutral400 : ApexColors.neutral500),
                         fontWeight: active ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),
                   ),
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 14,
-                    color: isDark ? ApexColors.neutral600 : ApexColors.neutral300,
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 180),
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 14,
+                      color: isDark ? ApexColors.neutral600 : ApexColors.neutral300,
+                    ),
                   ),
                 ],
               ),
@@ -827,34 +830,31 @@ class _NavLeafTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
+          hoverColor: isDark ? Colors.white.withOpacity(0.05) : ApexColors.neutral100,
           onTap: onTap,
-          child: Container(
-            height: 32,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOut,
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: isActive
-                  ? (isDark
-                      ? Colors.white.withOpacity(0.08)
-                      : ApexColors.primary50)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-              border: isActive
-                  ? Border.all(color: isDark ? Colors.white.withOpacity(0.15) : ApexColors.primary.withOpacity(0.25))
-                  : null,
+              color: isActive ? (isDark ? Colors.white.withOpacity(0.08) : ApexColors.primary50) : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: isActive ? Border.all(color: isDark ? Colors.white.withOpacity(0.15) : ApexColors.primary200) : null,
             ),
             child: Row(
               children: [
                 if (leaf.icon != null)
                   Icon(
                     leaf.icon,
-                    size: 14,
+                    size: 16,
                     color: isActive
-                        ? (isDark ? Colors.white : ApexColors.primary)
+                        ? (isDark ? Colors.white : ApexColors.primary600)
                         : (isDark ? ApexColors.neutral500 : ApexColors.neutral400),
                   )
                 else
@@ -863,22 +863,20 @@ class _NavLeafTile extends StatelessWidget {
                     height: 6,
                     margin: const EdgeInsets.only(right: 4),
                     decoration: BoxDecoration(
-                      color: isActive ? (isDark ? Colors.white : ApexColors.primary) : ApexColors.neutral300,
+                      color: isActive ? (isDark ? Colors.white : ApexColors.primary600) : ApexColors.neutral300,
                       shape: BoxShape.circle,
                     ),
                   ),
                 if (showLabel) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       leaf.label,
-                      style: ApexTypography.captionMedium.copyWith(
+                      style: ApexTypography.bodyMedium.copyWith(
                         color: isActive
-                            ? (isDark ? Colors.white : ApexColors.primary)
-                            : (isDark
-                                ? ApexColors.darkOnSurface
-                                : ApexColors.neutral700),
-                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                            ? (isDark ? Colors.white : ApexColors.primary600)
+                            : (isDark ? ApexColors.darkOnSurface : ApexColors.neutral700),
+                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),

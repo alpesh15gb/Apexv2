@@ -8,9 +8,12 @@ import '../../core/responsive.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../widgets/page_wrapper.dart';
-import '../../widgets/apex_badge.dart';
 import '../../widgets/apex_button.dart';
-import '../../widgets/apex_date_picker.dart';
+import '../../widgets/apex_badge.dart';
+import '../../widgets/apex_stat_card.dart';
+import '../../widgets/apex_filter_toolbar.dart';
+
+// ─── Providers ────────────────────────────────────────────────────────────────
 
 final attendanceDateProvider = StateProvider<String>((ref) => DateFormat('yyyy-MM-dd').format(DateTime.now()));
 
@@ -28,6 +31,8 @@ final attendanceStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async
 final attendanceListProvider = StateNotifierProvider<AttendanceListNotifier, AttendanceListState>((ref) {
   return AttendanceListNotifier(ref.read(dioProvider));
 });
+
+// ─── State & Notifier ─────────────────────────────────────────────────────────
 
 class AttendanceListState {
   final List<Map<String, dynamic>> records;
@@ -79,7 +84,7 @@ class AttendanceListState {
 
 class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
   final dynamic _dio;
-  AttendanceListNotifier(this._dio) : super(AttendanceListState()) {
+  AttendanceListNotifier(this._dio) : super(AttendanceListState(dateFilter: DateFormat('yyyy-MM-dd').format(DateTime.now()))) {
     fetch();
   }
 
@@ -104,16 +109,50 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
     }
   }
 
+
   void setDate(String date) {
-    state = state.copyWith(dateFilter: date);
+    state = AttendanceListState(
+      records: state.records,
+      total: state.total,
+      totalPages: state.totalPages,
+      dateFilter: date,
+      departmentFilter: state.departmentFilter,
+      statusFilter: state.statusFilter,
+    );
     fetch();
   }
 
-  void setFilter({String? department, String? status}) {
-    state = state.copyWith(departmentFilter: department, statusFilter: status);
+  void setDepartmentFilter(String? department) {
+    state = AttendanceListState(
+      records: state.records,
+      total: state.total,
+      totalPages: state.totalPages,
+      dateFilter: state.dateFilter,
+      departmentFilter: department,
+      statusFilter: state.statusFilter,
+    );
+    fetch();
+  }
+
+  void setStatusFilter(String? status) {
+    state = AttendanceListState(
+      records: state.records,
+      total: state.total,
+      totalPages: state.totalPages,
+      dateFilter: state.dateFilter,
+      departmentFilter: state.departmentFilter,
+      statusFilter: status,
+    );
+    fetch();
+  }
+
+  void resetFilters(String date) {
+    state = AttendanceListState(dateFilter: date);
     fetch();
   }
 }
+
+// ─── Main Dashboard Screen ────────────────────────────────────────────────────
 
 class AttendanceDashboardScreen extends ConsumerWidget {
   const AttendanceDashboardScreen({super.key});
@@ -129,24 +168,32 @@ class AttendanceDashboardScreen extends ConsumerWidget {
       body: ApexPageWrapper(
         title: 'Attendance Dashboard',
         description: 'Track daily attendance summaries, punch logs, and active status.',
-        onRefresh: () {
-          ref.invalidate(attendanceStatsProvider);
-          ref.read(attendanceListProvider.notifier).fetch();
-        },
         actions: [
+          // Action buttons grouped properly
+          ApexButton(
+            label: 'Refresh',
+            icon: Icons.refresh,
+            type: ApexButtonType.ghost,
+            onPressed: () {
+              ref.invalidate(attendanceStatsProvider);
+              ref.read(attendanceListProvider.notifier).fetch();
+            },
+          ),
+          const SizedBox(width: 8),
           ApexButton(
             label: 'Regularization',
             icon: Icons.edit_note,
             type: ApexButtonType.ghost,
             onPressed: () => context.push('/attendance/corrections'),
           ),
+          const SizedBox(width: 8),
           ApexButton(
             label: 'Shift Settings',
             icon: Icons.schedule,
             type: ApexButtonType.ghost,
             onPressed: () => context.push('/attendance/shifts'),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
           ApexButton(
             label: 'Mark Attendance',
             onPressed: () => context.push('/attendance/mark'),
@@ -155,29 +202,26 @@ class AttendanceDashboardScreen extends ConsumerWidget {
           ),
         ],
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isMobile ? 12 : 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Stats Row
               statsAsync.when(
-                data: (stats) => _StatsRow(stats: stats),
-                loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-                error: (e, _) => Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
-                  child: Row(children: [
-                    const Icon(Icons.error_outline, color: ApexColors.error, size: 18),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text('Failed to load attendance stats', style: ApexTypography.body.copyWith(color: ApexColors.error))),
-                    ApexButton(label: 'Retry', type: ApexButtonType.outline, onPressed: () => ref.invalidate(attendanceStatsProvider)),
-                  ]),
-                ),
+                data: (stats) => _StatsRow(stats: stats, isMobile: isMobile),
+                loading: () => const _StatsLoading(),
+                error: (e, _) => _StatsError(onRetry: () => ref.invalidate(attendanceStatsProvider)),
               ),
               const SizedBox(height: 16),
+              // Filters
               _FiltersBar(),
-              const SizedBox(height: 12),
-              _AttendanceTable(records: attState.records, loading: attState.loading),
-              if (attState.totalPages > 1) _Pagination(state: attState),
+              const SizedBox(height: 16),
+              // Table
+              _AttendanceTable(records: attState.records, loading: attState.loading, isMobile: isMobile),
+              if (attState.totalPages > 1) ...[
+                const SizedBox(height: 16),
+                _EnhancedPagination(state: attState),
+              ],
             ],
           ),
         ),
@@ -186,64 +230,129 @@ class AttendanceDashboardScreen extends ConsumerWidget {
   }
 }
 
+// ─── Stats Row Component ──────────────────────────────────────────────────────
+
 class _StatsRow extends StatelessWidget {
   final Map<String, dynamic> stats;
-  const _StatsRow({required this.stats});
+  final bool isMobile;
+
+  const _StatsRow({required this.stats, required this.isMobile});
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-    final cards = [
-      _StatCard(title: 'Present', value: '${stats['present'] ?? 0}', icon: Icons.check_circle, color: ApexColors.success),
-      _StatCard(title: 'Absent', value: '${stats['absent'] ?? 0}', icon: Icons.cancel, color: ApexColors.error),
-      _StatCard(title: 'Late', value: '${stats['late'] ?? 0}', icon: Icons.access_time, color: ApexColors.warning),
-      _StatCard(title: 'On Leave', value: '${stats['on_leave'] ?? 0}', icon: Icons.beach_access, color: ApexColors.primary500),
-    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final cardWidth = isMobile
+            ? availableWidth
+            : availableWidth < 900
+                ? (availableWidth - 12) / 2
+                : (availableWidth - 36) / 4;
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: cards.map((c) => SizedBox(
-        width: isMobile ? double.infinity : (MediaQuery.of(context).size.width - 320) / 4.4,
-        child: c,
-      )).toList(),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isMobile) ...[
+              Text(
+                'Overview',
+                style: ApexTypography.sectionTitle.copyWith(fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+            ],
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(width: cardWidth, child: ApexStatCard.present(value: '${stats['present'] ?? 0}')),
+                SizedBox(width: cardWidth, child: ApexStatCard.absent(value: '${stats['absent'] ?? 0}')),
+                SizedBox(width: cardWidth, child: ApexStatCard.late(value: '${stats['late'] ?? 0}')),
+                SizedBox(width: cardWidth, child: ApexStatCard.onLeave(value: '${stats['on_leave'] ?? 0}')),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
+class _StatsLoading extends StatelessWidget {
+  const _StatsLoading();
 
-  const _StatCard({required this.title, required this.value, required this.icon, required this.color});
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final cardWidth = isMobile
+            ? availableWidth
+            : availableWidth < 900
+                ? (availableWidth - 12) / 2
+                : (availableWidth - 36) / 4;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: List.generate(
+            4,
+            (index) => SizedBox(
+              width: cardWidth,
+              child: Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: ApexColors.neutral0,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ApexColors.neutral200),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StatsError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _StatsError({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(10), border: Border.all(color: ApexColors.neutral200)),
+      decoration: BoxDecoration(
+        color: ApexColors.neutral0,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ApexColors.error200),
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: color.withOpacity(0.1),
-            child: Icon(icon, color: color, size: 20),
+          Icon(Icons.error_outline, color: ApexColors.error, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Failed to load attendance stats',
+              style: ApexTypography.body.copyWith(color: ApexColors.error),
+            ),
           ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: ApexTypography.cardTitle.copyWith(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
-              const SizedBox(height: 2),
-              Text(title, style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral500)),
-            ],
+          ApexButton(
+            label: 'Retry',
+            type: ApexButtonType.outline,
+            onPressed: onRetry,
           ),
         ],
       ),
     );
   }
 }
+
+// ─── Filters Bar Component ────────────────────────────────────────────────────
 
 class _FiltersBar extends ConsumerStatefulWidget {
   @override
@@ -275,150 +384,254 @@ class _FiltersBarState extends ConsumerState<_FiltersBar> {
   Widget build(BuildContext context) {
     final dateStr = ref.watch(attendanceDateProvider);
     final attState = ref.watch(attendanceListProvider);
+    final isMobile = Responsive.isMobile(context);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 160,
-            child: ApexDatePicker(
-              label: 'Selected Date',
-              value: DateTime.parse(dateStr),
-              onChanged: (d) {
-                if (d != null) {
-                  final fmt = DateFormat('yyyy-MM-dd').format(d);
-                  ref.read(attendanceDateProvider.notifier).state = fmt;
-                  ref.read(attendanceListProvider.notifier).setDate(fmt);
-                }
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 180,
-            child: DropdownButtonFormField<String>(
-              value: attState.departmentFilter,
-              decoration: const InputDecoration(labelText: 'Department', contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('All Departments')),
-                ..._departments.map((d) => DropdownMenuItem(value: d['id'] as String, child: Text(d['name'] ?? ''))),
-              ],
-              onChanged: (v) => ref.read(attendanceListProvider.notifier).setFilter(department: v),
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 140,
-            child: DropdownButtonFormField<String>(
-              value: attState.statusFilter,
-              decoration: const InputDecoration(labelText: 'Status', contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('All Statuses')),
-                DropdownMenuItem(value: 'present', child: Text('Present')),
-                DropdownMenuItem(value: 'absent', child: Text('Absent')),
-                DropdownMenuItem(value: 'late', child: Text('Late')),
-                DropdownMenuItem(value: 'on_leave', child: Text('On Leave')),
-              ],
-              onChanged: (v) => ref.read(attendanceListProvider.notifier).setFilter(status: v),
-            ),
-          ),
-        ],
-      ),
+    return ApexFilterToolbar(
+      padding: const EdgeInsets.all(16),
+      filters: [
+        ApexFilter.date(
+          label: 'Date',
+          value: DateTime.parse(dateStr),
+          onChanged: (d) {
+            final fmt = DateFormat('yyyy-MM-dd').format(d);
+            ref.read(attendanceDateProvider.notifier).state = fmt;
+            ref.read(attendanceListProvider.notifier).setDate(fmt);
+          },
+          width: isMobile ? null : 180,
+        ),
+        ApexFilter.dropdown(
+          label: 'Department',
+          value: attState.departmentFilter,
+          items: [
+            const DropdownMenuItem<String>(value: null, child: Text('All Departments')),
+            ..._departments.map((d) => DropdownMenuItem<String>(value: d['id'] as String, child: Text(d['name'] ?? ''))),
+          ],
+          onChanged: (v) => ref.read(attendanceListProvider.notifier).setDepartmentFilter(v),
+          width: isMobile ? null : 200,
+        ),
+        ApexFilter.dropdown(
+          label: 'Status',
+          value: attState.statusFilter,
+          items: const [
+            DropdownMenuItem<String>(value: null, child: Text('All Statuses')),
+            DropdownMenuItem<String>(value: 'present', child: Text('Present')),
+            DropdownMenuItem<String>(value: 'absent', child: Text('Absent')),
+            DropdownMenuItem<String>(value: 'late', child: Text('Late')),
+            DropdownMenuItem<String>(value: 'on_leave', child: Text('On Leave')),
+          ],
+          onChanged: (v) => ref.read(attendanceListProvider.notifier).setStatusFilter(v),
+          width: isMobile ? null : 160,
+        ),
+      ],
+      onReset: () {
+        final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        ref.read(attendanceDateProvider.notifier).state = today;
+        ref.read(attendanceListProvider.notifier).resetFilters(today);
+      },
     );
   }
 }
 
+// ─── Attendance Table Component ──────────────────────────────────────────────
+
 class _AttendanceTable extends StatelessWidget {
   final List<Map<String, dynamic>> records;
   final bool loading;
+  final bool isMobile;
 
-  const _AttendanceTable({required this.records, required this.loading});
+  const _AttendanceTable({required this.records, required this.loading, required this.isMobile});
 
   @override
   Widget build(BuildContext context) {
     if (loading && records.isEmpty) {
-      return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+      return const _TableLoading();
     }
+
     if (records.isEmpty) {
+      return _TableEmpty();
+    }
+
+    Widget buildTable() {
       return Container(
-        height: 200,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
-        child: Center(child: Text('No attendance records found', style: ApexTypography.body.copyWith(color: ApexColors.neutral500))),
+        decoration: BoxDecoration(
+          color: ApexColors.neutral0,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ApexColors.neutral200),
+          boxShadow: [
+            BoxShadow(
+              color: ApexColors.neutral900.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            const _TableHeader(),
+            ...records.asMap().entries.map((entry) {
+              return _TableRow(
+                record: entry.value,
+                index: entry.key,
+              );
+            }),
+          ],
+        ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            color: ApexColors.neutral50,
-            child: Row(children: [
-              const Expanded(flex: 3, child: Text('EMPLOYEE', style: TextStyle(fontWeight: FontWeight.bold))),
-              const Expanded(flex: 2, child: Text('CHECK IN', style: TextStyle(fontWeight: FontWeight.bold))),
-              const Expanded(flex: 2, child: Text('CHECK OUT', style: TextStyle(fontWeight: FontWeight.bold))),
-              const Expanded(flex: 2, child: Text('WORK HOURS', style: TextStyle(fontWeight: FontWeight.bold))),
-              const SizedBox(width: 100, child: Text('STATUS', style: TextStyle(fontWeight: FontWeight.bold))),
-              const SizedBox(width: 40),
-            ]),
-          ),
-          ...records.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final r = entry.value;
-            final status = r['status'] ?? 'absent';
-            final employeeName = r['employee_name'] ?? '—';
-            final employeeCode = r['employee_code'] ?? '—';
+    if (isMobile) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(width: 760, child: buildTable()),
+      );
+    }
 
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              decoration: BoxDecoration(
-                color: idx.isEven ? Colors.white : ApexColors.neutral50,
-                border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(employeeName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        Text(employeeCode, style: TextStyle(color: ApexColors.neutral500, fontSize: 11)),
-                      ],
-                    ),
-                  ),
-                  Expanded(flex: 2, child: Text(_formatTime(r['punch_in']))),
-                  Expanded(flex: 2, child: Text(_formatTime(r['punch_out']))),
-                  Expanded(flex: 2, child: Text(r['total_hours'] != null ? '${(r['total_hours'] as num).toStringAsFixed(1)} hrs' : '—')),
-                  SizedBox(
-                    width: 100,
-                    child: _StatusBadge(status: status),
-                  ),
-                  SizedBox(
-                    width: 40,
-                    child: PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, size: 16),
-                      itemBuilder: (ctx) => [
-                        const PopupMenuItem(value: 'detail', child: Text('Detail View')),
-                        const PopupMenuItem(value: 'edit', child: Text('Manual Override')),
-                      ],
-                      onSelected: (v) {
-                        if (v == 'detail') context.push('/attendance/detail?employeeId=${r['employee_id']}');
-                        if (v == 'edit') context.push('/attendance/mark');
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+    return buildTable();
+  }
+}
+
+class _TableHeader extends StatelessWidget {
+  const _TableHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: ApexColors.neutral50,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+        border: Border(
+          bottom: BorderSide(color: ApexColors.neutral200),
+        ),
+      ),
+      child: const Row(
+        children: [
+          Expanded(flex: 3, child: Text('EMPLOYEE', style: _headerStyle)),
+          Expanded(flex: 2, child: Text('CHECK IN', style: _headerStyle, textAlign: TextAlign.center)),
+          Expanded(flex: 2, child: Text('CHECK OUT', style: _headerStyle, textAlign: TextAlign.center)),
+          Expanded(flex: 2, child: Text('WORK HOURS', style: _headerStyle, textAlign: TextAlign.right)),
+          SizedBox(width: 16),
+          SizedBox(width: 110, child: Text('STATUS', style: _headerStyle)),
+          SizedBox(width: 44),
         ],
       ),
     );
   }
+
+  static const _headerStyle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: ApexColors.gray600,
+    letterSpacing: 0.5,
+  );
+}
+
+class _TableRow extends StatelessWidget {
+  final Map<String, dynamic> record;
+  final int index;
+
+  const _TableRow({required this.record, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    final status = record['status'] ?? 'absent';
+    final employeeName = record['employee_name'] ?? '—';
+    final employeeCode = record['employee_code'] ?? '—';
+
+    return Material(
+      color: index.isEven ? ApexColors.neutral0 : ApexColors.neutral50,
+      child: InkWell(
+        hoverColor: ApexColors.primary50.withValues(alpha: 0.45),
+        onTap: () => context.push('/attendance/detail?employeeId=${record['employee_id']}'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: ApexColors.neutral200, width: 1),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      employeeName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: ApexColors.gray900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      employeeCode,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: ApexColors.gray500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  _formatTime(record['punch_in']),
+                  style: const TextStyle(fontSize: 14, color: ApexColors.gray700),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  _formatTime(record['punch_out']),
+                  style: const TextStyle(fontSize: 14, color: ApexColors.gray700),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  record['total_hours'] != null ? '${(record['total_hours'] as num).toStringAsFixed(1)} hrs' : '—',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: ApexColors.gray700,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 110,
+                child: AttendanceStatusBadge(status: status),
+              ),
+              SizedBox(
+                width: 44,
+                child: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, size: 18),
+                  tooltip: 'Attendance row actions',
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (ctx) => const [
+                    PopupMenuItem(value: 'detail', child: Text('Detail View')),
+                    PopupMenuItem(value: 'edit', child: Text('Manual Override')),
+                  ],
+                  onSelected: (v) {
+                    if (v == 'detail') context.push('/attendance/detail?employeeId=${record['employee_id']}');
+                    if (v == 'edit') context.push('/attendance/mark');
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _formatTime(dynamic time) {
     if (time == null) return '—';
     try {
@@ -428,44 +641,99 @@ class _AttendanceTable extends StatelessWidget {
       return time.toString();
     }
   }
-
 }
 
-class _StatusBadge extends StatelessWidget {
-  final String status;
-  const _StatusBadge({required this.status});
+class _TableLoading extends StatelessWidget {
+  const _TableLoading();
 
   @override
   Widget build(BuildContext context) {
-    switch (status) {
-      case 'present': return ApexBadge.success('PRESENT');
-      case 'absent': return ApexBadge.danger('ABSENT');
-      case 'late': return ApexBadge.warning('LATE');
-      case 'on_leave': return ApexBadge.neutral('ON LEAVE');
-      default: return ApexBadge.neutral(status.toUpperCase());
-    }
+    return Container(
+      height: 300,
+      decoration: BoxDecoration(
+        color: ApexColors.neutral0,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ApexColors.neutral200),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    );
   }
 }
 
-class _Pagination extends ConsumerWidget {
+class _TableEmpty extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        color: ApexColors.neutral0,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ApexColors.neutral200),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.event_busy, size: 48, color: ApexColors.gray400),
+            const SizedBox(height: 12),
+            Text(
+              'No attendance records found',
+              style: ApexTypography.body.copyWith(color: ApexColors.gray500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Enhanced Pagination ──────────────────────────────────────────────────────
+
+class _EnhancedPagination extends ConsumerWidget {
   final AttendanceListState state;
-  const _Pagination({required this.state});
+
+  const _EnhancedPagination({required this.state});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: ApexColors.neutral0,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ApexColors.neutral200),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: state.page > 1 ? () => ref.read(attendanceListProvider.notifier).fetch(page: state.page - 1) : null,
+            icon: const Icon(Icons.chevron_left, size: 20),
+            onPressed: state.page > 1
+                ? () => ref.read(attendanceListProvider.notifier).fetch(page: state.page - 1)
+                : null,
+            tooltip: 'Previous Page',
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           ),
-          Text('Page ${state.page} of ${state.totalPages}'),
+          const SizedBox(width: 16),
+          Text(
+            'Page ${state.page} of ${state.totalPages}',
+            style: ApexTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.w500,
+              color: ApexColors.gray700,
+            ),
+          ),
+          const SizedBox(width: 16),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: state.page < state.totalPages ? () => ref.read(attendanceListProvider.notifier).fetch(page: state.page + 1) : null,
+            icon: const Icon(Icons.chevron_right, size: 20),
+            onPressed: state.page < state.totalPages
+                ? () => ref.read(attendanceListProvider.notifier).fetch(page: state.page + 1)
+                : null,
+            tooltip: 'Next Page',
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           ),
         ],
       ),

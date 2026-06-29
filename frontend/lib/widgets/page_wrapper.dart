@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../core/navigation_config.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
-import '../design_system/spacing.dart';
 
 /// Standard page chrome used by every screen inside the shell.
 ///
@@ -199,23 +198,20 @@ class _PageHeader extends StatelessWidget {
           _Breadcrumbs(crumbs: crumbs),
           // Title bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 4, 16, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: ApexTypography.sectionTitle),
-                      if (description != null) ...[
-                        const SizedBox(height: 2),
-                        Text(description!, style: ApexTypography.caption.copyWith(color: ApexColors.neutral500)),
-                      ],
+            padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final titleColumn = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: ApexTypography.dashboardTitle),
+                    if (description != null) ...[
+                      const SizedBox(height: 4),
+                      Text(description!, style: ApexTypography.dashboardSubtitle),
                     ],
-                  ),
-                ),
-                _ToolbarActions(
+                  ],
+                );
+                final toolbar = _ToolbarActions(
                   actions: actions,
                   showSearch: showSearch,
                   searchHint: searchHint,
@@ -223,11 +219,30 @@ class _PageHeader extends StatelessWidget {
                   onSearch: onSearch,
                   onRefresh: onRefresh,
                   onExport: onExport,
-                ),
-              ],
+                );
+
+                if (constraints.maxWidth < 760) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      titleColumn,
+                      const SizedBox(height: 12),
+                      toolbar,
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: titleColumn),
+                    toolbar,
+                  ],
+                );
+              },
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           const Divider(height: 1),
         ],
       ),

@@ -43,14 +43,24 @@ class ApexTypography {
     fontSize: 13, fontWeight: FontWeight.w500, height: 1.5, color: const Color(0xFF4B5563),
   );
 
-  // ── KPI Value: 34px / 700 ───────────────────────────────────
-  static TextStyle get kpiValue => _base.copyWith(
-    fontSize: 34, fontWeight: FontWeight.w700, height: 1.1, color: const Color(0xFF111827),
+  // ── Dashboard KPI: 30px / 700 ────────────────────────────────
+  static TextStyle get dashboardKpiValue => _base.copyWith(
+    fontSize: 30, fontWeight: FontWeight.w700, height: 1.1, color: const Color(0xFF111827),
   );
 
-  // ── KPI Label: 13px / 500 ───────────────────────────────────
-  static TextStyle get kpiLabel => _base.copyWith(
-    fontSize: 13, fontWeight: FontWeight.w500, height: 1.4, color: const Color(0xFF4B5563),
+  // ── Dashboard KPI Label: 14px / 500 ──────────────────────────
+  static TextStyle get dashboardKpiLabel => _base.copyWith(
+    fontSize: 14, fontWeight: FontWeight.w500, height: 1.4, color: const Color(0xFF4B5563),
+  );
+
+  // ── Page Title (Dashboard): 28px / 700 ───────────────────────
+  static TextStyle get dashboardTitle => _base.copyWith(
+    fontSize: 28, fontWeight: FontWeight.w700, height: 1.2, letterSpacing: -0.3, color: const Color(0xFF111827),
+  );
+
+  // ── Page Subtitle: 15px / 400 ────────────────────────────────
+  static TextStyle get dashboardSubtitle => _base.copyWith(
+    fontSize: 15, fontWeight: FontWeight.w400, height: 1.5, color: const Color(0xFF4B5563),
   );
 
   // ── Secondary text: 14px / 400 ──────────────────────────────
@@ -97,4 +107,7 @@ class ApexTypography {
   static TextStyle get displayLarge => _base.copyWith(fontSize: 48, fontWeight: FontWeight.w700, height: 1.1, letterSpacing: -1.5, color: const Color(0xFF111827));
   static TextStyle get displayMedium => _base.copyWith(fontSize: 36, fontWeight: FontWeight.w700, height: 1.15, letterSpacing: -0.5, color: const Color(0xFF111827));
   static TextStyle get tableCell => table;
+  // ── Legacy KPI aliases ──────────────────────────────────────
+  static TextStyle get kpiValue => dashboardKpiValue;
+  static TextStyle get kpiLabel => dashboardKpiLabel;
 }
