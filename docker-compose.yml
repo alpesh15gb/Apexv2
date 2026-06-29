@@ -65,8 +65,13 @@ services:
       dockerfile: Dockerfile
     container_name: apex_celery_worker
     command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
+    working_dir: /app
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    tty: true
+    stdin_open: true
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,8 +87,13 @@ services:
       dockerfile: Dockerfile
     container_name: apex_celery_beat
     command: celery -A app.tasks.celery_app beat --loglevel=info
+    working_dir: /app
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    tty: true
+    stdin_open: true
     depends_on:
       postgres:
         condition: service_healthy
