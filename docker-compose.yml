@@ -43,54 +43,25 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: apex_backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+    command: >
+      sh -c "
+        celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2 &
+        celery -A app.tasks.celery_app beat --loglevel=info &
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+      "
     ports:
       - "127.0.0.1:8001:8000"
     volumes:
       - apex_uploads_data:/app/uploads
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - apex_network
-
-  celery_worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: apex_celery_worker
-    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
-    working_dir: /app
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
-    networks:
-      - apex_network
-
-  celery_beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: apex_celery_beat
-    command: celery -A app.tasks.celery_app beat --loglevel=info
-    working_dir: /app
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      - postgres
-      - redis
     restart: unless-stopped
     networks:
       - apex_network
