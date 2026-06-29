@@ -5,8 +5,10 @@ NEVER reads from eSSL directly. Only processes local raw_logs.
 """
 
 import uuid
-from datetime import datetime, date, time, timezone
+from datetime import datetime, date, time, timezone, timedelta
+from zoneinfo import ZoneInfo
 from typing import Dict, List, Optional, Tuple
+from app.models.tenant import Tenant
 
 import structlog
 from sqlalchemy import select, func, and_
@@ -72,9 +74,9 @@ class AttendanceProcessor:
         conditions = [AttendanceRawLog.tenant_id == tenant_id]
 
         if from_date:
-            conditions.append(AttendanceRawLog.punch_time >= datetime.combine(from_date, datetime.min.time()))
+            conditions.append(AttendanceRawLog.punch_time >= datetime.combine(from_date, datetime.min.time()).replace(tzinfo=timezone.utc))
         if to_date:
-            conditions.append(AttendanceRawLog.punch_time <= datetime.combine(to_date, datetime.max.time()))
+            conditions.append(AttendanceRawLog.punch_time <= datetime.combine(to_date, datetime.max.time()).replace(tzinfo=timezone.utc))
 
         employee_ids = None
         if employee_id:
@@ -112,15 +114,18 @@ class AttendanceProcessor:
         await self.db.flush()
 
         # Also delete existing attendance records for the date range + employees
-        # so reprocessing creates clean records
-        delete_conditions = [Attendance.tenant_id == tenant_id]
+        # so reprocessing creates clean records, preserving manual overrides & approved entries
+        delete_conditions = [
+            Attendance.tenant_id == tenant_id,
+            Attendance.is_manual == False,
+            Attendance.approved_by == None
+        ]
         if from_date:
             delete_conditions.append(Attendance.date >= from_date)
         if to_date:
             delete_conditions.append(Attendance.date <= to_date)
         if employee_ids:
             delete_conditions.append(Attendance.employee_id.in_(employee_ids))
-
         from sqlalchemy import delete as sql_delete
         del_stmt = sql_delete(Attendance).where(and_(*delete_conditions))
         await self.db.execute(del_stmt)
@@ -135,6 +140,11 @@ class AttendanceProcessor:
         """Core processing logic shared by process_raw_logs and reprocess."""
         if not raw_logs:
             return {"processed": 0, "created": 0, "updated": 0, "errors": 0}
+
+        # Resolve tenant timezone
+        tenant_stmt = select(Tenant.timezone).where(Tenant.id == tenant_id)
+        tenant_tz_res = await self.db.execute(tenant_stmt)
+        tz_name = tenant_tz_res.scalar() or "Asia/Kolkata"
 
         # Group by employee
         employee_punches: Dict[str, List[AttendanceRawLog]] = {}
@@ -165,8 +175,8 @@ class AttendanceProcessor:
                 if not employee:
                     logger.warning("attendance_employee_not_found", employee_code=punches[0].employee_code, employee_id=str(punches[0].employee_id) if punches[0].employee_id else None, tenant_id=str(tenant_id))
                     for p in punches:
-                        p.processed = True
-                        p.processing_error = "Employee not found"
+                        p.processed = False
+                        p.processing_error = "Employee mapping missing"
                     errors += 1
                     continue
 
@@ -181,12 +191,14 @@ class AttendanceProcessor:
                     day_punches.sort(key=lambda p: p.punch_time)
 
                     result = await self._calculate_and_upsert(
-                        tenant_id, employee, punch_date, day_punches
+                        tenant_id, employee, punch_date, day_punches, tz_name
                     )
                     if result == "created":
                         created += 1
                     elif result == "updated":
                         updated += 1
+                    elif result == "skipped_manual_override":
+                        pass
                     else:
                         errors += 1
 
@@ -217,6 +229,7 @@ class AttendanceProcessor:
         employee: Employee,
         punch_date: date,
         day_punches: List[AttendanceRawLog],
+        tz_name: str,
     ) -> str:
         """Calculate attendance for one employee on one date and upsert."""
         if not day_punches:
@@ -265,11 +278,11 @@ class AttendanceProcessor:
 
             if shift:
                 # Calculate lateness
-                is_late, late_minutes = self._calculate_lateness(punch_in, shift)
+                is_late, late_minutes = self._calculate_lateness(punch_in, shift, tz_name)
                 # Calculate early out
-                is_early_out, early_out_minutes = self._calculate_early_out(punch_out, shift)
+                is_early_out, early_out_minutes = self._calculate_early_out(punch_out, shift, tz_name)
                 # Calculate overtime
-                overtime_hours = self._calculate_overtime(punch_in, punch_out, shift)
+                overtime_hours = self._calculate_overtime(punch_in, punch_out, shift, tz_name)
 
             # Determine status
             if total_hours >= 8:
@@ -292,6 +305,10 @@ class AttendanceProcessor:
         attendance = existing_result.scalar_one_or_none()
 
         if attendance:
+            # Preserve manual overrides and approved records
+            if attendance.is_manual or attendance.approved_by is not None:
+                return "skipped_manual_override"
+            
             attendance.punch_in = punch_in
             attendance.punch_out = punch_out
             attendance.total_hours = total_hours
@@ -354,17 +371,18 @@ class AttendanceProcessor:
         return None
 
     @staticmethod
-    def _calculate_lateness(punch_in: datetime, shift: Shift) -> Tuple[bool, int]:
+    def _calculate_lateness(punch_in: datetime, shift: Shift, tz_name: str) -> Tuple[bool, int]:
         """Calculate if punch_in is late relative to shift start."""
         if not shift.start_time:
             return False, 0
 
-        shift_start = datetime.combine(punch_in.date(), shift.start_time).replace(tzinfo=timezone.utc)
+        local_tz = ZoneInfo(tz_name)
+        punch_in_local = punch_in.astimezone(local_tz)
+        shift_start_local = datetime.combine(punch_in_local.date(), shift.start_time).replace(tzinfo=local_tz)
+        shift_start = shift_start_local.astimezone(timezone.utc)
+
         grace = shift.grace_period_minutes or 0
-        threshold = shift_start.replace(
-            minute=shift_start.minute + grace,
-            second=shift_start.second,
-        )
+        threshold = shift_start + timedelta(minutes=grace)
 
         if punch_in > threshold:
             late = (punch_in - shift_start).total_seconds() / 60
@@ -372,17 +390,18 @@ class AttendanceProcessor:
         return False, 0
 
     @staticmethod
-    def _calculate_early_out(punch_out: datetime, shift: Shift) -> Tuple[bool, int]:
+    def _calculate_early_out(punch_out: datetime, shift: Shift, tz_name: str) -> Tuple[bool, int]:
         """Calculate if punch_out is early relative to shift end."""
         if not shift.end_time:
             return False, 0
 
-        shift_end = datetime.combine(punch_out.date(), shift.end_time).replace(tzinfo=timezone.utc)
+        local_tz = ZoneInfo(tz_name)
+        punch_out_local = punch_out.astimezone(local_tz)
+        shift_end_local = datetime.combine(punch_out_local.date(), shift.end_time).replace(tzinfo=local_tz)
+        shift_end = shift_end_local.astimezone(timezone.utc)
+
         early_rule = shift.early_rule_minutes or 0
-        threshold = shift_end.replace(
-            minute=shift_end.minute - early_rule,
-            second=shift_end.second,
-        )
+        threshold = shift_end - timedelta(minutes=early_rule)
 
         if punch_out < threshold:
             early = (shift_end - punch_out).total_seconds() / 60
@@ -390,17 +409,23 @@ class AttendanceProcessor:
         return False, 0
 
     @staticmethod
-    def _calculate_overtime(punch_in: datetime, punch_out: datetime, shift: Shift) -> float:
+    def _calculate_overtime(punch_in: datetime, punch_out: datetime, shift: Shift, tz_name: str) -> float:
         """Calculate overtime hours beyond shift duration."""
         if not shift.start_time or not shift.end_time:
             return 0.0
 
-        shift_start = datetime.combine(punch_in.date(), shift.start_time).replace(tzinfo=timezone.utc)
-        shift_end = datetime.combine(punch_out.date(), shift.end_time).replace(tzinfo=timezone.utc)
+        local_tz = ZoneInfo(tz_name)
+        punch_in_local = punch_in.astimezone(local_tz)
+        punch_out_local = punch_out.astimezone(local_tz)
 
-        # Handle night shifts
-        if shift_end <= shift_start:
-            shift_end += __import__("datetime").timedelta(days=1)
+        shift_start_local = datetime.combine(punch_in_local.date(), shift.start_time).replace(tzinfo=local_tz)
+        shift_end_local = datetime.combine(punch_out_local.date(), shift.end_time).replace(tzinfo=local_tz)
+
+        if shift_end_local <= shift_start_local:
+            shift_end_local += timedelta(days=1)
+
+        shift_start = shift_start_local.astimezone(timezone.utc)
+        shift_end = shift_end_local.astimezone(timezone.utc)
 
         shift_duration = (shift_end - shift_start).total_seconds() / 3600.0
         actual_hours = (punch_out - punch_in).total_seconds() / 3600.0

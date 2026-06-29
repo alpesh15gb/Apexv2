@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, date, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import Any, Dict, List, Optional, Tuple, Union
 from fastapi import HTTPException, status
 from sqlalchemy import select, func, or_
@@ -11,6 +12,7 @@ from app.models.attendance import Attendance, PunchLog, AttendanceStatus, PunchT
 from app.models.employee import Employee, EmployeeStatus
 from app.models.shift import Shift, ShiftSchedule
 from app.models.leave import LeaveRequest
+from app.models.tenant import Tenant
 from app.schemas.attendance import AttendanceSummary, DailyAttendanceSummary
 
 class AttendanceService:
@@ -75,14 +77,23 @@ class AttendanceService:
             shift = (await self.db.execute(shift_stmt)).scalar_one_or_none()
 
         # 3. Get all punches for the day
-        # Setup day bounds in UTC (or timezone naive depending on date comparison, but let's filter punch_time)
-        start_dt = datetime.combine(attendance_date, time.min).replace(tzinfo=timezone.utc)
-        end_dt = datetime.combine(attendance_date, time.max).replace(tzinfo=timezone.utc)
+        # Resolve tenant timezone
+        tenant_stmt = select(Tenant.timezone).where(Tenant.id == tenant_id)
+        tenant_tz_res = await self.db.execute(tenant_stmt)
+        tz_name = tenant_tz_res.scalar() or "Asia/Kolkata"
+        local_tz = ZoneInfo(tz_name)
+
+        # Setup day bounds in local timezone, then convert to UTC
+        start_dt_local = datetime.combine(attendance_date, time.min).replace(tzinfo=local_tz)
+        end_dt_local = datetime.combine(attendance_date, time.max).replace(tzinfo=local_tz)
+        
+        start_dt = start_dt_local.astimezone(timezone.utc)
+        end_dt = end_dt_local.astimezone(timezone.utc)
         
         # If it's a night shift, extend end_dt to the next day's end to capture night shift out punches
         if shift and (shift.is_night_shift or shift.end_time < shift.start_time):
-            end_dt = datetime.combine(attendance_date + timedelta(days=1), shift.end_time).replace(tzinfo=timezone.utc) + timedelta(hours=4)
-
+            end_dt_local_extended = datetime.combine(attendance_date + timedelta(days=1), shift.end_time).replace(tzinfo=local_tz) + timedelta(hours=4)
+            end_dt = end_dt_local_extended.astimezone(timezone.utc)
         punch_stmt = select(PunchLog).where(
             PunchLog.employee_id == employee_id,
             PunchLog.tenant_id == tenant_id,
@@ -166,12 +177,15 @@ class AttendanceService:
             if shift:
                 attendance.shift_id = shift.id
                 
-                # Align shift times to punch date
-                shift_start = datetime.combine(attendance_date, shift.start_time).replace(tzinfo=timezone.utc)
+                # Align shift times to punch date in local timezone, then convert to UTC
+                shift_start_local = datetime.combine(attendance_date, shift.start_time).replace(tzinfo=local_tz)
                 if shift.is_night_shift or shift.end_time < shift.start_time:
-                    shift_end = datetime.combine(attendance_date + timedelta(days=1), shift.end_time).replace(tzinfo=timezone.utc)
+                    shift_end_local = datetime.combine(attendance_date + timedelta(days=1), shift.end_time).replace(tzinfo=local_tz)
                 else:
-                    shift_end = datetime.combine(attendance_date, shift.end_time).replace(tzinfo=timezone.utc)
+                    shift_end_local = datetime.combine(attendance_date, shift.end_time).replace(tzinfo=local_tz)
+                
+                shift_start = shift_start_local.astimezone(timezone.utc)
+                shift_end = shift_end_local.astimezone(timezone.utc)
 
                 # Late check
                 if punch_in_time > shift_start:
@@ -440,12 +454,20 @@ class AttendanceService:
         if employee_id:
             stmt = stmt.where(PunchLog.employee_id == employee_id)
             count_stmt = count_stmt.where(PunchLog.employee_id == employee_id)
+        # Resolve tenant timezone
+        tenant_stmt = select(Tenant.timezone).where(Tenant.id == tenant_id)
+        tenant_tz_res = await self.db.execute(tenant_stmt)
+        tz_name = tenant_tz_res.scalar() or "Asia/Kolkata"
+        local_tz = ZoneInfo(tz_name)
+
         if from_date:
-            stmt = stmt.where(PunchLog.punch_time >= datetime.combine(from_date, datetime.min.time()).replace(tzinfo=timezone.utc))
-            count_stmt = count_stmt.where(PunchLog.punch_time >= datetime.combine(from_date, datetime.min.time()).replace(tzinfo=timezone.utc))
+            from_dt = datetime.combine(from_date, datetime.min.time()).replace(tzinfo=local_tz).astimezone(timezone.utc)
+            stmt = stmt.where(PunchLog.punch_time >= from_dt)
+            count_stmt = count_stmt.where(PunchLog.punch_time >= from_dt)
         if to_date:
-            stmt = stmt.where(PunchLog.punch_time <= datetime.combine(to_date, datetime.max.time()).replace(tzinfo=timezone.utc))
-            count_stmt = count_stmt.where(PunchLog.punch_time <= datetime.combine(to_date, datetime.max.time()).replace(tzinfo=timezone.utc))
+            to_dt = datetime.combine(to_date, datetime.max.time()).replace(tzinfo=local_tz).astimezone(timezone.utc)
+            stmt = stmt.where(PunchLog.punch_time <= to_dt)
+            count_stmt = count_stmt.where(PunchLog.punch_time <= to_dt)
 
         total = (await self.db.execute(count_stmt)).scalar() or 0
         offset = (page - 1) * page_size

@@ -2,7 +2,9 @@
 
 import uuid
 from datetime import datetime, date, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import Dict, List, Optional, Tuple
+from app.models.tenant import Tenant
 
 import structlog
 from sqlalchemy import select, func, and_, or_, String
@@ -50,6 +52,15 @@ class DuplicateDetector:
             to_date = date.today()
 
         # Find punches with same employee_code + punch_time across different servers
+        # Resolve tenant timezone
+        tenant_stmt = select(Tenant.timezone).where(Tenant.id == tenant_id)
+        tenant_tz_res = await self.db.execute(tenant_stmt)
+        tz_name = tenant_tz_res.scalar() or "Asia/Kolkata"
+        local_tz = ZoneInfo(tz_name)
+
+        from_dt = datetime.combine(from_date, datetime.min.time()).replace(tzinfo=local_tz).astimezone(timezone.utc)
+        to_dt = datetime.combine(to_date, datetime.max.time()).replace(tzinfo=local_tz).astimezone(timezone.utc)
+
         stmt = (
             select(
                 AttendanceRawLog.employee_code,
@@ -62,8 +73,8 @@ class DuplicateDetector:
             )
             .where(
                 AttendanceRawLog.tenant_id == tenant_id,
-                AttendanceRawLog.punch_time >= datetime.combine(from_date, datetime.min.time()).replace(tzinfo=timezone.utc),
-                AttendanceRawLog.punch_time <= datetime.combine(to_date, datetime.max.time()).replace(tzinfo=timezone.utc),
+                AttendanceRawLog.punch_time >= from_dt,
+                AttendanceRawLog.punch_time <= to_dt,
             )
             .group_by(
                 AttendanceRawLog.employee_code,

@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime, date, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import Any, Dict, List, Optional, Tuple
 
 import structlog
@@ -265,14 +266,15 @@ class EsslConnectorService:
         """Initial attendance sync for a date range (first-time import).
         Supports progress tracking, pause, resume, and cancel.
         """
+        await self._clean_stale_running_jobs(SyncType.ATTENDANCE)
         history = EsslSyncHistory(
             tenant_id=self.server.tenant_id,
             essl_server_id=self.server.id,
             sync_type=SyncType.ATTENDANCE,
             status=SyncStatus.RUNNING,
             triggered_by=triggered_by,
-            date_range_from=datetime.combine(from_date, time.min).replace(tzinfo=timezone.utc),
-            date_range_to=datetime.combine(to_date, time.max).replace(tzinfo=timezone.utc),
+            date_range_from=datetime.combine(from_date, time.min).replace(tzinfo=ZoneInfo(self.server.timezone or "Asia/Kolkata")).astimezone(timezone.utc),
+            date_range_to=datetime.combine(to_date, time.max).replace(tzinfo=ZoneInfo(self.server.timezone or "Asia/Kolkata")).astimezone(timezone.utc),
             total_records_expected=0,
             progress_percent=0,
         )
@@ -374,12 +376,13 @@ class EsslConnectorService:
                                 raw_data=log,
                                 processed=False,
                             )
-                            self.db.add(raw_log)
                             try:
-                                await self.db.flush()
+                                async with self.db.begin_nested():
+                                    self.db.add(raw_log)
+                                    await self.db.flush()
                                 created += 1
-                            except Exception:
-                                await self.db.rollback()
+                            except Exception as flush_err:
+                                logger.debug("punch_log_flush_skipped", error=str(flush_err))
                                 skipped += 1
 
                     except Exception as e:
@@ -407,15 +410,24 @@ class EsslConnectorService:
 
             # Update cursor
             if created > 0:
-                await self._update_cursor("attendance", last_punch_time=datetime.combine(to_date, time.max).replace(tzinfo=timezone.utc))
+                await self._update_cursor("attendance", last_punch_time=datetime.combine(to_date, time.max).replace(tzinfo=ZoneInfo(self.server.timezone or "Asia/Kolkata")).astimezone(timezone.utc))
 
         except Exception as e:
+            import traceback
+            tb_str = traceback.format_exc()
             history.status = SyncStatus.FAILED
-            history.error_message = str(e)
+            history.error_message = f"{str(e)}\n\nTraceback:\n{tb_str}"
             history.completed_at = datetime.now(timezone.utc)
             history.duration_seconds = (history.completed_at - history.started_at).total_seconds()
             await self.db.commit()
-            logger.error("essl_initial_sync_failed", server_id=str(self.server.id), error=str(e))
+            logger.error(
+                "essl_initial_sync_failed",
+                server_id=str(self.server.id),
+                server_name=self.server.name,
+                tenant_id=str(self.server.tenant_id),
+                error=str(e),
+                traceback=tb_str,
+            )
 
         return history
 
@@ -501,6 +513,7 @@ class EsslConnectorService:
         4. If not: create new employee + mapping
         5. Apply conflict policy for local employees missing from eSSL
         """
+        await self._clean_stale_running_jobs(SyncType.EMPLOYEES)
         history = EsslSyncHistory(
             tenant_id=self.server.tenant_id,
             essl_server_id=self.server.id,
@@ -658,12 +671,21 @@ class EsslConnectorService:
             await self._update_cursor("employees")
 
         except Exception as e:
+            import traceback
+            tb_str = traceback.format_exc()
             history.status = SyncStatus.FAILED
-            history.error_message = str(e)
+            history.error_message = f"{str(e)}\n\nTraceback:\n{tb_str}"
             history.completed_at = datetime.now(timezone.utc)
             history.duration_seconds = (history.completed_at - history.started_at).total_seconds()
             await self.db.commit()
-            logger.error("essl_employee_sync_failed", server_id=str(self.server.id), error=str(e))
+            logger.error(
+                "essl_employee_sync_failed",
+                server_id=str(self.server.id),
+                server_name=self.server.name,
+                tenant_id=str(self.server.tenant_id),
+                error=str(e),
+                traceback=tb_str,
+            )
 
         return history
 
@@ -677,6 +699,7 @@ class EsslConnectorService:
         Strategy: Use GetDeviceLogs for bulk fetching (one call per device).
         Only fall back to per-employee GetEmployeePunchLogs if bulk API fails.
         """
+        await self._clean_stale_running_jobs(SyncType.ATTENDANCE)
         history = EsslSyncHistory(
             tenant_id=self.server.tenant_id,
             essl_server_id=self.server.id,
@@ -717,8 +740,10 @@ class EsslConnectorService:
             if device_mappings:
                 for serial, dev_mapping in device_mappings.items():
                     try:
-                        from_str = from_time.strftime("%Y-%m-%d %H:%M:%S") if from_time else ""
-                        to_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                        server_tz = ZoneInfo(self.server.timezone or "Asia/Kolkata")
+                        from_tz_time = from_time.astimezone(server_tz) if from_time else None
+                        from_str = from_tz_time.strftime("%Y-%m-%d %H:%M:%S") if from_tz_time else ""
+                        to_str = datetime.now(timezone.utc).astimezone(server_tz).strftime("%Y-%m-%d %H:%M:%S")
 
                         logs_result = await self.client.soap.get_device_logs(serial, from_str, to_str)
                         if not logs_result.get("success"):
@@ -765,12 +790,13 @@ class EsslConnectorService:
                                 raw_data=log,
                                 processed=False,
                             )
-                            self.db.add(raw_log)
                             try:
-                                await self.db.flush()
+                                async with self.db.begin_nested():
+                                    self.db.add(raw_log)
+                                    await self.db.flush()
                                 created += 1
-                            except Exception:
-                                await self.db.rollback()
+                            except Exception as flush_err:
+                                logger.debug("punch_log_flush_skipped", error=str(flush_err))
                                 skipped += 1
 
                     except Exception as e:
@@ -780,14 +806,16 @@ class EsslConnectorService:
             # Strategy 2: Fallback to per-employee GetEmployeePunchLogs
             print(f"[SYNC] Strategy 2: bulk_success={bulk_success}, employee_mappings={len(employee_mappings)}, device_mappings={len(device_mappings)}")
             if not bulk_success:
+                server_tz = ZoneInfo(self.server.timezone or "Asia/Kolkata")
                 history.date_range_from = from_time or (datetime.now(timezone.utc) - timedelta(days=1))
                 history.date_range_to = datetime.now(timezone.utc)
 
                 for emp_code, emp_mapping in employee_mappings.items():
                     try:
                         print(f"[SYNC] Processing {emp_code}...")
-                        from_str = (from_time or (datetime.now(timezone.utc) - timedelta(days=1))).strftime("%Y-%m-%d")
-                        to_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                        from_tz_time = (from_time or (datetime.now(timezone.utc) - timedelta(days=1))).astimezone(server_tz)
+                        from_str = from_tz_time.strftime("%Y-%m-%d")
+                        to_str = datetime.now(timezone.utc).astimezone(server_tz).strftime("%Y-%m-%d")
 
                         punch_result = await self.client.get_employee_punch_logs(
                             emp_code, from_str, to_str, bypass_cache=True
@@ -852,15 +880,14 @@ class EsslConnectorService:
                                 raw_data=raw_data,
                                 processed=False,
                             )
-                            self.db.add(raw_log)
                             try:
                                 async with self.db.begin_nested():
+                                    self.db.add(raw_log)
                                     await self.db.flush()
                                 created += 1
                             except Exception as flush_err:
-                                print(f"[SYNC] {emp_code}: flush failed: {flush_err}")
+                                logger.debug("punch_log_flush_skipped", error=str(flush_err))
                                 skipped += 1
-
                     except Exception as e:
                         print(f"[SYNC] {emp_code}: EXCEPTION: {e}")
                         self._log_error(history, "punch_log", emp_code, str(e))
@@ -890,12 +917,21 @@ class EsslConnectorService:
             await self.db.commit()
 
         except Exception as e:
+            import traceback
+            tb_str = traceback.format_exc()
             history.status = SyncStatus.FAILED
-            history.error_message = str(e)
+            history.error_message = f"{str(e)}\n\nTraceback:\n{tb_str}"
             history.completed_at = datetime.now(timezone.utc)
             history.duration_seconds = (history.completed_at - history.started_at).total_seconds()
             await self.db.commit()
-            logger.error("essl_attendance_sync_failed", server_id=str(self.server.id), error=str(e))
+            logger.error(
+                "essl_attendance_sync_failed",
+                server_id=str(self.server.id),
+                server_name=self.server.name,
+                tenant_id=str(self.server.tenant_id),
+                error=str(e),
+                traceback=tb_str,
+            )
 
         return history
 
@@ -911,6 +947,7 @@ class EsslConnectorService:
         """Device sync pipeline — MULTI-SERVER SAFE.
         Handles device migration between servers.
         """
+        await self._clean_stale_running_jobs(SyncType.DEVICES)
         history = EsslSyncHistory(
             tenant_id=self.server.tenant_id,
             essl_server_id=self.server.id,
@@ -1075,12 +1112,21 @@ class EsslConnectorService:
             await self._update_cursor("devices")
 
         except Exception as e:
+            import traceback
+            tb_str = traceback.format_exc()
             history.status = SyncStatus.FAILED
-            history.error_message = str(e)
+            history.error_message = f"{str(e)}\n\nTraceback:\n{tb_str}"
             history.completed_at = datetime.now(timezone.utc)
             history.duration_seconds = (history.completed_at - history.started_at).total_seconds()
             await self.db.commit()
-            logger.error("essl_device_sync_failed", server_id=str(self.server.id), error=str(e))
+            logger.error(
+                "essl_device_sync_failed",
+                server_id=str(self.server.id),
+                server_name=self.server.name,
+                tenant_id=str(self.server.tenant_id),
+                error=str(e),
+                traceback=tb_str,
+            )
 
         return history
 
@@ -1118,6 +1164,21 @@ class EsslConnectorService:
     # ------------------------------------------------------------------
     # CURSOR MANAGEMENT
     # ------------------------------------------------------------------
+
+    async def _clean_stale_running_jobs(self, sync_type: SyncType):
+        """Mark any existing running sync history jobs as failed (interrupted)."""
+        stale_stmt = select(EsslSyncHistory).where(
+            EsslSyncHistory.essl_server_id == self.server.id,
+            EsslSyncHistory.sync_type == sync_type.value,
+            EsslSyncHistory.status == SyncStatus.RUNNING
+        )
+        stale_result = await self.db.execute(stale_stmt)
+        for stale_history in stale_result.scalars().all():
+            stale_history.status = SyncStatus.FAILED
+            stale_history.error_message = "Sync job was interrupted or worker restarted"
+            stale_history.completed_at = datetime.now(timezone.utc)
+            stale_history.duration_seconds = (stale_history.completed_at - stale_history.started_at).total_seconds()
+        await self.db.flush()
 
     async def _get_cursor(self, cursor_type: str) -> Optional[EsslSyncCursor]:
         stmt = select(EsslSyncCursor).where(
@@ -1246,26 +1307,43 @@ class EsslConnectorService:
     @staticmethod
     def _parse_datetime(val: str, server_timezone: str = "UTC") -> Optional[datetime]:
         """Parse a datetime string from the eSSL device.
-        
-        Stores times as-is (naive) without timezone conversion.
-        The eBioserver and VPS are in the same timezone (IST),
-        so no conversion is needed.
+
+        Converts the datetime to a timezone-aware UTC datetime.
+        If the parsed datetime is naive, it assumes it is in `server_timezone`
+        and converts it to UTC.
         """
         if not val:
             return None
 
+        # Clean string slightly
+        val_str = str(val).strip()
+
         # Try parsing as ISO 8601
         try:
-            dt = datetime.fromisoformat(val.replace("Z", "+00:00"))
-            # Strip timezone info to store as naive
-            return dt.replace(tzinfo=None)
+            clean_val = val_str.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(clean_val)
+            if dt.tzinfo is not None:
+                return dt.astimezone(timezone.utc)
+            else:
+                # Naive
+                try:
+                    tz = ZoneInfo(server_timezone)
+                except Exception:
+                    tz = ZoneInfo("UTC")
+                return dt.replace(tzinfo=tz).astimezone(timezone.utc)
         except Exception:
             pass
 
         # Try common formats
         for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f", "%m/%d/%Y %H:%M:%S"):
             try:
-                return datetime.strptime(val, fmt)
+                dt = datetime.strptime(val_str, fmt)
+                try:
+                    tz = ZoneInfo(server_timezone)
+                except Exception:
+                    tz = ZoneInfo("UTC")
+                return dt.replace(tzinfo=tz).astimezone(timezone.utc)
             except ValueError:
                 continue
+
         return None

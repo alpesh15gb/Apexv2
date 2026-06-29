@@ -1,7 +1,8 @@
 """eSSL Dashboard Service — consolidates all eSSL dashboard queries."""
 
 import uuid
-from datetime import datetime, date, timezone, timedelta
+from datetime import datetime, date, timezone, timedelta, time
+from zoneinfo import ZoneInfo
 from typing import List, Dict, Any, Optional
 
 import structlog
@@ -34,9 +35,14 @@ class EsslDashboardService:
         servers = list(servers_result.scalars().all())
 
         dashboard = []
-        today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
-
         for server in servers:
+            try:
+                server_tz = ZoneInfo(server.timezone or "Asia/Kolkata")
+            except Exception:
+                server_tz = ZoneInfo("Asia/Kolkata")
+            local_now = datetime.now(timezone.utc).astimezone(server_tz)
+            today_start_local = datetime.combine(local_now.date(), time.min).replace(tzinfo=server_tz)
+            today_start = today_start_local.astimezone(timezone.utc)
             # Get cursors
             cursor_stmt = select(EsslSyncCursor).where(
                 EsslSyncCursor.essl_server_id == server.id
@@ -179,7 +185,6 @@ class EsslDashboardService:
         servers = list(servers_result.scalars().all())
 
         now = datetime.now(timezone.utc)
-        today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
         week_ago = now - timedelta(days=throughput_days)
 
         server_health_list = []
@@ -189,6 +194,13 @@ class EsslDashboardService:
         processing_lags = []
 
         for server in servers:
+            try:
+                server_tz = ZoneInfo(server.timezone or "Asia/Kolkata")
+            except Exception:
+                server_tz = ZoneInfo("Asia/Kolkata")
+            local_now = now.astimezone(server_tz)
+            today_start_local = datetime.combine(local_now.date(), time.min).replace(tzinfo=server_tz)
+            today_start = today_start_local.astimezone(timezone.utc)
             alerts = []
             score = 100
 
@@ -207,7 +219,8 @@ class EsslDashboardService:
             cursor = (await self.db.execute(cursor_stmt)).scalar_one_or_none()
             cursor_freshness = None
             if cursor and cursor.last_punch_time:
-                cursor_freshness = (now - cursor.last_punch_time.replace(tzinfo=timezone.utc)).total_seconds() / 60
+                last_punch = cursor.last_punch_time.replace(tzinfo=timezone.utc) if cursor.last_punch_time.tzinfo is None else cursor.last_punch_time.astimezone(timezone.utc)
+                cursor_freshness = (now - last_punch).total_seconds() / 60
                 if cursor_freshness > 60:
                     score -= 15
                     alerts.append(f"Cursor stale ({cursor_freshness:.0f}min)")
@@ -288,7 +301,8 @@ class EsslDashboardService:
                     default=None,
                 )
                 if last_completed:
-                    last_sync_age = (now - last_completed.replace(tzinfo=timezone.utc)).total_seconds() / 60
+                    last_comp_dt = last_completed.replace(tzinfo=timezone.utc) if last_completed.tzinfo is None else last_completed.astimezone(timezone.utc)
+                    last_sync_age = (now - last_comp_dt).total_seconds() / 60
                     if last_sync_age > 30:
                         score -= 10
                         alerts.append(f"Last sync {last_sync_age:.0f}min ago")
