@@ -70,13 +70,9 @@ services:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
-    tty: true
-    stdin_open: true
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     restart: unless-stopped
     networks:
       - apex_network
@@ -92,13 +88,9 @@ services:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
-    tty: true
-    stdin_open: true
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     restart: unless-stopped
     networks:
       - apex_network
