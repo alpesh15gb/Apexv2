@@ -656,7 +656,7 @@ class _ModuleTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: active
                       ? (isDark
-                          ? ApexColors.primary.withOpacity(0.15)
+                          ? Colors.white.withOpacity(0.08)
                           : ApexColors.primary50)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
@@ -667,7 +667,7 @@ class _ModuleTile extends StatelessWidget {
                       active ? module.activeIcon : module.icon,
                       size: 18,
                       color: active
-                          ? ApexColors.primary
+                          ? (isDark ? Colors.white : ApexColors.primary)
                           : (isDark ? ApexColors.neutral400 : ApexColors.neutral500),
                     ),
                     if (sidebarExpanded) ...[
@@ -677,7 +677,7 @@ class _ModuleTile extends StatelessWidget {
                           module.label,
                           style: ApexTypography.bodyMedium.copyWith(
                             color: active
-                                ? ApexColors.primary
+                                ? (isDark ? Colors.white : ApexColors.primary)
                                 : (isDark ? ApexColors.darkOnSurface : ApexColors.neutral700),
                             fontWeight: active ? FontWeight.w600 : FontWeight.w500,
                           ),
@@ -761,7 +761,7 @@ class _GroupTile extends StatelessWidget {
                     group.icon,
                     size: 15,
                     color: active
-                        ? ApexColors.primary500
+                        ? (isDark ? Colors.white : ApexColors.primary500)
                         : (isDark ? ApexColors.neutral500 : ApexColors.neutral400),
                   ),
                   const SizedBox(width: 8),
@@ -770,7 +770,7 @@ class _GroupTile extends StatelessWidget {
                       group.label,
                       style: ApexTypography.captionMedium.copyWith(
                         color: active
-                            ? ApexColors.primary
+                            ? (isDark ? Colors.white : ApexColors.primary)
                             : (isDark ? ApexColors.neutral400 : ApexColors.neutral500),
                         fontWeight: active ? FontWeight.w600 : FontWeight.w500,
                       ),
@@ -839,12 +839,12 @@ class _NavLeafTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: isActive
                   ? (isDark
-                      ? ApexColors.primary.withOpacity(0.18)
+                      ? Colors.white.withOpacity(0.08)
                       : ApexColors.primary50)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border: isActive
-                  ? Border.all(color: ApexColors.primary.withOpacity(0.25))
+                  ? Border.all(color: isDark ? Colors.white.withOpacity(0.15) : ApexColors.primary.withOpacity(0.25))
                   : null,
             ),
             child: Row(
@@ -854,7 +854,7 @@ class _NavLeafTile extends StatelessWidget {
                     leaf.icon,
                     size: 14,
                     color: isActive
-                        ? ApexColors.primary
+                        ? (isDark ? Colors.white : ApexColors.primary)
                         : (isDark ? ApexColors.neutral500 : ApexColors.neutral400),
                   )
                 else
@@ -863,7 +863,7 @@ class _NavLeafTile extends StatelessWidget {
                     height: 6,
                     margin: const EdgeInsets.only(right: 4),
                     decoration: BoxDecoration(
-                      color: isActive ? ApexColors.primary : ApexColors.neutral300,
+                      color: isActive ? (isDark ? Colors.white : ApexColors.primary) : ApexColors.neutral300,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -874,7 +874,7 @@ class _NavLeafTile extends StatelessWidget {
                       leaf.label,
                       style: ApexTypography.captionMedium.copyWith(
                         color: isActive
-                            ? ApexColors.primary
+                            ? (isDark ? Colors.white : ApexColors.primary)
                             : (isDark
                                 ? ApexColors.darkOnSurface
                                 : ApexColors.neutral700),

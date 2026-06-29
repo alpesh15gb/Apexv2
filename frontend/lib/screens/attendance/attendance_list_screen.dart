@@ -427,11 +427,11 @@ class _AttendanceTable extends StatelessWidget {
                     onChanged: (v) => onSelectAll(v ?? false),
                   ),
                 ),
-                const Expanded(flex: 3, child: Text('EMPLOYEE', style: TextStyle(fontWeight: FontWeight.bold))),
-                const Expanded(flex: 2, child: Text('CHECK IN', style: TextStyle(fontWeight: FontWeight.bold))),
-                const Expanded(flex: 2, child: Text('CHECK OUT', style: TextStyle(fontWeight: FontWeight.bold))),
-                const Expanded(flex: 2, child: Text('WORK HOURS', style: TextStyle(fontWeight: FontWeight.bold))),
-                const SizedBox(width: 100, child: Text('STATUS', style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(flex: 3, child: Text('EMPLOYEE', style: ApexTypography.tableHeader)),
+                Expanded(flex: 2, child: Text('CHECK IN', style: ApexTypography.tableHeader)),
+                Expanded(flex: 2, child: Text('CHECK OUT', style: ApexTypography.tableHeader)),
+                Expanded(flex: 2, child: Text('WORK HOURS', style: ApexTypography.tableHeader)),
+                SizedBox(width: 100, child: Text('STATUS', style: ApexTypography.tableHeader)),
                 const SizedBox(width: 40),
               ],
             ),
@@ -462,14 +462,32 @@ class _AttendanceTable extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(employeeName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        Text(employeeCode, style: TextStyle(color: ApexColors.neutral500, fontSize: 11)),
+                        Text(employeeName, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
+                        Text(employeeCode, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
                       ],
                     ),
                   ),
-                  Expanded(flex: 2, child: Text(r.punchIn != null ? DateFormat('hh:mm a').format(r.punchIn!.toLocal()) : '—')),
-                  Expanded(flex: 2, child: Text(r.punchOut != null ? DateFormat('hh:mm a').format(r.punchOut!.toLocal()) : '—')),
-                  Expanded(flex: 2, child: Text(r.totalHours != null ? '${r.totalHours!.toStringAsFixed(1)} hrs' : '—')),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      r.punchIn != null ? DateFormat('hh:mm a').format(r.punchIn!.toLocal()) : '—',
+                      style: ApexTypography.body.copyWith(color: ApexColors.neutral800),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      r.punchOut != null ? DateFormat('hh:mm a').format(r.punchOut!.toLocal()) : '—',
+                      style: ApexTypography.body.copyWith(color: ApexColors.neutral800),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      r.totalHours != null ? '${r.totalHours!.toStringAsFixed(1)} hrs' : '—',
+                      style: ApexTypography.body.copyWith(color: ApexColors.neutral800),
+                    ),
+                  ),
                   SizedBox(
                     width: 100,
                     child: _StatusBadge(status: status),
