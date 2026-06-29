@@ -315,10 +315,10 @@ class _SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final present = summary['present'] ?? 0;
-    final absent = summary['absent'] ?? 0;
-    final late = summary['late'] ?? 0;
-    final leave = summary['on_leave'] ?? 0;
+    final present = summary.present;
+    final absent = summary.absent;
+    final late = summary.late;
+    final leave = summary.onLeave;
 
     return Padding(
       padding: const EdgeInsets.all(16),
