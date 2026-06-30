@@ -384,7 +384,8 @@ class AttendanceService:
 
         present = att_counts.get(AttendanceStatus.PRESENT.value, 0) + \
                   att_counts.get(AttendanceStatus.LATE.value, 0) + \
-                  att_counts.get(AttendanceStatus.EARLY_OUT.value, 0)
+                  att_counts.get(AttendanceStatus.EARLY_OUT.value, 0) + \
+                  att_counts.get(AttendanceStatus.HALF_DAY.value, 0)
         absent = att_counts.get(AttendanceStatus.ABSENT.value, 0)
         half_day = att_counts.get(AttendanceStatus.HALF_DAY.value, 0)
 

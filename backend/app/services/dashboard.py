@@ -52,7 +52,7 @@ class DashboardService:
 
         att_row = (await self.db.execute(
             select(
-                func.count().filter(Attendance.status.in_(["present", "late", "early_out"])).label("present"),
+                func.count().filter(Attendance.status.in_(["present", "late", "early_out", "half_day"])).label("present"),
                 func.count().filter(Attendance.status == "absent").label("absent"),
                 func.count().filter(Attendance.is_late == True).label("late"),
                 func.count().filter(
