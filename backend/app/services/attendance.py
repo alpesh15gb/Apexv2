@@ -182,8 +182,6 @@ class AttendanceService:
                 attendance.total_hours = (punch_out_time - punch_in_time).total_seconds() / 3600.0
             else:
                 attendance.total_hours = 0.0
-                attendance.status = AttendanceStatus.HALF_DAY.value
-                attendance.remarks = "Single punch recorded"
 
             attendance.overtime_hours = 0.0
             attendance.is_late = False
@@ -224,25 +222,37 @@ class AttendanceService:
                     if ot_diff > shift.overtime_threshold_minutes:
                         attendance.overtime_hours = ot_diff / 60.0
 
-                # Status assignment (consistent with AttendanceProcessor)
-                if attendance.total_hours >= 8.0:
-                    if attendance.is_late:
-                        attendance.status = AttendanceStatus.LATE.value
-                    elif attendance.is_early_out:
-                        attendance.status = AttendanceStatus.EARLY_OUT.value
+                if punch_out_time:
+                    # Status assignment (consistent with AttendanceProcessor)
+                    if attendance.total_hours >= 8.0:
+                        if attendance.is_late:
+                            attendance.status = AttendanceStatus.LATE.value
+                        elif attendance.is_early_out:
+                            attendance.status = AttendanceStatus.EARLY_OUT.value
+                        else:
+                            attendance.status = AttendanceStatus.PRESENT.value
+                    elif attendance.total_hours >= 4.0:
+                        attendance.status = AttendanceStatus.HALF_DAY.value
                     else:
-                        attendance.status = AttendanceStatus.PRESENT.value
-                elif attendance.total_hours >= 4.0:
-                    attendance.status = AttendanceStatus.HALF_DAY.value
-                else:
-                    attendance.status = AttendanceStatus.ABSENT.value
+                        attendance.status = AttendanceStatus.ABSENT.value
             else:
-                if attendance.total_hours >= 8.0:
-                    attendance.status = AttendanceStatus.PRESENT.value
-                elif attendance.total_hours >= 4.0:
-                    attendance.status = AttendanceStatus.HALF_DAY.value
+                if punch_out_time:
+                    if attendance.total_hours >= 8.0:
+                        attendance.status = AttendanceStatus.PRESENT.value
+                    elif attendance.total_hours >= 4.0:
+                        attendance.status = AttendanceStatus.HALF_DAY.value
+                    else:
+                        attendance.status = AttendanceStatus.ABSENT.value
+
+            if not punch_out_time:
+                # Single punch (punch_out is None)
+                today_local = datetime.now(local_tz).date()
+                if attendance_date == today_local:
+                    attendance.status = AttendanceStatus.LATE.value if attendance.is_late else AttendanceStatus.PRESENT.value
+                    attendance.remarks = "Currently working"
                 else:
-                    attendance.status = AttendanceStatus.ABSENT.value
+                    attendance.status = AttendanceStatus.HALF_DAY.value
+                    attendance.remarks = "Single punch recorded"
 
         await self.db.commit()
         await self.db.refresh(attendance)

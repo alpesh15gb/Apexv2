@@ -365,8 +365,19 @@ class AttendanceProcessor:
             else:
                 status = AttendanceStatus.ABSENT.value
         elif punch_in:
-            status = AttendanceStatus.HALF_DAY.value
             total_hours = 0.0
+            if shift:
+                is_late, late_minutes = self._calculate_lateness(punch_in, shift, tz_name)
+            
+            # Resolve tenant local date to check if it's today
+            local_tz = ZoneInfo(tz_name)
+            today_local = datetime.now(local_tz).date()
+            if punch_date == today_local:
+                # Employee checked in today and is currently working
+                status = AttendanceStatus.LATE.value if is_late else AttendanceStatus.PRESENT.value
+            else:
+                # Missed checkout for a past date
+                status = AttendanceStatus.HALF_DAY.value
 
         # Upsert attendance
         existing_stmt = select(Attendance).where(
