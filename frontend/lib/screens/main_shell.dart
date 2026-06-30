@@ -8,6 +8,7 @@ import '../core/responsive.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../providers/auth_provider.dart';
+import '../providers/favorites_provider.dart';
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
 
@@ -507,7 +508,7 @@ class _SearchResults extends StatelessWidget {
 
 // ─── Full Navigation Tree ─────────────────────────────────────────────────────
 
-class _FullNavTree extends StatelessWidget {
+class _FullNavTree extends ConsumerWidget {
   const _FullNavTree({
     required this.expanded,
     required this.expandedModules,
@@ -531,10 +532,36 @@ class _FullNavTree extends StatelessWidget {
   final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favorites = ref.watch(favoritesProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Favorites Section
+        if (expanded && favorites.isNotEmpty) ...[
+          _SectionHeader(label: 'FAVORITES', isDark: isDark),
+          ...favorites.map((route) {
+            final label = NavigationConfig.labelFor(route);
+            final leaf = NavigationConfig.allLeaves.firstWhere(
+              (l) => l.route == route,
+              orElse: () => NavLeaf(
+                id: 'fav_$route',
+                label: label,
+                route: route,
+                icon: Icons.star_border,
+              ),
+            );
+            return _NavLeafTile(
+              leaf: leaf,
+              isActive: currentRoute == route,
+              onTap: () => onNavigate(route),
+              isDark: isDark,
+              showLabel: expanded,
+            );
+          }),
+          const Divider(height: 16, indent: 12, endIndent: 12),
+        ],
+
         // Recently visited
         if (recentRoutes.isNotEmpty && expanded) ...[
           _SectionHeader(label: 'RECENT', isDark: isDark),
@@ -1020,7 +1047,7 @@ class _UserInfo extends StatelessWidget {
 
 // ─── Top Bar ──────────────────────────────────────────────────────────────────
 
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({
     required this.isMobile,
     required this.currentRoute,
@@ -1038,7 +1065,7 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onLogout;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       height: 52,
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20),
@@ -1063,12 +1090,36 @@ class _TopBar extends StatelessWidget {
 
           // Page title from breadcrumb (last segment)
           Expanded(
-            child: Text(
-              NavigationConfig.labelFor(currentRoute),
-              style: ApexTypography.titleMedium.copyWith(
-                color: isDark ? ApexColors.darkOnSurface : ApexColors.neutral800,
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    NavigationConfig.labelFor(currentRoute),
+                    style: ApexTypography.titleMedium.copyWith(
+                      color: isDark ? ApexColors.darkOnSurface : ApexColors.neutral800,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    ref.watch(favoritesProvider).contains(currentRoute)
+                        ? Icons.star
+                        : Icons.star_border,
+                    size: 20,
+                    color: ref.watch(favoritesProvider).contains(currentRoute)
+                        ? Colors.amber
+                        : (isDark ? ApexColors.neutral400 : ApexColors.neutral500),
+                  ),
+                  onPressed: () => ref.read(favoritesProvider.notifier).toggleFavorite(currentRoute),
+                  tooltip: ref.watch(favoritesProvider).contains(currentRoute)
+                      ? 'Remove from Favorites'
+                      : 'Add to Favorites',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
+              ],
             ),
           ),
 

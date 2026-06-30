@@ -65,14 +65,47 @@ class NavigationConfig {
         rootRoute: '/dashboard',
         groups: [
           NavGroup(id: 'dashboard_main', label: 'Overview', icon: Icons.home_outlined, items: [
-            NavLeaf(id: 'dashboard_home', label: 'Dashboard', route: '/dashboard'),
+            NavLeaf(id: 'dashboard_home', label: 'Dashboard', route: '/dashboard', icon: Icons.analytics_outlined),
+          ]),
+        ],
+      ),
+      NavModule(
+        id: 'approvals',
+        label: 'Approvals',
+        icon: Icons.check_circle_outline,
+        activeIcon: Icons.check_circle,
+        rootRoute: '/approvals',
+        groups: [
+          NavGroup(id: 'app_pending', label: 'Pending Approvals', icon: Icons.inbox_outlined, items: [
+            NavLeaf(id: 'app_leave',        label: 'Leave',               route: '/approvals/leave',                icon: Icons.event_busy_outlined),
+            NavLeaf(id: 'app_attendance',   label: 'Attendance',          route: '/approvals/attendance',           icon: Icons.calendar_today_outlined),
+            NavLeaf(id: 'app_missed',       label: 'Missed Punch',        route: '/approvals/missed-punch',         icon: Icons.fingerprint),
+            NavLeaf(id: 'app_compoff',      label: 'Comp Off',            route: '/approvals/comp-off',             icon: Icons.swap_horiz_outlined),
+            NavLeaf(id: 'app_outdoor',      label: 'Outdoor Duty',        route: '/approvals/outdoor-duty',         icon: Icons.directions_walk_outlined),
+            NavLeaf(id: 'app_payroll',      label: 'Payroll',             route: '/approvals/payroll',              icon: Icons.payments_outlined),
+          ]),
+        ],
+      ),
+      NavModule(
+        id: 'ess',
+        label: 'Self Service',
+        icon: Icons.person_outline,
+        activeIcon: Icons.person,
+        rootRoute: '/ess',
+        groups: [
+          NavGroup(id: 'ess_portal', label: 'ESS Portal', icon: Icons.account_circle_outlined, items: [
+            NavLeaf(id: 'ess_profile',    label: 'My Profile',          route: '/ess/profile',                    icon: Icons.badge_outlined),
+            NavLeaf(id: 'ess_clock',      label: 'Clock In/Out',        route: '/ess/attendance',                 icon: Icons.fingerprint),
+            NavLeaf(id: 'ess_attendance', label: 'My Attendance',       route: '/ess/attendance/calendar',        icon: Icons.calendar_month_outlined),
+            NavLeaf(id: 'ess_leaves',     label: 'My Leaves',           route: '/ess/leaves',                     icon: Icons.event_busy_outlined),
+            NavLeaf(id: 'ess_payslips',   label: 'My Payslips',         route: '/ess/payslips',                   icon: Icons.description_outlined),
           ]),
         ],
       ),
     ]),
 
-    // ── HRMS ─────────────────────────────────────────────────────────────────
-    NavSection(label: 'HRMS', modules: [
+    // ── HRMS OPERATIONS ───────────────────────────────────────────────────────
+    NavSection(label: 'HRMS OPERATIONS', modules: [
       NavModule(
         id: 'employees',
         label: 'Employees',
@@ -87,16 +120,8 @@ class NavigationConfig {
             NavLeaf(id: 'emp_assets',   label: 'Employee Assets',     route: '/employees/assets',           icon: Icons.inventory_2_outlined),
             NavLeaf(id: 'emp_timeline', label: 'Employee Timeline',   route: '/employees/timeline',         icon: Icons.timeline_outlined),
           ]),
-          NavGroup(id: 'emp_org', label: 'Organisation', icon: Icons.corporate_fare_outlined, items: [
-            NavLeaf(id: 'emp_depts',    label: 'Departments',         route: '/employees/departments',      icon: Icons.business_outlined),
-            NavLeaf(id: 'emp_desig',    label: 'Designations',        route: '/employees/designations',     icon: Icons.work_outline),
-            NavLeaf(id: 'emp_branches', label: 'Branches',            route: '/employees/branches',         icon: Icons.store_outlined),
-            NavLeaf(id: 'emp_locs',     label: 'Locations',           route: '/employees/locations',        icon: Icons.location_on_outlined),
-            NavLeaf(id: 'emp_types',    label: 'Employment Types',    route: '/employees/employment-types', icon: Icons.category_outlined),
-          ]),
         ],
       ),
-
       NavModule(
         id: 'attendance',
         label: 'Attendance',
@@ -109,42 +134,22 @@ class NavigationConfig {
             NavLeaf(id: 'att_register',    label: 'Attendance Register', route: '/attendance/register',            icon: Icons.table_chart_outlined),
             NavLeaf(id: 'att_manual',      label: 'Manual Attendance',   route: '/attendance/mark',                icon: Icons.edit_calendar_outlined),
             NavLeaf(id: 'att_corrections', label: 'Corrections',         route: '/attendance/corrections',         icon: Icons.edit_note_outlined),
-            NavLeaf(id: 'att_approvals',   label: 'Approvals',           route: '/attendance/approvals',           icon: Icons.check_circle_outline),
-          ]),
-          NavGroup(id: 'att_shifts', label: 'Shift Management', icon: Icons.schedule_outlined, items: [
-            NavLeaf(id: 'att_shift_types',  label: 'Shift Types',        route: '/attendance/shifts',              icon: Icons.access_time_outlined),
-            NavLeaf(id: 'att_shift_sched',  label: 'Shift Schedule',     route: '/attendance/shifts/schedule',     icon: Icons.calendar_month_outlined),
-            NavLeaf(id: 'att_shift_rot',    label: 'Shift Rotation',     route: '/attendance/shifts/rotation',     icon: Icons.loop_outlined),
-            NavLeaf(id: 'att_weekly_off',   label: 'Weekly Off',         route: '/attendance/shifts/weekly-off',   icon: Icons.weekend_outlined),
-          ]),
-          NavGroup(id: 'att_holidays', label: 'Holidays', icon: Icons.celebration_outlined, items: [
-            NavLeaf(id: 'att_hol_cal',    label: 'Holiday Calendar',     route: '/attendance/holidays',            icon: Icons.event_outlined),
-            NavLeaf(id: 'att_hol_groups', label: 'Holiday Groups',       route: '/attendance/holidays/groups',     icon: Icons.group_work_outlined),
-          ]),
-          NavGroup(id: 'att_leave', label: 'Leave', icon: Icons.event_busy_outlined, items: [
-            NavLeaf(id: 'att_lv_types',     label: 'Leave Types',        route: '/attendance/leave/types',         icon: Icons.label_outlined),
-            NavLeaf(id: 'att_lv_policies',  label: 'Leave Policies',     route: '/attendance/leave/policies',      icon: Icons.policy_outlined),
-            NavLeaf(id: 'att_lv_requests',  label: 'Leave Requests',     route: '/attendance/leave/requests',      icon: Icons.inbox_outlined),
-            NavLeaf(id: 'att_lv_approvals', label: 'Leave Approvals',    route: '/attendance/leave/approvals',     icon: Icons.how_to_reg_outlined),
-            NavLeaf(id: 'att_lv_balance',   label: 'Leave Balance',      route: '/attendance/leave/balance',       icon: Icons.account_balance_outlined),
-          ]),
-          NavGroup(id: 'att_duty', label: 'Duty', icon: Icons.transfer_within_a_station_outlined, items: [
-            NavLeaf(id: 'att_outdoor',  label: 'Out Duty',               route: '/attendance/duty/outdoor',        icon: Icons.directions_walk_outlined),
-            NavLeaf(id: 'att_compoff',  label: 'Comp Off',               route: '/attendance/duty/comp-off',       icon: Icons.swap_horiz_outlined),
-            NavLeaf(id: 'att_missed',   label: 'Missed Punch',           route: '/attendance/duty/missed-punch',   icon: Icons.fingerprint),
-            NavLeaf(id: 'att_regular',  label: 'Regularization',         route: '/attendance/duty/regularization', icon: Icons.rule_outlined),
-          ]),
-          NavGroup(id: 'att_settings', label: 'Attendance Settings', icon: Icons.tune_outlined, items: [
-            NavLeaf(id: 'att_set_policies', label: 'Attendance Policies', route: '/attendance/settings/policies',    icon: Icons.policy_outlined),
-            NavLeaf(id: 'att_set_grace',    label: 'Grace Time',          route: '/attendance/settings/grace',       icon: Icons.timer_outlined),
-            NavLeaf(id: 'att_set_ot',       label: 'Overtime Rules',      route: '/attendance/settings/overtime',    icon: Icons.access_alarm_outlined),
-            NavLeaf(id: 'att_set_auto',     label: 'Auto Shift',          route: '/attendance/settings/auto-shift',  icon: Icons.auto_mode_outlined),
-            NavLeaf(id: 'att_set_geo',      label: 'Geofencing',          route: '/attendance/settings/geofencing',  icon: Icons.my_location_outlined),
-            NavLeaf(id: 'att_set_bio',      label: 'Biometric Settings',  route: '/attendance/settings/biometric',   icon: Icons.fingerprint),
           ]),
         ],
       ),
-
+      NavModule(
+        id: 'leave',
+        label: 'Leave',
+        icon: Icons.event_busy_outlined,
+        activeIcon: Icons.event_busy,
+        rootRoute: '/attendance/leave',
+        groups: [
+          NavGroup(id: 'lv_ops', label: 'Leave Ledger', icon: Icons.inbox_outlined, items: [
+            NavLeaf(id: 'att_lv_requests',  label: 'Leave Requests',     route: '/attendance/leave/requests',      icon: Icons.inbox_outlined),
+            NavLeaf(id: 'att_lv_balance',   label: 'Leave Balance',      route: '/attendance/leave/balance',       icon: Icons.account_balance_outlined),
+          ]),
+        ],
+      ),
       NavModule(
         id: 'payroll',
         label: 'Payroll',
@@ -152,73 +157,14 @@ class NavigationConfig {
         activeIcon: Icons.payments,
         rootRoute: '/payroll',
         groups: [
-          NavGroup(id: 'pay_salary', label: 'Salary', icon: Icons.monetization_on_outlined, items: [
-            NavLeaf(id: 'pay_structures', label: 'Salary Structures',   route: '/payroll/salary-structures',        icon: Icons.layers_outlined),
-            NavLeaf(id: 'pay_components', label: 'Pay Components',      route: '/payroll/pay-components',           icon: Icons.extension_outlined),
-            NavLeaf(id: 'pay_grades',     label: 'Pay Grades',          route: '/payroll/pay-grades',               icon: Icons.leaderboard_outlined),
-            NavLeaf(id: 'pay_policies',   label: 'Payroll Policies',    route: '/payroll/policies',                 icon: Icons.policy_outlined),
-          ]),
           NavGroup(id: 'pay_processing', label: 'Processing', icon: Icons.receipt_long_outlined, items: [
             NavLeaf(id: 'pay_run',         label: 'Payroll Run',         route: '/payroll/run',                    icon: Icons.play_circle_outline),
-            NavLeaf(id: 'pay_cycles',      label: 'Pay Cycles',          route: '/payroll/cycles',                 icon: Icons.loop_outlined),
             NavLeaf(id: 'pay_proc',        label: 'Salary Processing',   route: '/payroll/processing',             icon: Icons.settings_outlined),
             NavLeaf(id: 'pay_lock',        label: 'Lock Payroll',        route: '/payroll/lock',                   icon: Icons.lock_outline),
-          ]),
-          NavGroup(id: 'pay_payslips', label: 'Payslips', icon: Icons.description_outlined, items: [
             NavLeaf(id: 'pay_slip_gen',   label: 'Generate Payslips',    route: '/payroll/payslips',               icon: Icons.note_add_outlined),
-            NavLeaf(id: 'pay_slip_bulk',  label: 'Bulk Download',        route: '/payroll/payslips/bulk-download', icon: Icons.download_outlined),
-            NavLeaf(id: 'pay_slip_email', label: 'Email Payslips',       route: '/payroll/payslips/email',         icon: Icons.email_outlined),
-          ]),
-          NavGroup(id: 'pay_statutory', label: 'Statutory', icon: Icons.account_balance_outlined, items: [
-            NavLeaf(id: 'pay_pf',  label: 'PF',                          route: '/payroll/statutory/pf',           icon: Icons.savings_outlined),
-            NavLeaf(id: 'pay_esi', label: 'ESI',                         route: '/payroll/statutory/esi',          icon: Icons.health_and_safety_outlined),
-            NavLeaf(id: 'pay_pt',  label: 'Professional Tax',            route: '/payroll/statutory/pt',           icon: Icons.account_balance_outlined),
-            NavLeaf(id: 'pay_tds', label: 'TDS',                         route: '/payroll/statutory/tds',          icon: Icons.percent_outlined),
           ]),
         ],
       ),
-    ]),
-
-    // ── OPERATIONS ────────────────────────────────────────────────────────────
-    NavSection(label: 'OPERATIONS', modules: [
-      NavModule(
-        id: 'devices',
-        label: 'Devices',
-        icon: Icons.devices_outlined,
-        activeIcon: Icons.devices,
-        rootRoute: '/devices',
-        groups: [
-          NavGroup(id: 'dev_mgmt', label: 'Device Management', icon: Icons.device_hub_outlined, items: [
-            NavLeaf(id: 'dev_list',    label: 'Device List',              route: '/devices',                              icon: Icons.list_alt_outlined),
-            NavLeaf(id: 'dev_add',     label: 'Add Device',               route: '/devices/add',                          icon: Icons.add_to_queue_outlined),
-            NavLeaf(id: 'dev_status',  label: 'Device Status',            route: '/devices/status',                       icon: Icons.monitor_heart_outlined),
-            NavLeaf(id: 'dev_groups',  label: 'Device Groups',            route: '/devices/groups',                       icon: Icons.device_hub_outlined),
-          ]),
-          NavGroup(id: 'dev_locations', label: 'Locations', icon: Icons.location_city_outlined, items: [
-            NavLeaf(id: 'dev_loc_list',   label: 'Location List',         route: '/devices/locations',                    icon: Icons.location_on_outlined),
-            NavLeaf(id: 'dev_branch_map', label: 'Branch Mapping',        route: '/devices/locations/branch-mapping',     icon: Icons.map_outlined),
-          ]),
-          NavGroup(id: 'dev_commands', label: 'Commands', icon: Icons.terminal_outlined, items: [
-            NavLeaf(id: 'dev_cmd_sync_u',  label: 'Sync Users',           route: '/devices/commands/sync-users',          icon: Icons.sync_outlined),
-            NavLeaf(id: 'dev_cmd_sync_t',  label: 'Sync Time',            route: '/devices/commands/sync-time',           icon: Icons.schedule_outlined),
-            NavLeaf(id: 'dev_cmd_restart', label: 'Restart Device',       route: '/devices/commands/restart',             icon: Icons.restart_alt_outlined),
-            NavLeaf(id: 'dev_cmd_clear',   label: 'Clear Logs',           route: '/devices/commands/clear-logs',          icon: Icons.delete_sweep_outlined),
-            NavLeaf(id: 'dev_cmd_dl',      label: 'Download Logs',        route: '/devices/commands/download-logs',       icon: Icons.cloud_download_outlined),
-          ]),
-          NavGroup(id: 'dev_logs', label: 'Logs', icon: Icons.receipt_outlined, items: [
-            NavLeaf(id: 'dev_log_device',  label: 'Device Logs',          route: '/devices/logs',                         icon: Icons.list_alt_outlined),
-            NavLeaf(id: 'dev_log_illegal', label: 'Illegal Logs',         route: '/devices/logs/illegal',                 icon: Icons.warning_outlined),
-            NavLeaf(id: 'dev_log_op',      label: 'OP Logs',              route: '/devices/logs/op',                      icon: Icons.manage_search_outlined),
-            NavLeaf(id: 'dev_log_sync',    label: 'Sync History',         route: '/devices/logs/sync-history',            icon: Icons.history_outlined),
-          ]),
-          NavGroup(id: 'dev_employees', label: 'Employees', icon: Icons.group_outlined, items: [
-            NavLeaf(id: 'dev_emp_push', label: 'Push Employees',          route: '/devices/employees/push',               icon: Icons.upload_outlined),
-            NavLeaf(id: 'dev_emp_pull', label: 'Pull Employees',          route: '/devices/employees/pull',               icon: Icons.download_outlined),
-            NavLeaf(id: 'dev_emp_map',  label: 'Employee Mapping',        route: '/devices/employees/mapping',            icon: Icons.compare_arrows_outlined),
-          ]),
-        ],
-      ),
-
       NavModule(
         id: 'visitors',
         label: 'Visitors',
@@ -229,14 +175,13 @@ class NavigationConfig {
           NavGroup(id: 'vis_main', label: 'Visitor Management', icon: Icons.supervisor_account_outlined, items: [
             NavLeaf(id: 'vis_logs',      label: 'Visitor Logs',          route: '/visitors',                             icon: Icons.format_list_bulleted_outlined),
             NavLeaf(id: 'vis_passes',    label: 'Visitor Passes',        route: '/visitors/passes',                      icon: Icons.confirmation_number_outlined),
-            NavLeaf(id: 'vis_cards',     label: 'Visitor Cards',         route: '/visitors/cards',                       icon: Icons.credit_card_outlined),
-            NavLeaf(id: 'vis_desks',     label: 'Visitor Desks',         route: '/visitors/desks',                       icon: Icons.desk_outlined),
-            NavLeaf(id: 'vis_blacklist', label: 'Blacklist',             route: '/visitors/blacklist',                   icon: Icons.block_outlined),
-            NavLeaf(id: 'vis_analytics', label: 'Visitor Analytics',     route: '/visitors/analytics',                   icon: Icons.bar_chart_outlined),
           ]),
         ],
       ),
+    ]),
 
+    // ── REPORT CENTER ────────────────────────────────────────────────────────
+    NavSection(label: 'REPORT CENTER', modules: [
       NavModule(
         id: 'reports',
         label: 'Reports',
@@ -260,11 +205,6 @@ class NavigationConfig {
             NavLeaf(id: 'rep_lv_balance', label: 'Leave Balance',        route: '/reports/leave/balance',                icon: Icons.account_balance_outlined),
             NavLeaf(id: 'rep_lv_history', label: 'Leave History',        route: '/reports/leave/history',                icon: Icons.history_outlined),
           ]),
-          NavGroup(id: 'rep_duty', label: 'Duty Reports', icon: Icons.transfer_within_a_station_outlined, items: [
-            NavLeaf(id: 'rep_duty_out',    label: 'Out Duty',            route: '/reports/duty/outdoor',                 icon: Icons.directions_walk_outlined),
-            NavLeaf(id: 'rep_duty_comp',   label: 'Comp Off',            route: '/reports/duty/comp-off',                icon: Icons.swap_horiz_outlined),
-            NavLeaf(id: 'rep_duty_missed', label: 'Missed Punch',        route: '/reports/duty/missed-punch',            icon: Icons.fingerprint),
-          ]),
           NavGroup(id: 'rep_payroll', label: 'Payroll Reports', icon: Icons.payments_outlined, items: [
             NavLeaf(id: 'rep_pay_sal',  label: 'Salary Register',        route: '/reports/payroll/salary',               icon: Icons.receipt_long_outlined),
             NavLeaf(id: 'rep_pay_bank', label: 'Bank Transfer',          route: '/reports/payroll/bank',                 icon: Icons.account_balance_outlined),
@@ -278,54 +218,54 @@ class NavigationConfig {
             NavLeaf(id: 'rep_dev_health', label: 'Device Health',        route: '/reports/device/health',                icon: Icons.monitor_heart_outlined),
             NavLeaf(id: 'rep_dev_sync',   label: 'Sync Status',          route: '/reports/device/sync',                  icon: Icons.sync_outlined),
           ]),
-          NavGroup(id: 'rep_analytics', label: 'Analytics', icon: Icons.insights_outlined, items: [
-            NavLeaf(id: 'rep_ana_emp',  label: 'Employee Analytics',     route: '/reports/analytics/employee',           icon: Icons.people_outlined),
-            NavLeaf(id: 'rep_ana_att',  label: 'Attendance Trends',      route: '/reports/analytics/attendance',         icon: Icons.trending_up_outlined),
-            NavLeaf(id: 'rep_ana_dept', label: 'Department Summary',     route: '/reports/analytics/department',         icon: Icons.business_outlined),
+        ],
+      ),
+    ]),
+
+    // ── CONFIGURATION ────────────────────────────────────────────────────────
+    NavSection(label: 'CONFIGURATION', modules: [
+      NavModule(
+        id: 'configuration',
+        label: 'Configuration',
+        icon: Icons.settings_suggest_outlined,
+        activeIcon: Icons.settings_suggest,
+        rootRoute: '/settings/config',
+        groups: [
+          NavGroup(id: 'cfg_org', label: 'Organization', icon: Icons.corporate_fare_outlined, items: [
+            NavLeaf(id: 'emp_branches', label: 'Branches',            route: '/employees/branches',         icon: Icons.store_outlined),
+            NavLeaf(id: 'emp_locs',     label: 'Locations',           route: '/employees/locations',        icon: Icons.location_on_outlined),
+            NavLeaf(id: 'emp_depts',    label: 'Departments',         route: '/employees/departments',      icon: Icons.business_outlined),
+            NavLeaf(id: 'emp_desig',    label: 'Designations',        route: '/employees/designations',     icon: Icons.work_outline),
+            NavLeaf(id: 'emp_types',    label: 'Employment Types',    route: '/employees/employment-types', icon: Icons.category_outlined),
+          ]),
+          NavGroup(id: 'cfg_attendance', label: 'Attendance', icon: Icons.tune_outlined, items: [
+            NavLeaf(id: 'att_shift_types',  label: 'Shifts',             route: '/attendance/shifts',              icon: Icons.access_time_outlined),
+            NavLeaf(id: 'att_weekly_off',   label: 'Weekly Off',         route: '/attendance/shifts/weekly-off',   icon: Icons.weekend_outlined),
+            NavLeaf(id: 'att_hol_groups', label: 'Holiday Groups',       route: '/attendance/holidays/groups',     icon: Icons.group_work_outlined),
+            NavLeaf(id: 'att_lv_policies',  label: 'Leave Policies',     route: '/attendance/leave/policies',      icon: Icons.policy_outlined),
+            NavLeaf(id: 'att_set_grace',    label: 'Grace Rules',        route: '/attendance/settings/grace',       icon: Icons.timer_outlined),
+            NavLeaf(id: 'att_set_auto',     label: 'Auto Shift',          route: '/attendance/settings/auto-shift',  icon: Icons.auto_mode_outlined),
+            NavLeaf(id: 'att_set_geo',      label: 'Geofencing',          route: '/attendance/settings/geofencing',  icon: Icons.my_location_outlined),
+            NavLeaf(id: 'att_set_ot',       label: 'Overtime',            route: '/attendance/settings/overtime',    icon: Icons.access_alarm_outlined),
+          ]),
+          NavGroup(id: 'cfg_payroll', label: 'Payroll', icon: Icons.payments_outlined, items: [
+            NavLeaf(id: 'pay_components', label: 'Pay Components',      route: '/payroll/pay-components',           icon: Icons.extension_outlined),
+            NavLeaf(id: 'pay_grades',     label: 'Pay Grades',          route: '/payroll/pay-grades',               icon: Icons.leaderboard_outlined),
+            NavLeaf(id: 'pay_cycles',      label: 'Pay Cycles',          route: '/payroll/cycles',                 icon: Icons.loop_outlined),
+            NavLeaf(id: 'pay_stat_pf',     label: 'Statutory PF',        route: '/payroll/statutory/pf',           icon: Icons.savings_outlined),
+            NavLeaf(id: 'pay_structures', label: 'Salary Templates',    route: '/payroll/salary-structures',        icon: Icons.layers_outlined),
+          ]),
+          NavGroup(id: 'cfg_devices', label: 'Devices', icon: Icons.devices_other_outlined, items: [
+            NavLeaf(id: 'adm_essl_list', label: 'eSSL Servers',           route: '/settings/essl',                      icon: Icons.dns_outlined),
+            NavLeaf(id: 'dev_groups',  label: 'Device Groups',            route: '/devices/groups',                       icon: Icons.device_hub_outlined),
+            NavLeaf(id: 'dev_emp_map',  label: 'Employee Mapping',        route: '/devices/employees/mapping',            icon: Icons.compare_arrows_outlined),
           ]),
         ],
       ),
     ]),
 
-    // ── TOOLS ─────────────────────────────────────────────────────────────────
-    NavSection(label: 'TOOLS', modules: [
-      NavModule(
-        id: 'utilities',
-        label: 'Utilities',
-        icon: Icons.build_outlined,
-        activeIcon: Icons.build,
-        rootRoute: '/utilities/import/employees',
-        groups: [
-          NavGroup(id: 'util_import', label: 'Import', icon: Icons.upload_file_outlined, items: [
-            NavLeaf(id: 'util_imp_emp',   label: 'Import Employees',     route: '/utilities/import/employees',           icon: Icons.people_outlined),
-            NavLeaf(id: 'util_imp_dev',   label: 'Import Devices',       route: '/utilities/import/devices',             icon: Icons.devices_outlined),
-            NavLeaf(id: 'util_imp_att',   label: 'Import Attendance',    route: '/utilities/import/attendance',          icon: Icons.calendar_today_outlined),
-            NavLeaf(id: 'util_imp_hol',   label: 'Import Holidays',      route: '/utilities/import/holidays',            icon: Icons.celebration_outlined),
-            NavLeaf(id: 'util_imp_shift', label: 'Import Shifts',        route: '/utilities/import/shifts',              icon: Icons.schedule_outlined),
-          ]),
-          NavGroup(id: 'util_export', label: 'Export', icon: Icons.download_outlined, items: [
-            NavLeaf(id: 'util_exp_emp',  label: 'Export Employees',      route: '/utilities/export/employees',           icon: Icons.people_outlined),
-            NavLeaf(id: 'util_exp_dev',  label: 'Export Devices',        route: '/utilities/export/devices',             icon: Icons.devices_outlined),
-            NavLeaf(id: 'util_exp_att',  label: 'Export Attendance',     route: '/utilities/export/attendance',          icon: Icons.calendar_today_outlined),
-            NavLeaf(id: 'util_exp_pay',  label: 'Export Payroll',        route: '/utilities/export/payroll',             icon: Icons.payments_outlined),
-          ]),
-          NavGroup(id: 'util_bulk', label: 'Bulk Operations', icon: Icons.select_all_outlined, items: [
-            NavLeaf(id: 'util_bulk_shift', label: 'Bulk Shift Assignment', route: '/utilities/bulk/shift-assignment',    icon: Icons.schedule_outlined),
-            NavLeaf(id: 'util_bulk_leave', label: 'Bulk Leave Credit',     route: '/utilities/bulk/leave-credit',        icon: Icons.event_available_outlined),
-            NavLeaf(id: 'util_bulk_emp',   label: 'Bulk Employee Update',  route: '/utilities/bulk/employee-update',     icon: Icons.manage_accounts_outlined),
-          ]),
-          NavGroup(id: 'util_data', label: 'Data Tools', icon: Icons.storage_outlined, items: [
-            NavLeaf(id: 'util_backup',  label: 'Backup',                  route: '/utilities/data/backup',              icon: Icons.backup_outlined),
-            NavLeaf(id: 'util_restore', label: 'Restore',                 route: '/utilities/data/restore',             icon: Icons.restore_outlined),
-            NavLeaf(id: 'util_archive', label: 'Archive',                 route: '/utilities/data/archive',             icon: Icons.archive_outlined),
-          ]),
-          NavGroup(id: 'util_api', label: 'Integrations', icon: Icons.webhook_outlined, items: [
-            NavLeaf(id: 'util_webhooks', label: 'Webhooks',               route: '/utilities/webhooks',                 icon: Icons.webhook_outlined),
-            NavLeaf(id: 'util_api_int',  label: 'API Integrations',       route: '/utilities/integrations',             icon: Icons.api_outlined),
-          ]),
-        ],
-      ),
-
+    // ── ADMINISTRATION ───────────────────────────────────────────────────────
+    NavSection(label: 'ADMINISTRATION', modules: [
       NavModule(
         id: 'administration',
         label: 'Administration',
@@ -347,12 +287,11 @@ class NavigationConfig {
             NavLeaf(id: 'adm_approval', label: 'Approval Workflow',       route: '/settings/approval-workflow',         icon: Icons.check_circle_outline),
             NavLeaf(id: 'adm_notif',    label: 'Notification Settings',   route: '/settings/notifications',             icon: Icons.notifications_outlined),
           ]),
-          NavGroup(id: 'adm_essl', label: 'Biometric Server', icon: Icons.dns_outlined, items: [
-            NavLeaf(id: 'adm_essl_list', label: 'eSSL Servers',           route: '/settings/essl',                      icon: Icons.dns_outlined),
-            NavLeaf(id: 'adm_essl_dash', label: 'Sync Dashboard',         route: '/settings/essl/dashboard',            icon: Icons.sync_outlined),
-            NavLeaf(id: 'adm_cats',      label: 'Categories',             route: '/settings/categories',                icon: Icons.category_outlined),
-            NavLeaf(id: 'adm_tenant',    label: 'Tenant Settings',        route: '/settings/tenant-settings',           icon: Icons.tune_outlined),
-            NavLeaf(id: 'adm_workcodes', label: 'Work Codes',             route: '/settings/work-codes',                icon: Icons.qr_code_outlined),
+          NavGroup(id: 'adm_data', label: 'Data Tools', icon: Icons.storage_outlined, items: [
+            NavLeaf(id: 'util_backup',  label: 'Backup',                  route: '/utilities/data/backup',              icon: Icons.backup_outlined),
+            NavLeaf(id: 'util_restore', label: 'Restore',                 route: '/utilities/data/restore',             icon: Icons.restore_outlined),
+            NavLeaf(id: 'util_webhooks', label: 'Webhooks',               route: '/utilities/webhooks',                 icon: Icons.webhook_outlined),
+            NavLeaf(id: 'util_api_int',  label: 'API Integrations',       route: '/utilities/integrations',             icon: Icons.api_outlined),
           ]),
         ],
       ),
@@ -362,6 +301,18 @@ class NavigationConfig {
   // ─── Route → label map for breadcrumbs ───────────────────────────────────
 
   static const Map<String, String> routeLabels = {
+    '/approvals/leave':                     'Leave Approvals',
+    '/approvals/attendance':                'Attendance Approvals',
+    '/approvals/missed-punch':              'Missed Punch Approvals',
+    '/approvals/comp-off':                  'Comp Off Approvals',
+    '/approvals/outdoor-duty':              'Outdoor Duty Approvals',
+    '/approvals/payroll':                   'Payroll Approvals',
+    '/ess/profile':                         'My Profile',
+    '/ess/attendance/calendar':             'My Attendance',
+    '/ess/leaves':                          'My Leaves',
+    '/ess/payslips':                        'My Payslips',
+    '/ess/documents':                       'My Documents',
+    '/ess/notifications':                   'My Notifications',
     '/dashboard':                           'Dashboard',
     '/employees':                           'Employee List',
     '/employees/create':                    'Add Employee',
