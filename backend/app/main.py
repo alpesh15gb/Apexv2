@@ -21,13 +21,13 @@ async def lifespan(app: FastAPI):
     # Startup: Validate secrets
     issues = validate_secrets(settings, on_startup=True)
     for issue in issues:
-        print(f"⚠️  {issue}")
+        logger.warning("secret_issue", issue=issue)
 
     # Startup: Verify DB Connection
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-        print("Database connection verified successfully.")
+        logger.info("database_connection_verified")
     except Exception as e:
         logger.error("db_connection_failed", error=str(e))
         raise
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown: Close DB Connections
     await engine.dispose()
-    print("Database connections closed.")
+    logger.info("database_connections_closed")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

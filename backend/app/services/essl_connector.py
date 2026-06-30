@@ -804,7 +804,7 @@ class EsslConnectorService:
                         failed += 1
 
             # Strategy 2: Fallback to per-employee GetEmployeePunchLogs
-            print(f"[SYNC] Strategy 2: bulk_success={bulk_success}, employee_mappings={len(employee_mappings)}, device_mappings={len(device_mappings)}")
+            logger.info("sync_strategy_2", bulk_success=bulk_success, employee_mappings=len(employee_mappings), device_mappings=len(device_mappings))
             if not bulk_success:
                 server_tz = ZoneInfo(self.server.timezone or "Asia/Kolkata")
                 history.date_range_from = from_time or (datetime.now(timezone.utc) - timedelta(days=1))
@@ -812,7 +812,7 @@ class EsslConnectorService:
 
                 for emp_code, emp_mapping in employee_mappings.items():
                     try:
-                        print(f"[SYNC] Processing {emp_code}...")
+                        logger.debug("sync_processing_emp", emp_code=emp_code)
                         from_tz_time = (from_time or (datetime.now(timezone.utc) - timedelta(days=1))).astimezone(server_tz)
                         from_str = from_tz_time.strftime("%Y-%m-%d")
                         to_str = datetime.now(timezone.utc).astimezone(server_tz).strftime("%Y-%m-%d")
@@ -820,7 +820,7 @@ class EsslConnectorService:
                         punch_result = await self.client.get_employee_punch_logs(
                             emp_code, from_str, to_str, bypass_cache=True
                         )
-                        print(f"[SYNC] {emp_code}: success={punch_result.get('success')}, data_type={type(punch_result.get('data')).__name__}, data={str(punch_result.get('data'))[:200]}")
+                        logger.debug("sync_punch_result", emp_code=emp_code, success=punch_result.get("success"))
                         if not punch_result.get("success"):
                             self._log_error(history, "punch_log", emp_code, punch_result.get("error", "Failed"))
                             failed += 1
@@ -833,7 +833,7 @@ class EsslConnectorService:
                         elif isinstance(punches, dict):
                             punches = [punches]
 
-                        print(f"[SYNC] {emp_code}: got {len(punches)} punches, type={type(punches[0]).__name__ if punches else 'empty'}")
+                        logger.debug("sync_punches_received", emp_code=emp_code, count=len(punches))
 
                         for punch in punches:
                             # Convert Pydantic model to dict if needed
@@ -852,7 +852,7 @@ class EsslConnectorService:
 
                             punch_time = self._parse_datetime(str(pt_str), self.server.timezone)
                             if not punch_time:
-                                print(f"[SYNC] {emp_code}: parse failed for '{pt_str}'")
+                                logger.warning("sync_parse_failed", emp_code=emp_code, pt_str=str(pt_str))
                                 continue
 
                             if max_punch_time is None or punch_time > max_punch_time:
@@ -889,7 +889,7 @@ class EsslConnectorService:
                                 logger.debug("punch_log_flush_skipped", error=str(flush_err))
                                 skipped += 1
                     except Exception as e:
-                        print(f"[SYNC] {emp_code}: EXCEPTION: {e}")
+                        logger.error("sync_emp_exception", emp_code=emp_code, error=str(e))
                         self._log_error(history, "punch_log", emp_code, str(e))
                         failed += 1
 

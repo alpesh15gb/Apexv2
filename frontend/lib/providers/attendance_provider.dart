@@ -15,6 +15,7 @@ class AttendanceListState {
   final String? toDate;
   final String? status;
   final bool? isLate;
+  final String? search;
 
   AttendanceListState({
     required this.records,
@@ -27,6 +28,7 @@ class AttendanceListState {
     this.toDate,
     this.status,
     this.isLate,
+    this.search,
   });
 
   AttendanceListState copyWith({
@@ -40,6 +42,7 @@ class AttendanceListState {
     String? toDate,
     String? status,
     bool? isLate,
+    String? search,
   }) {
     return AttendanceListState(
       records: records ?? this.records,
@@ -52,6 +55,7 @@ class AttendanceListState {
       toDate: toDate ?? this.toDate,
       status: status ?? this.status,
       isLate: isLate ?? this.isLate,
+      search: search ?? this.search,
     );
   }
 }
@@ -87,6 +91,7 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
         toDate: state.toDate,
         status: state.status,
         isLate: state.isLate,
+        search: state.search,
       );
 
       final items = (data['items'] as List)
@@ -112,6 +117,7 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
     String? toDate,
     String? status,
     bool? isLate,
+    String? search,
   }) {
     state = state.copyWith(
       employeeId: employeeId,
@@ -121,6 +127,7 @@ class AttendanceListNotifier extends StateNotifier<AttendanceListState> {
       toDate: toDate,
       status: status,
       isLate: isLate,
+      search: search,
     );
     fetchRecords(isRefresh: true);
   }

@@ -2,12 +2,14 @@
 
 import uuid
 from datetime import date, timedelta, datetime, timezone
+from zoneinfo import ZoneInfo
 from typing import List, Optional, Dict, Any
 
 import structlog
 from sqlalchemy import select, func, and_, case, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.tenant import Tenant
 from app.models.employee import Employee, Department
 from app.models.device import Device
 from app.models.attendance import Attendance
@@ -26,10 +28,20 @@ class DashboardService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def _get_local_date(self, tenant_id: uuid.UUID) -> date:
+        tenant_stmt = select(Tenant.timezone).where(Tenant.id == tenant_id)
+        tenant_tz_res = await self.db.execute(tenant_stmt)
+        tz_name = tenant_tz_res.scalar() or "Asia/Kolkata"
+        try:
+            local_tz = ZoneInfo(tz_name)
+        except Exception:
+            local_tz = ZoneInfo("Asia/Kolkata")
+        return datetime.now(local_tz).date()
+
     async def get_stats(self, tenant_id: uuid.UUID, target_date: Optional[date] = None) -> dict:
         """Get dashboard statistics for a tenant."""
         if target_date is None:
-            target_date = date.today()
+            target_date = await self._get_local_date(tenant_id)
 
         total_emp = (await self.db.execute(
             select(func.count(Employee.id)).where(
@@ -93,7 +105,7 @@ class DashboardService:
 
     async def get_attendance_heatmap(self, tenant_id: uuid.UUID, days: int = 30) -> List[dict]:
         """Get attendance heatmap data for the last N days."""
-        end_date = date.today()
+        end_date = await self._get_local_date(tenant_id)
         start_date = end_date - timedelta(days=days)
 
         stmt = (
@@ -167,7 +179,7 @@ class DashboardService:
 
     async def get_birthdays(self, tenant_id: uuid.UUID) -> List[dict]:
         """Get employees with birthdays this month."""
-        today = date.today()
+        today = await self._get_local_date(tenant_id)
         stmt = (
             select(
                 Employee.id,
@@ -201,7 +213,7 @@ class DashboardService:
 
     async def get_work_anniversaries(self, tenant_id: uuid.UUID) -> List[dict]:
         """Get employees with work anniversaries this month."""
-        today = date.today()
+        today = await self._get_local_date(tenant_id)
         stmt = (
             select(
                 Employee.id,
@@ -235,7 +247,7 @@ class DashboardService:
     async def get_attendance_distribution(self, tenant_id: uuid.UUID, target_date: Optional[date] = None) -> dict:
         """Get attendance status distribution for a date."""
         if target_date is None:
-            target_date = date.today()
+            target_date = await self._get_local_date(tenant_id)
 
         stmt = (
             select(
@@ -275,7 +287,7 @@ class DashboardService:
 
     async def get_monthly_trend(self, tenant_id: uuid.UUID, months: int = 6) -> List[dict]:
         """Get monthly attendance trend."""
-        end_date = date.today()
+        end_date = await self._get_local_date(tenant_id)
         start_date = date(end_date.year, end_date.month, 1) - timedelta(days=months * 31)
 
         stmt = (
@@ -361,7 +373,7 @@ class DashboardService:
         self, tenant_id: uuid.UUID, days: int = 30
     ) -> List[dict]:
         """Get attendance trend data for the chart."""
-        end_date = date.today()
+        end_date = await self._get_local_date(tenant_id)
         start_date = end_date - timedelta(days=days)
 
         stmt = (

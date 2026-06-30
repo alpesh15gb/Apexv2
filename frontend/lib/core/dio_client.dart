@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'constants.dart';
@@ -116,18 +116,20 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  // Add Pretty Logger in debug mode
-  dio.interceptors.add(
-    PrettyDioLogger(
-      requestHeader: true,
-      requestBody: true,
-      responseBody: true,
-      responseHeader: false,
-      error: true,
-      compact: true,
-      maxWidth: 90,
-    ),
-  );
+  // Add Pretty Logger only in debug mode
+  if (kDebugMode) {
+    dio.interceptors.add(
+      PrettyDioLogger(
+        requestHeader: false,
+        requestBody: false,
+        responseBody: false,
+        responseHeader: false,
+        error: true,
+        compact: true,
+        maxWidth: 90,
+      ),
+    );
+  }
 
   return dio;
 });

@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, get_current_active_user, require_permissions, require_feature
 from app.models.user import User
 from app.models.employee import Employee
-from app.models.attendance import Attendance, PunchLog
+from app.models.attendance import Attendance, PunchLog, PunchSource
 from app.models.leave import LeaveRequest, LeaveBalance, LeaveType
 from app.models.payroll import PaySlip
 from app.models.document import Document
@@ -52,6 +53,14 @@ async def get_current_employee(db: AsyncSession, user: User) -> Employee:
     return employee
 
 
+def _get_today(current_user: User) -> date:
+    tz_name = (current_user.tenant.timezone if current_user.tenant else None) or "Asia/Kolkata"
+    try:
+        local_tz = ZoneInfo(tz_name)
+    except Exception:
+        local_tz = ZoneInfo("Asia/Kolkata")
+    return datetime.now(local_tz).date()
+
 @router.get("/dashboard")
 async def ess_dashboard(
     db: AsyncSession = Depends(get_db),
@@ -59,7 +68,7 @@ async def ess_dashboard(
 ):
     """Employee self-service dashboard summary."""
     employee = await get_current_employee(db, current_user)
-    today = date.today()
+    today = _get_today(current_user)
 
     today_attendance = (await db.execute(
         select(Attendance).where(
@@ -129,9 +138,9 @@ async def my_attendance(
     """Get my attendance records."""
     employee = await get_current_employee(db, current_user)
     if not from_date:
-        from_date = date.today().replace(day=1)
+        from_date = _get_today(current_user).replace(day=1)
     if not to_date:
-        to_date = date.today()
+        to_date = _get_today(current_user)
 
     stmt = (
         select(Attendance)
@@ -168,7 +177,7 @@ async def clock_in(
 ):
     """Clock in for today."""
     employee = await get_current_employee(db, current_user)
-    today = date.today()
+    today = _get_today(current_user)
 
     existing = (await db.execute(
         select(Attendance).where(
@@ -181,14 +190,25 @@ async def clock_in(
     if existing:
         raise HTTPException(status_code=400, detail="Already clocked in today")
 
+    now_utc = datetime.now(timezone.utc)
     attendance = Attendance(
         tenant_id=current_user.tenant_id,
         employee_id=employee.id,
         date=today,
-        punch_in=datetime.now(timezone.utc),
+        punch_in=now_utc,
         status="present",
     )
     db.add(attendance)
+    
+    # Create corresponding PunchLog record
+    punch_log = PunchLog(
+        tenant_id=current_user.tenant_id,
+        employee_id=employee.id,
+        punch_time=now_utc,
+        punch_type="in",
+        source="web",
+    )
+    db.add(punch_log)
     await db.commit()
     return {"message": "Clocked in successfully", "time": attendance.punch_in.isoformat()}
 
@@ -200,7 +220,7 @@ async def clock_out(
 ):
     """Clock out for today."""
     employee = await get_current_employee(db, current_user)
-    today = date.today()
+    today = _get_today(current_user)
 
     attendance = (await db.execute(
         select(Attendance).where(
@@ -215,10 +235,21 @@ async def clock_out(
     if attendance.punch_out:
         raise HTTPException(status_code=400, detail="Already clocked out")
 
-    attendance.punch_out = datetime.now(timezone.utc)
+    now_utc = datetime.now(timezone.utc)
+    attendance.punch_out = now_utc
     if attendance.punch_in:
         delta = attendance.punch_out - attendance.punch_in
         attendance.total_hours = round(delta.total_seconds() / 3600, 2)
+    
+    # Create corresponding PunchLog record
+    punch_log = PunchLog(
+        tenant_id=current_user.tenant_id,
+        employee_id=employee.id,
+        punch_time=now_utc,
+        punch_type="out",
+        source="web",
+    )
+    db.add(punch_log)
     await db.commit()
     return {"message": "Clocked out successfully", "time": attendance.punch_out.isoformat()}
 

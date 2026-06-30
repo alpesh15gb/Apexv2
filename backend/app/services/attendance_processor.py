@@ -14,8 +14,8 @@ import structlog
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.attendance import Attendance, AttendanceRawLog, AttendanceStatus
-from app.models.employee import Employee
+from app.models.attendance import Attendance, AttendanceRawLog, AttendanceStatus, PunchLog, PunchSource
+from app.models.employee import Employee, EmployeeStatus
 from app.models.shift import Shift, ShiftSchedule
 
 logger = structlog.get_logger(__name__)
@@ -70,14 +70,18 @@ class AttendanceProcessor:
         Resets processed=False for matching raw logs, then runs the processor.
         Supports filtering by date range, employee, or department.
         """
-        # Build filter for raw logs to reset
-        conditions = [AttendanceRawLog.tenant_id == tenant_id]
+        # Resolve tenant timezone to compute local day boundaries in UTC
+        tenant_stmt = select(Tenant.timezone).where(Tenant.id == tenant_id)
+        tenant_tz_res = await self.db.execute(tenant_stmt)
+        tz_name = tenant_tz_res.scalar() or "Asia/Kolkata"
+        local_tz = ZoneInfo(tz_name)
 
         if from_date:
-            conditions.append(AttendanceRawLog.punch_time >= datetime.combine(from_date, datetime.min.time()).replace(tzinfo=timezone.utc))
+            start_local = datetime.combine(from_date, datetime.min.time()).replace(tzinfo=local_tz)
+            conditions.append(AttendanceRawLog.punch_time >= start_local.astimezone(timezone.utc))
         if to_date:
-            conditions.append(AttendanceRawLog.punch_time <= datetime.combine(to_date, datetime.max.time()).replace(tzinfo=timezone.utc))
-
+            end_local = datetime.combine(to_date, datetime.max.time()).replace(tzinfo=local_tz)
+            conditions.append(AttendanceRawLog.punch_time <= end_local.astimezone(timezone.utc))
         employee_ids = None
         if employee_id:
             employee_ids = [employee_id]
@@ -129,12 +133,60 @@ class AttendanceProcessor:
         from sqlalchemy import delete as sql_delete
         del_stmt = sql_delete(Attendance).where(and_(*delete_conditions))
         await self.db.execute(del_stmt)
+
+        # Delete corresponding PunchLog records for the date range + employees where source = "biometric"
+        delete_punch_conditions = [
+            PunchLog.tenant_id == tenant_id,
+            PunchLog.source == PunchSource.BIOMETRIC.value
+        ]
+        if from_date:
+            start_local = datetime.combine(from_date, datetime.min.time()).replace(tzinfo=local_tz)
+            delete_punch_conditions.append(PunchLog.punch_time >= start_local.astimezone(timezone.utc))
+        if to_date:
+            end_local = datetime.combine(to_date, datetime.max.time()).replace(tzinfo=local_tz)
+            delete_punch_conditions.append(PunchLog.punch_time <= end_local.astimezone(timezone.utc))
+        if employee_ids:
+            delete_punch_conditions.append(PunchLog.employee_id.in_(employee_ids))
+        
+        del_punch_stmt = sql_delete(PunchLog).where(and_(*delete_punch_conditions))
+        await self.db.execute(del_punch_stmt)
         await self.db.flush()
 
         # Now process the reset logs
         result = await self._process_logs(tenant_id, raw_logs)
         result["reset"] = reset_count
-        return result
+
+        # Backfill missing attendance records for the date range to prevent gaps (absent, holidays, week off)
+        if from_date and to_date:
+            from app.services.attendance import AttendanceService
+            att_service = AttendanceService(self.db)
+            
+            # Get active employees
+            emp_stmt = select(Employee).where(
+                Employee.tenant_id == tenant_id,
+                Employee.status == EmployeeStatus.ACTIVE.value
+            )
+            if employee_ids:
+                emp_stmt = emp_stmt.where(Employee.id.in_(employee_ids))
+            emp_res = await self.db.execute(emp_stmt)
+            active_employees = list(emp_res.scalars().all())
+            
+            from datetime import timedelta
+            current_date = from_date
+            while current_date <= to_date:
+                for emp in active_employees:
+                    # Check if attendance record exists
+                    exists_stmt = select(Attendance).where(
+                        Attendance.employee_id == emp.id,
+                        Attendance.tenant_id == tenant_id,
+                        Attendance.date == current_date
+                    )
+                    exists_res = await self.db.execute(exists_stmt)
+                    if not exists_res.scalar_one_or_none():
+                        await att_service.calculate_attendance(tenant_id, emp.id, current_date)
+                current_date += timedelta(days=1)
+            
+            await self.db.commit()
 
     async def _process_logs(self, tenant_id: uuid.UUID, raw_logs: List[AttendanceRawLog]) -> Dict:
         """Core processing logic shared by process_raw_logs and reprocess."""
@@ -180,14 +232,15 @@ class AttendanceProcessor:
                     errors += 1
                     continue
 
-                # Process each date in the punches
+                # Process each date in the punches (convert UTC to tenant local date)
+                local_tz = ZoneInfo(tz_name)
                 dates = set()
                 for p in punches:
                     if p.punch_time:
-                        dates.add(p.punch_time.date())
+                        dates.add(p.punch_time.astimezone(local_tz).date())
 
                 for punch_date in dates:
-                    day_punches = [p for p in punches if p.punch_time and p.punch_time.date() == punch_date]
+                    day_punches = [p for p in punches if p.punch_time and p.punch_time.astimezone(local_tz).date() == punch_date]
                     day_punches.sort(key=lambda p: p.punch_time)
 
                     result = await self._calculate_and_upsert(
@@ -202,6 +255,26 @@ class AttendanceProcessor:
                     else:
                         errors += 1
 
+                    # Sync biometric punches to PunchLog table so list_punch_logs and calculate_daily_attendance work
+                    for dp in day_punches:
+                        # Check if a PunchLog with same employee, time, and type exists
+                        exists_stmt = select(PunchLog).where(
+                            PunchLog.employee_id == employee.id,
+                            PunchLog.punch_time == dp.punch_time,
+                            PunchLog.punch_type == (dp.punch_type or "in")
+                        )
+                        exists_res = await self.db.execute(exists_stmt)
+                        if not exists_res.scalar_one_or_none():
+                            punch_log = PunchLog(
+                                tenant_id=tenant_id,
+                                employee_id=employee.id,
+                                device_id=dp.device_id,
+                                punch_time=dp.punch_time,
+                                punch_type=dp.punch_type or "in",
+                                source=PunchSource.BIOMETRIC.value,
+                                raw_data=str(dp.raw_data) if dp.raw_data else f"Biometric punch from raw log {dp.id}"
+                            )
+                            self.db.add(punch_log)
                     # Mark raw logs as processed
                     for p in day_punches:
                         p.processed = True

@@ -28,7 +28,14 @@ async def daily_summary(
         from sqlalchemy import func, select
         from app.models.attendance import Attendance
         latest = await db.execute(select(func.max(Attendance.date)).where(Attendance.tenant_id == current_user.tenant_id))
-        date = latest.scalar() or date_type.today()
+        tz_name = (current_user.tenant.timezone if current_user.tenant else None) or "Asia/Kolkata"
+        from zoneinfo import ZoneInfo
+        from datetime import datetime
+        try:
+            local_tz = ZoneInfo(tz_name)
+        except Exception:
+            local_tz = ZoneInfo("Asia/Kolkata")
+        date = latest.scalar() or datetime.now(local_tz).date()
     return await service.get_daily_summary(current_user.tenant_id, date)
 
 

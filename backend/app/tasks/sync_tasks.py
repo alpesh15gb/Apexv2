@@ -2,6 +2,9 @@
 
 import asyncio
 from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,7 +44,7 @@ def sync_all_tenants_attendance():
                     connector = EsslConnectorService(db, server)
                     await connector.sync_attendance(triggered_by="auto")
                 except Exception as e:
-                    print(f"Attendance sync failed for server {server.id}: {e}")
+                    logger.error("attendance_sync_failed", server_id=str(server.id), error=str(e))
 
     _run_async(_do())
 
@@ -68,7 +71,7 @@ def sync_all_tenants_devices():
                     connector = EsslConnectorService(db, server)
                     await connector.sync_devices(triggered_by="auto")
                 except Exception as e:
-                    print(f"Device sync failed for server {server.id}: {e}")
+                    logger.error("device_sync_failed", server_id=str(server.id), error=str(e))
 
     _run_async(_do())
 
@@ -95,7 +98,7 @@ def sync_all_tenants_employees():
                     connector = EsslConnectorService(db, server)
                     await connector.sync_employees(triggered_by="auto")
                 except Exception as e:
-                    print(f"Employee sync failed for server {server.id}: {e}")
+                    logger.error("employee_sync_failed", server_id=str(server.id), error=str(e))
 
     _run_async(_do())
 
@@ -121,6 +124,6 @@ def process_all_unprocessed_attendance():
                     processor = AttendanceProcessor(db)
                     await processor.process_raw_logs(tenant_id)
                 except Exception as e:
-                    print(f"Attendance processing failed for tenant {tenant_id}: {e}")
+                    logger.error("attendance_processing_failed", tenant_id=str(tenant_id), error=str(e))
 
     _run_async(_do())

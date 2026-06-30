@@ -41,6 +41,13 @@ async def system_metrics(
 ):
     """System metrics for monitoring."""
     tid = current_user.tenant_id
+    tz_name = (current_user.tenant.timezone if current_user.tenant else None) or "Asia/Kolkata"
+    from zoneinfo import ZoneInfo
+    try:
+        local_tz = ZoneInfo(tz_name)
+    except Exception:
+        local_tz = ZoneInfo("Asia/Kolkata")
+    local_today = __import__('datetime').datetime.now(local_tz).date()
 
     total_employees = (await db.execute(
         select(func.count(Employee.id)).where(Employee.tenant_id == tid)
@@ -53,7 +60,7 @@ async def system_metrics(
     today_attendance = (await db.execute(
         select(func.count(Attendance.id)).where(
             Attendance.tenant_id == tid,
-            Attendance.date == __import__('datetime').date.today(),
+            Attendance.date == local_today,
         )
     )).scalar() or 0
 

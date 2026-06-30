@@ -15,6 +15,7 @@ class ApexCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -22,9 +23,9 @@ class ApexCard extends StatelessWidget {
         width: double.infinity,
         padding: padding ?? EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: ApexColors.neutral0,
+          color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ApexColors.neutral200),
+          border: Border.all(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
           boxShadow: [
             BoxShadow(
               color: ApexColors.neutral900.withValues(alpha: 0.04),

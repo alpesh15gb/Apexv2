@@ -28,21 +28,42 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen> {
   final Set<String> _selected = {};
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateFilters();
+    });
+  }
+
+  void _updateFilters() {
+    final dateStr = _selectedDate.toIso8601String().substring(0, 10);
+    ref.read(attendanceListProvider.notifier).setFilters(
+      fromDate: dateStr,
+      toDate: dateStr,
+      departmentId: _deptFilter,
+      status: _statusFilter,
+      search: _search,
+    );
+  }
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final listState = ref.watch(attendanceListProvider);
     final deptsAsync = ref.watch(departmentsProvider);
     final dateStr = _selectedDate.toIso8601String().substring(0, 10);
     final summaryAsync = ref.watch(dailySummaryProvider(dateStr));
-    final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      backgroundColor: ApexColors.neutral50,
+      backgroundColor: isDark ? ApexColors.darkBackground : ApexColors.neutral50,
       body: ApexPageWrapper(
         title: 'Attendance Register',
         description: 'Detailed attendance grid, filters, and status override actions.',
         showSearch: true,
         searchHint: 'Search employee...',
-        onSearch: (v) => setState(() => _search = v),
+        onSearch: (v) => setState(() {
+          _search = v;
+          _updateFilters();
+        }),
         onRefresh: () => ref.read(attendanceListProvider.notifier).fetchRecords(isRefresh: true),
         actions: [
           ApexButton(
@@ -60,19 +81,35 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen> {
         ],
         filterBar: _Toolbar(
           search: _search,
-          onSearch: (v) => setState(() => _search = v),
+          onSearch: (v) => setState(() {
+            _search = v;
+            _updateFilters();
+          }),
           selectedDate: _selectedDate,
-          onDateChanged: (v) => setState(() => _selectedDate = v),
+          onDateChanged: (v) => setState(() {
+            _selectedDate = v;
+            _updateFilters();
+          }),
           deptFilter: _deptFilter,
           shiftFilter: _shiftFilter,
           statusFilter: _statusFilter,
-          onDeptChanged: (v) => setState(() => _deptFilter = v),
-          onShiftChanged: (v) => setState(() => _shiftFilter = v),
-          onStatusChanged: (v) => setState(() => _statusFilter = v),
+          onDeptChanged: (v) => setState(() {
+            _deptFilter = v;
+            _updateFilters();
+          }),
+          onShiftChanged: (v) => setState(() {
+            _shiftFilter = v;
+            _updateFilters();
+          }),
+          onStatusChanged: (v) => setState(() {
+            _statusFilter = v;
+            _updateFilters();
+          }),
           onClear: () => setState(() {
             _deptFilter = null;
             _shiftFilter = null;
             _statusFilter = null;
+            _updateFilters();
           }),
           deptsAsync: deptsAsync,
         ),
@@ -93,7 +130,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.calendar_today_outlined, size: 48, color: ApexColors.neutral400),
+                          Icon(Icons.calendar_today_outlined, size: 48, color: isDark ? ApexColors.darkOnSurfaceVariant : ApexColors.neutral400),
                           const SizedBox(height: 16),
                           Text('No Attendance Records', style: ApexTypography.cardTitle),
                           const SizedBox(height: 8),
@@ -177,9 +214,10 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      color: ApexColors.neutral0,
+      color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -260,6 +298,7 @@ class _DatePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: () async {
         final picked = await showDatePicker(
@@ -274,15 +313,15 @@ class _DatePicker extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: ApexColors.neutral200),
+          border: Border.all(color: isDark ? ApexColors.neutral600 : ApexColors.neutral200),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_month, size: 16, color: ApexColors.neutral500),
+            Icon(Icons.calendar_month, size: 16, color: isDark ? ApexColors.darkOnSurfaceVariant : ApexColors.neutral500),
             const SizedBox(width: 8),
-            Text(DateFormat('dd MMM yyyy').format(date), style: ApexTypography.captionMedium.copyWith(color: ApexColors.neutral700)),
+            Text(DateFormat('dd MMM yyyy').format(date), style: ApexTypography.captionMedium.copyWith(color: isDark ? ApexColors.darkOnSurface : ApexColors.neutral700)),
           ],
         ),
       ),
@@ -300,11 +339,11 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FilterChip(
-      label: Text(value ?? label, style: ApexTypography.captionMedium.copyWith(color: value != null ? ApexColors.primary : ApexColors.neutral700)),
+      label: Text(value ?? label, style: ApexTypography.captionMedium.copyWith(color: value != null ? ApexColors.primary : null)),
       selected: value != null,
       onSelected: (_) => onTap(),
       selectedColor: ApexColors.primary.withOpacity(0.1),
-      side: BorderSide(color: value != null ? ApexColors.primary : ApexColors.neutral200),
+      side: BorderSide(color: value != null ? ApexColors.primary : ApexColors.neutral300),
     );
   }
 }
@@ -315,10 +354,31 @@ class _SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
     final present = summary.present;
     final absent = summary.absent;
     final late = summary.late;
     final leave = summary.onLeave;
+
+    if (isMobile) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 2.2,
+          children: [
+            _SummaryCard(label: 'Present', value: '$present', color: ApexColors.success),
+            _SummaryCard(label: 'Absent', value: '$absent', color: ApexColors.error),
+            _SummaryCard(label: 'Late', value: '$late', color: ApexColors.warning),
+            _SummaryCard(label: 'On Leave', value: '$leave', color: ApexColors.primary),
+          ],
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -346,12 +406,13 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ApexColors.neutral0,
+        color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ApexColors.neutral200),
+        border: Border.all(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
       ),
       child: Row(
         children: [
@@ -361,12 +422,14 @@ class _SummaryCard extends StatelessWidget {
             decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: ApexTypography.cardTitle.copyWith(fontWeight: FontWeight.w700, color: color)),
-              Text(label, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: ApexTypography.cardTitle.copyWith(fontWeight: FontWeight.w700, color: color), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(label, style: ApexTypography.captionSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ],
       ),
@@ -411,13 +474,21 @@ class _AttendanceTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? ApexColors.neutral700 : ApexColors.neutral200;
+    final headerColor = isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral50;
+    final rowEvenColor = isDark ? ApexColors.darkSurface : ApexColors.neutral0;
+    final rowOddColor = isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral50;
+    final cellTextColor = isDark ? ApexColors.darkOnSurface : ApexColors.neutral800;
+
     return Container(
-      decoration: BoxDecoration(color: ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: ApexColors.neutral200)),
+      decoration: BoxDecoration(color: isDark ? ApexColors.darkSurface : ApexColors.neutral0, borderRadius: BorderRadius.circular(8), border: Border.all(color: borderColor)),
       child: Column(
         children: [
+          // Sticky header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            color: ApexColors.neutral50,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: headerColor,
             child: Row(
               children: [
                 SizedBox(
@@ -427,89 +498,100 @@ class _AttendanceTable extends StatelessWidget {
                     onChanged: (v) => onSelectAll(v ?? false),
                   ),
                 ),
-                Expanded(flex: 3, child: Text('EMPLOYEE', style: ApexTypography.tableHeader)),
-                Expanded(flex: 2, child: Text('CHECK IN', style: ApexTypography.tableHeader)),
-                Expanded(flex: 2, child: Text('CHECK OUT', style: ApexTypography.tableHeader)),
-                Expanded(flex: 2, child: Text('WORK HOURS', style: ApexTypography.tableHeader)),
-                SizedBox(width: 100, child: Text('STATUS', style: ApexTypography.tableHeader)),
+                Expanded(flex: 3, child: Text('EMPLOYEE', style: ApexTypography.tableHeader, overflow: TextOverflow.ellipsis)),
+                Expanded(flex: 2, child: Text('CHECK IN', style: ApexTypography.tableHeader, overflow: TextOverflow.ellipsis)),
+                Expanded(flex: 2, child: Text('CHECK OUT', style: ApexTypography.tableHeader, overflow: TextOverflow.ellipsis)),
+                Expanded(flex: 2, child: Text('WORK HOURS', style: ApexTypography.tableHeader, overflow: TextOverflow.ellipsis)),
+                SizedBox(width: 100, child: Text('STATUS', style: ApexTypography.tableHeader, overflow: TextOverflow.ellipsis)),
                 const SizedBox(width: 40),
               ],
             ),
           ),
-          ...records.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final r = entry.value;
-            final status = r.status ?? 'absent';
-            final employeeName = r.employeeName ?? '—';
-            final employeeCode = r.employeeCode ?? '—';
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              decoration: BoxDecoration(
-                color: idx.isEven ? ApexColors.neutral0 : ApexColors.neutral50,
-                border: Border(bottom: BorderSide(color: ApexColors.neutral200)),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 40,
-                    child: Checkbox(
-                      value: selected.contains(r.id),
-                      onChanged: (v) => onSelect(r.id, v ?? false),
-                    ),
+          // Scrollable body
+          Expanded(
+            child: ListView.builder(
+              itemCount: records.length,
+              itemBuilder: (context, idx) {
+                final r = records[idx];
+                final status = r.status ?? 'absent';
+                final employeeName = r.employeeName ?? '—';
+                final employeeCode = r.employeeCode ?? '—';
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: idx.isEven ? rowEvenColor : rowOddColor,
+                    border: Border(bottom: BorderSide(color: borderColor)),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(employeeName, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600, color: ApexColors.neutral900)),
-                        Text(employeeCode, style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
-                      ],
-                    ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        child: Checkbox(
+                          value: selected.contains(r.id),
+                          onChanged: (v) => onSelect(r.id, v ?? false),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(employeeName, style: ApexTypography.body.copyWith(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            Text(employeeCode, style: ApexTypography.captionSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          r.punchIn != null ? DateFormat('hh:mm a').format(r.punchIn!.toLocal()) : '—',
+                          style: ApexTypography.body.copyWith(color: cellTextColor),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          r.punchOut != null ? DateFormat('hh:mm a').format(r.punchOut!.toLocal()) : '—',
+                          style: ApexTypography.body.copyWith(color: cellTextColor),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          r.totalHours != null ? '${r.totalHours!.toStringAsFixed(1)} hrs' : '—',
+                          style: ApexTypography.body.copyWith(color: cellTextColor),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: _StatusBadge(status: status),
+                      ),
+                      SizedBox(
+                        width: 40,
+                        child: PopupMenuButton<String>(
+                          icon: Icon(Icons.more_vert, size: 16, color: isDark ? ApexColors.darkOnSurfaceVariant : ApexColors.neutral500),
+                          itemBuilder: (ctx) => [
+                            const PopupMenuItem(value: 'detail', child: Text('Detail View')),
+                            const PopupMenuItem(value: 'override', child: Text('Manual Override')),
+                          ],
+                          onSelected: (v) {
+                            if (v == 'detail') onTap(r);
+                            if (v == 'override') context.push('/attendance/mark');
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      r.punchIn != null ? DateFormat('hh:mm a').format(r.punchIn!.toLocal()) : '—',
-                      style: ApexTypography.body.copyWith(color: ApexColors.neutral800),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      r.punchOut != null ? DateFormat('hh:mm a').format(r.punchOut!.toLocal()) : '—',
-                      style: ApexTypography.body.copyWith(color: ApexColors.neutral800),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      r.totalHours != null ? '${r.totalHours!.toStringAsFixed(1)} hrs' : '—',
-                      style: ApexTypography.body.copyWith(color: ApexColors.neutral800),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 100,
-                    child: _StatusBadge(status: status),
-                  ),
-                  SizedBox(
-                    width: 40,
-                    child: PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, size: 16),
-                      itemBuilder: (ctx) => [
-                        const PopupMenuItem(value: 'detail', child: Text('Detail View')),
-                        const PopupMenuItem(value: 'override', child: Text('Manual Override')),
-                      ],
-                      onSelected: (v) {
-                        if (v == 'detail') onTap(r);
-                        if (v == 'override') context.push('/attendance/mark');
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

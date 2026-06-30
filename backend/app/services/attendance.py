@@ -12,6 +12,7 @@ from app.models.attendance import Attendance, PunchLog, AttendanceStatus, PunchT
 from app.models.employee import Employee, EmployeeStatus
 from app.models.shift import Shift, ShiftSchedule
 from app.models.leave import LeaveRequest
+from app.models.holiday import Holiday
 from app.models.tenant import Tenant
 from app.schemas.attendance import AttendanceSummary, DailyAttendanceSummary
 
@@ -113,6 +114,9 @@ class AttendanceService:
         att_res = await self.db.execute(att_stmt)
         attendance = att_res.scalar_one_or_none()
 
+        if attendance and (attendance.is_manual or attendance.approved_by is not None):
+            return attendance
+
         if not attendance:
             attendance = Attendance(
                 tenant_id=tenant_id,
@@ -123,26 +127,39 @@ class AttendanceService:
 
         # 5. Populate attendance based on punches
         if not punches:
-            # Check if they are on leave
-            leave_stmt = select(LeaveRequest).where(
-                LeaveRequest.employee_id == employee_id,
-                LeaveRequest.tenant_id == tenant_id,
-                LeaveRequest.status == "approved",
-                LeaveRequest.start_date <= attendance_date,
-                LeaveRequest.end_date >= attendance_date
+            # Check if it's a holiday first
+            holiday_stmt = select(Holiday).where(
+                Holiday.tenant_id == tenant_id,
+                Holiday.date == attendance_date,
+                Holiday.is_active == True,
             )
-            leave_res = await self.db.execute(leave_stmt)
-            leave_req = leave_res.scalar_one_or_none()
+            holiday_res = await self.db.execute(holiday_stmt)
+            holiday = holiday_res.scalar_one_or_none()
 
-            if leave_req:
-                attendance.status = AttendanceStatus.ABSENT.value  # or on leave, but status has ABSENT / HOLIDAY / WEEK_OFF
-                attendance.remarks = f"On Leave (Request: {leave_req.id})"
+            if holiday:
+                attendance.status = AttendanceStatus.HOLIDAY.value
+                attendance.remarks = f"Holiday: {holiday.name}"
             else:
-                # If weekend and no punches, check if it's week off
-                if weekday in [5, 6] and not shift:  # Sat, Sun default week off
-                    attendance.status = AttendanceStatus.WEEK_OFF.value
-                else:
+                # Check if they are on leave
+                leave_stmt = select(LeaveRequest).where(
+                    LeaveRequest.employee_id == employee_id,
+                    LeaveRequest.tenant_id == tenant_id,
+                    LeaveRequest.status == "approved",
+                    LeaveRequest.start_date <= attendance_date,
+                    LeaveRequest.end_date >= attendance_date
+                )
+                leave_res = await self.db.execute(leave_stmt)
+                leave_req = leave_res.scalar_one_or_none()
+
+                if leave_req:
                     attendance.status = AttendanceStatus.ABSENT.value
+                    attendance.remarks = f"On Leave (Request: {leave_req.id})"
+                else:
+                    # If weekend and no punches, check if it's week off
+                    if weekday in [5, 6] and not shift:  # Sat, Sun default week off
+                        attendance.status = AttendanceStatus.WEEK_OFF.value
+                    else:
+                        attendance.status = AttendanceStatus.ABSENT.value
             
             attendance.punch_in = None
             attendance.punch_out = None
@@ -197,9 +214,9 @@ class AttendanceService:
                 # Early check (only if punch_out exists)
                 if punch_out_time and punch_out_time < shift_end:
                     early_diff = (shift_end - punch_out_time).total_seconds() / 60.0
-                    # Check if there is early out rule or check
-                    attendance.is_early_out = True
-                    attendance.early_out_minutes = int(early_diff)
+                    if early_diff > (shift.early_rule_minutes or 0):
+                        attendance.is_early_out = True
+                        attendance.early_out_minutes = int(early_diff)
 
                 # OT check
                 if punch_out_time and punch_out_time > shift_end:
@@ -207,17 +224,25 @@ class AttendanceService:
                     if ot_diff > shift.overtime_threshold_minutes:
                         attendance.overtime_hours = ot_diff / 60.0
 
-                # Status assignment
-                if attendance.total_hours > 0.0:
+                # Status assignment (consistent with AttendanceProcessor)
+                if attendance.total_hours >= 8.0:
                     if attendance.is_late:
                         attendance.status = AttendanceStatus.LATE.value
                     elif attendance.is_early_out:
                         attendance.status = AttendanceStatus.EARLY_OUT.value
                     else:
                         attendance.status = AttendanceStatus.PRESENT.value
+                elif attendance.total_hours >= 4.0:
+                    attendance.status = AttendanceStatus.HALF_DAY.value
+                else:
+                    attendance.status = AttendanceStatus.ABSENT.value
             else:
-                if attendance.total_hours > 0.0:
+                if attendance.total_hours >= 8.0:
                     attendance.status = AttendanceStatus.PRESENT.value
+                elif attendance.total_hours >= 4.0:
+                    attendance.status = AttendanceStatus.HALF_DAY.value
+                else:
+                    attendance.status = AttendanceStatus.ABSENT.value
 
         await self.db.commit()
         await self.db.refresh(attendance)

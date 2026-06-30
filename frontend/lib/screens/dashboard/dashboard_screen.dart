@@ -63,7 +63,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final syncAsync = ref.watch(syncHealthProvider);
 
     return Scaffold(
-      backgroundColor: ApexColors.neutral50,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? ApexColors.darkBackground : ApexColors.neutral50,
       body: RefreshIndicator(
         onRefresh: _refreshAll,
         child: SingleChildScrollView(
@@ -72,13 +72,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── RULE 4: Header ──────────────────────────
-              _Header(),
+              const _Header(),
               const SizedBox(height: 16),
 
               // ── RULE 4: KPI Row ─────────────────────────
               statsAsync.when(
                 data: (s) => _KpiRow(stats: s),
-                loading: () => const SizedBox(height: 88, child: Center(child: CircularProgressIndicator())),
+                loading: () => const SizedBox(height: 96, child: Center(child: CircularProgressIndicator())),
                 error: (e, _) => _ErrorCard(msg: e.toString()),
               ),
               const SizedBox(height: 16),
@@ -187,21 +187,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
 // ── RULE 4: Header ─────────────────────────────────────────
 class _Header extends StatelessWidget {
+  const _Header();
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Dashboard', style: ApexTypography.pageTitle.copyWith(color: ApexColors.neutral900)),
-            Text(
-              DateFormat('EEEE, MMMM dd, yyyy').format(DateTime.now()),
-              style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500),
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Dashboard', style: ApexTypography.pageTitle),
+              Text(
+                DateFormat('EEEE, MMMM dd, yyyy').format(DateTime.now()),
+                style: ApexTypography.bodySmall,
+              ),
+            ],
+          ),
         ),
-        const Spacer(),
         if (!Responsive.isMobile(context))
           ElevatedButton.icon(
             onPressed: () => context.push('/attendance/mark'),
@@ -227,15 +230,17 @@ class _KpiRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
     final pct = stats.attendancePercentage;
+    final crossAxisCount = isMobile ? 2 : (isTablet ? 4 : 7);
 
     return GridView.count(
-      crossAxisCount: isMobile ? 2 : 7,
+      crossAxisCount: crossAxisCount,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 8,
       mainAxisSpacing: 8,
-      childAspectRatio: isMobile ? 1.6 : 2.0,
+      childAspectRatio: isMobile ? 1.6 : 1.8,
       children: [
         _KpiCard(label: 'Attendance', value: '${pct.toStringAsFixed(0)}%', color: pct >= 90 ? ApexColors.successDark : ApexColors.warning, onTap: () => context.push('/attendance')),
         _KpiCard(label: 'Present', value: '${stats.employeesPresent}', color: ApexColors.successDark, onTap: () => context.push('/attendance')),
@@ -266,6 +271,7 @@ class _KpiCardState extends State<_KpiCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -276,9 +282,9 @@ class _KpiCardState extends State<_KpiCard> {
           height: 80,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: ApexColors.neutral0,
+            color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _hovered ? widget.color.withOpacity(0.4) : ApexColors.neutral200),
+            border: Border.all(color: _hovered ? widget.color.withOpacity(0.4) : (isDark ? ApexColors.neutral700 : ApexColors.neutral200)),
           ),
           child: Row(
             children: [
@@ -289,8 +295,8 @@ class _KpiCardState extends State<_KpiCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(widget.value, style: ApexTypography.kpiValue.copyWith(color: ApexColors.neutral900)),
-                    Text(widget.label, style: ApexTypography.kpiLabel),
+                    Text(widget.value, style: ApexTypography.kpiValue, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(widget.label, style: ApexTypography.kpiLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
@@ -309,10 +315,14 @@ class _TrendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gridColor = isDark ? ApexColors.neutral700 : ApexColors.neutral200;
+    final labelColor = isDark ? ApexColors.darkOnSurfaceVariant : ApexColors.neutral500;
+
     return _SectionCard(
       title: 'Attendance Trend',
       child: data.isEmpty
-          ? const _EmptyBlock(msg: 'No attendance data yet')
+          ? _EmptyBlock(msg: 'No attendance data yet')
           : SizedBox(
               height: 180,
               child: LineChart(
@@ -321,7 +331,7 @@ class _TrendChart extends StatelessWidget {
                     show: true,
                     drawVerticalLine: false,
                     horizontalInterval: 1,
-                    getDrawingHorizontalLine: (v) => FlLine(color: ApexColors.neutral200, strokeWidth: 0.5),
+                    getDrawingHorizontalLine: (v) => FlLine(color: gridColor, strokeWidth: 0.5),
                   ),
                   titlesData: FlTitlesData(
                     show: true,
@@ -329,7 +339,7 @@ class _TrendChart extends StatelessWidget {
                       final i = v.toInt();
                       if (i >= 0 && i < data.length) return Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(DateFormat('E').format(data[i].date), style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500)),
+                        child: Text(DateFormat('E').format(data[i].date), style: ApexTypography.captionSmall.copyWith(color: labelColor)),
                       );
                       return const SizedBox();
                     })),
@@ -365,10 +375,13 @@ class _DeptDistribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final trackColor = isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral200;
+
     return _SectionCard(
       title: 'Departments',
       child: data.isEmpty
-          ? const _EmptyBlock(msg: 'No departments configured')
+          ? _EmptyBlock(msg: 'No departments configured')
           : Column(
               children: data.take(6).map((d) {
                 final total = data.fold<int>(0, (s, x) => s + x.count);
@@ -381,7 +394,7 @@ class _DeptDistribution extends StatelessWidget {
                       Expanded(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(value: pct, backgroundColor: ApexColors.neutral200, color: ApexColors.primary600, minHeight: 6),
+                          child: LinearProgressIndicator(value: pct, backgroundColor: trackColor, color: ApexColors.primary600, minHeight: 6),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -401,16 +414,19 @@ class _PendingWork extends StatelessWidget {
   const _PendingWork({required this.stats});
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark ? ApexColors.neutral700 : ApexColors.neutral200;
+
     return _SectionCard(
       title: 'Pending Work',
       child: Column(
         children: [
           _PendingItem(icon: Icons.warning_amber, label: 'Missing Punches', count: '${stats.missingPunches} employees', color: ApexColors.warning, onTap: () => context.push('/attendance')),
-          const Divider(height: 1, color: ApexColors.neutral200),
+          Divider(height: 1, color: dividerColor),
           _PendingItem(icon: Icons.access_time, label: 'Late Today', count: '${stats.lateToday} employees', color: ApexColors.warning, onTap: () => context.push('/attendance')),
-          const Divider(height: 1, color: ApexColors.neutral200),
+          Divider(height: 1, color: dividerColor),
           _PendingItem(icon: Icons.event_busy, label: 'Pending Approvals', count: '${stats.pendingLeaves} requests', color: ApexColors.primary600, onTap: () => context.push('/leaves/requests')),
-          const Divider(height: 1, color: ApexColors.neutral200),
+          Divider(height: 1, color: dividerColor),
           _PendingItem(icon: Icons.cloud_off, label: 'Offline Devices', count: '${stats.offlineDevices} devices', color: ApexColors.error, onTap: () => context.push('/devices')),
         ],
       ),
@@ -429,6 +445,7 @@ class _PendingItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
@@ -438,7 +455,7 @@ class _PendingItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(count, style: ApexTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: color)),
-          Icon(Icons.chevron_right, size: 16, color: ApexColors.neutral500),
+          Icon(Icons.chevron_right, size: 16, color: isDark ? ApexColors.darkOnSurfaceVariant : ApexColors.neutral500),
         ],
       ),
       onTap: onTap,
@@ -453,15 +470,18 @@ class _RecentPunchLogs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark ? ApexColors.neutral700 : ApexColors.neutral200;
+
     return _SectionCard(
       title: 'Recent Punch Logs',
       child: data.isEmpty
-          ? const _EmptyBlock(msg: 'No punch logs yet')
+          ? _EmptyBlock(msg: 'No punch logs yet')
           : ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: data.length > 8 ? 8 : data.length,
-              separatorBuilder: (_, __) => const Divider(height: 1, color: ApexColors.neutral200),
+              separatorBuilder: (_, __) => Divider(height: 1, color: dividerColor),
               itemBuilder: (context, i) {
                 final log = data[i];
                 final empName = log['employee_name'] ?? log['employee_code'] ?? 'Unknown';
@@ -476,10 +496,10 @@ class _RecentPunchLogs extends StatelessWidget {
                     backgroundColor: isIn ? ApexColors.successDark.withOpacity(0.1) : ApexColors.error.withOpacity(0.1),
                     child: Icon(Icons.fingerprint, size: 14, color: isIn ? ApexColors.successDark : ApexColors.error),
                   ),
-                  title: Text('$empName', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w500, color: ApexColors.neutral900), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text('$empName', style: ApexTypography.caption.copyWith(fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
                   subtitle: Text(
                     '${punchType.toString().toUpperCase()}  •  ${_formatTime(punchTime)}',
-                    style: ApexTypography.captionSmall.copyWith(color: ApexColors.neutral500),
+                    style: ApexTypography.captionSmall,
                   ),
                 );
               },
@@ -502,19 +522,32 @@ class _RecentPunchLogs extends StatelessWidget {
 class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
     return _SectionCard(
       title: 'Quick Actions',
-      child: Row(
-        children: [
-          Expanded(child: _ActionBtn(icon: Icons.person_add, label: 'Add Employee', onTap: () => context.push('/employees/create'))),
-          const SizedBox(width: 8),
-          Expanded(child: _ActionBtn(icon: Icons.calendar_today, label: 'Mark Attendance', onTap: () => context.push('/attendance/mark'))),
-          const SizedBox(width: 8),
-          Expanded(child: _ActionBtn(icon: Icons.event_busy, label: 'Apply Leave', onTap: () => context.push('/leaves/apply'))),
-          const SizedBox(width: 8),
-          Expanded(child: _ActionBtn(icon: Icons.assessment, label: 'Reports', onTap: () => context.push('/reports'))),
-        ],
-      ),
+      child: isMobile
+          ? Column(
+              children: [
+                _ActionBtn(icon: Icons.person_add, label: 'Add Employee', onTap: () => context.push('/employees/create')),
+                const SizedBox(height: 8),
+                _ActionBtn(icon: Icons.calendar_today, label: 'Mark Attendance', onTap: () => context.push('/attendance/mark')),
+                const SizedBox(height: 8),
+                _ActionBtn(icon: Icons.event_busy, label: 'Apply Leave', onTap: () => context.push('/leaves/apply')),
+                const SizedBox(height: 8),
+                _ActionBtn(icon: Icons.assessment, label: 'Reports', onTap: () => context.push('/reports')),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: _ActionBtn(icon: Icons.person_add, label: 'Add Employee', onTap: () => context.push('/employees/create'))),
+                const SizedBox(width: 8),
+                Expanded(child: _ActionBtn(icon: Icons.calendar_today, label: 'Mark Attendance', onTap: () => context.push('/attendance/mark'))),
+                const SizedBox(width: 8),
+                Expanded(child: _ActionBtn(icon: Icons.event_busy, label: 'Apply Leave', onTap: () => context.push('/leaves/apply'))),
+                const SizedBox(width: 8),
+                Expanded(child: _ActionBtn(icon: Icons.assessment, label: 'Reports', onTap: () => context.push('/reports'))),
+              ],
+            ),
     );
   }
 }
@@ -528,20 +561,21 @@ class _ActionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: ApexColors.neutral200),
+          border: Border.all(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Column(
           children: [
             Icon(icon, size: 20, color: ApexColors.primary600),
             const SizedBox(height: 4),
-            Text(label, style: ApexTypography.captionSmall, textAlign: TextAlign.center),
+            Text(label, style: ApexTypography.captionSmall, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
       ),
@@ -595,12 +629,14 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ApexColors.neutral0,
+        color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ApexColors.neutral200),
+        border: Border.all(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,7 +658,7 @@ class _EmptyBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Center(child: Text(msg, style: ApexTypography.bodySmall.copyWith(color: ApexColors.neutral500))),
+      child: Center(child: Text(msg, style: ApexTypography.bodySmall)),
     );
   }
 }
@@ -633,12 +669,13 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ApexColors.neutral0,
+        color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ApexColors.neutral200),
+        border: Border.all(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
       ),
       child: Row(children: [
         Icon(Icons.error_outline, color: ApexColors.error, size: 18),
@@ -655,15 +692,15 @@ class _LoadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: ApexColors.neutral0,
+        color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ApexColors.neutral200),
+        border: Border.all(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200),
       ),
       child: const Center(child: CircularProgressIndicator()),
     );
   }
 }
-

@@ -40,8 +40,16 @@ async def import_employees(
             text = content.decode('utf-8')
             reader = csv.DictReader(io.StringIO(text))
             rows = list(reader)
+        elif file.filename.endswith(('.xlsx', '.xls')):
+            from openpyxl import load_workbook
+            wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+            ws = wb.active
+            headers = [str(cell.value).strip().lower() if cell.value else '' for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+            rows = []
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                rows.append({headers[i]: str(row[i]).strip() if row[i] is not None else '' for i in range(len(headers))})
         else:
-            raise HTTPException(status_code=400, detail="Excel support requires openpyxl. Use CSV for now.")
+            raise HTTPException(status_code=400, detail="Only CSV and Excel files are supported")
     except Exception as e:
         logger.error("import_parse_failed", error=str(e), filename=file.filename)
         raise HTTPException(status_code=400, detail="Failed to parse file. Ensure it is valid CSV or Excel.")

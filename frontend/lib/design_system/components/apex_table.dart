@@ -123,7 +123,7 @@ class _ApexTableState<T> extends State<ApexTable<T>> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isDark ? ApexColors.darkSurface : ApexColors.neutral50,
-        border: const Border(bottom: BorderSide(color: ApexColors.neutral200)),
+        border: Border(bottom: BorderSide(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200)),
       ),
       child: Row(
         children: [
@@ -217,7 +217,7 @@ class _ApexTableState<T> extends State<ApexTable<T>> {
       height: 44,
       decoration: BoxDecoration(
         color: isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral50,
-        border: const Border(bottom: BorderSide(color: ApexColors.neutral200)),
+        border: Border(bottom: BorderSide(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200)),
       ),
       child: Row(
         children: [
@@ -321,7 +321,7 @@ class _ApexTableState<T> extends State<ApexTable<T>> {
                   : isDark
                       ? ApexColors.darkSurface
                       : ApexColors.neutral0,
-              border: const Border(bottom: BorderSide(color: ApexColors.neutral100)),
+              border: Border(bottom: BorderSide(color: isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral100)),
             ),
             child: Row(
               children: [
@@ -367,7 +367,7 @@ class _ApexTableState<T> extends State<ApexTable<T>> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral50,
-              border: const Border(bottom: BorderSide(color: ApexColors.neutral200)),
+              border: Border(bottom: BorderSide(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200)),
             ),
             child: widget.expandedRowBuilder!(context, item),
           ),
@@ -379,7 +379,7 @@ class _ApexTableState<T> extends State<ApexTable<T>> {
     return Container(
       height: _rowHeight,
       decoration: BoxDecoration(
-        border: const Border(bottom: BorderSide(color: ApexColors.neutral100)),
+        border: Border(bottom: BorderSide(color: isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral100)),
       ),
       child: Row(
         children: [

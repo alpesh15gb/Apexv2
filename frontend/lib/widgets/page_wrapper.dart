@@ -189,8 +189,9 @@ class _PageHeader extends StatelessWidget {
     final route = GoRouterState.of(context).matchedLocation;
     final crumbs = NavigationConfig.breadcrumbsFor(route);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      color: ApexColors.neutral0,
+      color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -313,6 +314,7 @@ class _ToolbarActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -328,21 +330,20 @@ class _ToolbarActions extends StatelessWidget {
                 hintText: searchHint,
                 hintStyle: ApexTypography.body.copyWith(color: ApexColors.neutral400),
                 prefixIcon: const Icon(Icons.search, size: 18, color: ApexColors.neutral400),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 isDense: true,
                 filled: true,
-                fillColor: ApexColors.neutral50,
+                fillColor: isDark ? ApexColors.darkSurface : ApexColors.neutral50,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: ApexColors.neutral200),
+                  borderSide: BorderSide(color: isDark ? ApexColors.neutral600 : ApexColors.neutral200),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: ApexColors.neutral200),
+                  borderSide: BorderSide(color: isDark ? ApexColors.neutral600 : ApexColors.neutral200),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: ApexColors.primary, width: 1.5),
+                  borderSide: BorderSide(color: isDark ? ApexColors.primary400 : ApexColors.primary, width: 1.5),
                 ),
               ),
             ),
@@ -372,6 +373,7 @@ class _IconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Tooltip(
       message: tooltip,
       child: InkWell(
@@ -381,10 +383,10 @@ class _IconBtn extends StatelessWidget {
           height: 36,
           width: 36,
           decoration: BoxDecoration(
-            border: Border.all(color: ApexColors.neutral200),
+            border: Border.all(color: isDark ? ApexColors.neutral600 : ApexColors.neutral200),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(icon, size: 18, color: ApexColors.neutral600),
+          child: Icon(icon, size: 18, color: isDark ? ApexColors.darkOnSurfaceVariant : ApexColors.neutral600),
         ),
       ),
     );
@@ -420,6 +422,7 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -430,7 +433,7 @@ class _ErrorState extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: ApexColors.errorLight,
+                color: isDark ? ApexColors.error.withOpacity(0.15) : ApexColors.errorLight,
                 borderRadius: BorderRadius.circular(28),
               ),
               child: const Icon(Icons.error_outline, color: ApexColors.error, size: 28),
@@ -467,8 +470,8 @@ class _EmptyState extends StatelessWidget {
   final String? subtitle;
   final Widget? action;
 
-  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -479,7 +482,7 @@ class _EmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: ApexColors.neutral100,
+                color: isDark ? ApexColors.darkSurfaceVariant : ApexColors.neutral100,
                 borderRadius: BorderRadius.circular(36),
               ),
               child: Icon(
@@ -532,15 +535,16 @@ class ApexPaginationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final start = total == 0 ? 0 : (page - 1) * pageSize + 1;
     final end = (page * pageSize).clamp(0, total);
 
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: const BoxDecoration(
-        color: ApexColors.neutral0,
-        border: Border(top: BorderSide(color: ApexColors.neutral200)),
+      decoration: BoxDecoration(
+        color: isDark ? ApexColors.darkSurface : ApexColors.neutral0,
+        border: Border(top: BorderSide(color: isDark ? ApexColors.neutral700 : ApexColors.neutral200)),
       ),
       child: Row(
         children: [

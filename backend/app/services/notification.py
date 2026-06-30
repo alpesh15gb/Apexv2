@@ -2,11 +2,14 @@ import uuid
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple, Union
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.notification import Notification, NotificationType, NotificationStatus
 from app.models.user import User
@@ -48,14 +51,47 @@ class NotificationService:
         return notification
 
     async def send_email(self, to: str, subject: str, body: str) -> None:
-        # Log email sending
-        logger.info(f"[EMAIL SENDING] To: {to} | Subject: {subject} | Body: {body}")
-        print(f"[EMAIL SENDING] To: {to} | Subject: {subject} | Body: {body}")
+        settings = get_settings()
+        if not settings.SMTP_HOST or not settings.SMTP_USER:
+            logger.warning("smtp_not_configured, skipping email", to=to, subject=subject)
+            return
+        try:
+            import aiosmtplib
+            msg = MIMEMultipart()
+            msg["From"] = settings.SMTP_FROM_EMAIL or settings.SMTP_USER
+            msg["To"] = to
+            msg["Subject"] = subject
+            msg.attach(MIMEText(body, "html"))
+            await aiosmtplib.send(
+                msg,
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                username=settings.SMTP_USER,
+                password=settings.SMTP_PASSWORD,
+                start_tls=True,
+            )
+            logger.info("email_sent", to=to, subject=subject)
+        except Exception as e:
+            logger.error("email_send_failed", to=to, subject=subject, error=str(e))
+            raise
 
     async def send_sms(self, phone: str, message: str) -> None:
-        # Log SMS sending
-        logger.info(f"[SMS SENDING] To: {phone} | Message: {message}")
-        print(f"[SMS SENDING] To: {phone} | Message: {message}")
+        settings = get_settings()
+        if not settings.SMS_API_URL or not settings.SMS_API_KEY:
+            logger.warning("sms_not_configured, skipping sms", phone=phone)
+            return
+        try:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                await client.post(
+                    settings.SMS_API_URL,
+                    json={"phone": phone, "message": message, "api_key": settings.SMS_API_KEY},
+                    timeout=10,
+                )
+            logger.info("sms_sent", phone=phone)
+        except Exception as e:
+            logger.error("sms_send_failed", phone=phone, error=str(e))
+            raise
 
     async def send_notification(self, notification_id: uuid.UUID) -> Notification:
         stmt = select(Notification).where(Notification.id == notification_id).options(selectinload(Notification.user))

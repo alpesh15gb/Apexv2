@@ -43,6 +43,7 @@ class AttendanceService {
     String? toDate,
     String? status,
     bool? isLate,
+    String? search,
   }) async {
     final queryParams = <String, dynamic>{
       'page': page,
@@ -55,6 +56,7 @@ class AttendanceService {
     if (toDate != null && toDate.isNotEmpty) queryParams['to_date'] = toDate;
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (isLate != null) queryParams['is_late'] = isLate;
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
     final response = await _dio.get(
       '${ApiConstants.attendance}/',

@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.payroll import SalaryStructure, PaySlip, Loan
 from app.models.employee import Employee
 from app.models.attendance import Attendance
+from app.models.leave import LeaveRequest
 from app.schemas.common import ResponseBase
 from app.schemas.payroll import (
     SalaryStructureCreate, SalaryStructureUpdate, SalaryStructureResponse,
@@ -110,19 +111,39 @@ async def generate_payslips(
 
         att_stmt = select(Attendance).where(Attendance.tenant_id == current_user.tenant_id, Attendance.employee_id == emp.id, Attendance.date >= from_date, Attendance.date <= to_date)
         attendances = list((await db.execute(att_stmt)).scalars().all())
-
-        present = sum(1 for a in attendances if a.status in ("present", "late"))
+        present = sum(1 for a in attendances if a.status in ("present", "late", "early_out"))
         absent = sum(1 for a in attendances if a.status == "absent")
         half_days = sum(1 for a in attendances if a.status == "half_day")
-        leave = sum(1 for a in attendances if a.status in ("on_leave",))
+
+        # Query approved leave days overlapping this month
+        leave_stmt = select(LeaveRequest).where(
+            LeaveRequest.tenant_id == current_user.tenant_id,
+            LeaveRequest.employee_id == emp.id,
+            LeaveRequest.status == "approved",
+            LeaveRequest.start_date <= to_date,
+            LeaveRequest.end_date >= from_date,
+        )
+        leave_reqs = (await db.execute(leave_stmt)).scalars().all()
+        leave = 0
+        for lr in leave_reqs:
+            overlap_start = max(lr.start_date, from_date)
+            overlap_end = min(lr.end_date, to_date)
+            if overlap_start <= overlap_end:
+                leave += (overlap_end - overlap_start).days + 1
+
         ot_hours = sum(a.overtime_hours or 0 for a in attendances)
 
         working_days = last_day
-        lop_days = absent + (half_days * 0.5)
+        # Approved leave days are marked ABSENT in attendance but should not be LOP
+        unpaid_absent = max(absent - leave, 0)
+        lop_days = unpaid_absent + (half_days * 0.5)
         per_day = (ss.basic + ss.hra + ss.da + ss.conveyance + ss.medical + ss.special) / working_days if working_days > 0 else 0
         lop_amount = per_day * lop_days
+        # OT amount: basic hourly rate * OT hours
+        ot_rate = ss.basic / (working_days * 8) if working_days > 0 else 0
+        ot_amount = ot_rate * ot_hours
 
-        gross = ss.basic + ss.hra + ss.da + ss.conveyance + ss.medical + ss.special - lop_amount
+        gross = ss.basic + ss.hra + ss.da + ss.conveyance + ss.medical + ss.special - lop_amount + ot_amount
         deductions = ss.pf_employee + ss.esi_employee + ss.professional_tax + ss.income_tax
         net = gross - deductions
 
@@ -132,7 +153,7 @@ async def generate_payslips(
             gross_earnings=gross, pf=ss.pf_employee, esi=ss.esi_employee, pt=ss.professional_tax, it=ss.income_tax,
             total_deductions=deductions, net_pay=net, working_days=working_days,
             present_days=present, absent_days=absent, leave_days=leave,
-            ot_hours=ot_hours, ot_amount=0, lop_days=int(lop_days), lop_amount=lop_amount,
+            ot_hours=ot_hours, ot_amount=ot_amount, lop_days=int(lop_days), lop_amount=lop_amount,
             status="calculated", generated_at=datetime.now(timezone.utc),
         )
         db.add(payslip)

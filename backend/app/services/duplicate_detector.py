@@ -46,17 +46,16 @@ class DuplicateDetector:
             }
         ]
         """
-        if from_date is None:
-            from_date = date.today() - timedelta(days=30)
-        if to_date is None:
-            to_date = date.today()
-
-        # Find punches with same employee_code + punch_time across different servers
         # Resolve tenant timezone
         tenant_stmt = select(Tenant.timezone).where(Tenant.id == tenant_id)
         tenant_tz_res = await self.db.execute(tenant_stmt)
         tz_name = tenant_tz_res.scalar() or "Asia/Kolkata"
         local_tz = ZoneInfo(tz_name)
+
+        if from_date is None:
+            from_date = datetime.now(local_tz).date() - timedelta(days=30)
+        if to_date is None:
+            to_date = datetime.now(local_tz).date()
 
         from_dt = datetime.combine(from_date, datetime.min.time()).replace(tzinfo=local_tz).astimezone(timezone.utc)
         to_dt = datetime.combine(to_date, datetime.max.time()).replace(tzinfo=local_tz).astimezone(timezone.utc)

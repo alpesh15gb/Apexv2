@@ -127,3 +127,77 @@ async def super_auth_headers(client, superuser):
     })
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+@pytest_asyncio.fixture
+async def db_session(db):
+    return db
+
+@pytest_asyncio.fixture
+async def test_tenant(tenant):
+    return tenant
+
+@pytest_asyncio.fixture
+async def test_department(db, tenant):
+    from app.models.employee import Department
+    dept = Department(
+        tenant_id=tenant.id,
+        name="Engineering",
+        code="ENG",
+        is_active=True,
+    )
+    db.add(dept)
+    await db.flush()
+    return dept
+
+@pytest_asyncio.fixture
+async def test_branch(db, tenant):
+    from app.models.employee import Branch
+    branch = Branch(
+        tenant_id=tenant.id,
+        name="Main Office",
+        code="HQ",
+        is_active=True,
+    )
+    db.add(branch)
+    await db.flush()
+    return branch
+
+@pytest_asyncio.fixture
+async def test_shift(db, tenant):
+    from app.models.shift import Shift
+    from datetime import time
+    shift = Shift(
+        tenant_id=tenant.id,
+        name="General Shift",
+        start_time=time(9, 0),
+        end_time=time(18, 0),
+        grace_period_minutes=10,
+        late_rule_minutes=15,
+        early_rule_minutes=10,
+        overtime_threshold_minutes=30,
+        is_night_shift=False,
+        is_active=True,
+    )
+    db.add(shift)
+    await db.flush()
+    return shift
+
+@pytest_asyncio.fixture
+async def test_employee(db, tenant, test_department, test_branch, test_shift):
+    from app.models.employee import Employee
+    from datetime import date
+    employee = Employee(
+        tenant_id=tenant.id,
+        employee_code="EMP00001",
+        first_name="John",
+        last_name="Doe",
+        email="john@test.com",
+        department_id=test_department.id,
+        branch_id=test_branch.id,
+        shift_id=test_shift.id,
+        joining_date=date(2024, 1, 1),
+        status="active",
+    )
+    db.add(employee)
+    await db.flush()
+    return employee
